@@ -21,6 +21,8 @@ add_compile_options(${GTK3_CFLAGS_OTHER})
 add_executable(JavaLang
         main.c
         GUI/mainview.c
+        Headers/file_manager.h
+        Logic/Files/file_manager.c
 )
 
 # Configurar propiedades del target

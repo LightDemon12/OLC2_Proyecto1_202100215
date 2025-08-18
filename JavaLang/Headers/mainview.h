@@ -6,9 +6,9 @@
 #define MAINVIEW_H
 
 #include <gtk/gtk.h>
+#include "file_manager.h"  // Ahora podemos incluir porque FileState ya está definido
 
-// Estructura principal de la aplicación
-typedef struct {
+typedef struct MainView {
     GtkWidget *window;
     GtkWidget *code_textview;
     GtkWidget *output_textview;
@@ -16,14 +16,17 @@ typedef struct {
     GtkTextBuffer *code_buffer;
     GtkTextBuffer *output_buffer;
     GtkTextBuffer *console_buffer;
+
+    // === Estado de archivos ===
+    FileState *file_state;
+
 } MainView;
 
-// Funciones públicas
+// === FUNCIONES PRINCIPALES ===
+
 MainView* mainview_create(GtkApplication *app);
 void mainview_destroy(MainView *mainview);
 void mainview_show(const MainView *mainview);
-
-// Funciones para manipular el contenido
 void mainview_set_code(const MainView *mainview, const char *code);
 void mainview_append_output(const MainView *mainview, const char *output);
 void mainview_append_console(const MainView *mainview, const char *console_text);
