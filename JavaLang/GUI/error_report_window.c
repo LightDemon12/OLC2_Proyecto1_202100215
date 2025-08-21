@@ -10,9 +10,10 @@
 enum {
     COL_ID = 0,
     COL_TYPE,
+    COL_DESCRIPTION,  // ← Renombrar COL_MESSAGE
+    COL_SCOPE,        // ← NUEVA COLUMNA
     COL_LINE,
     COL_COLUMN,
-    COL_MESSAGE,
     COL_TOKEN,
     NUM_COLS
 };
@@ -22,7 +23,7 @@ static void apply_error_window_css() {
     GtkCssProvider *provider = gtk_css_provider_new();
 
     const char *error_window_css =
-        "/* Tabla de errores estilo Win98 */\n"
+        "/* Tabla de errores estilo Win98 RESPONSIVA */\n"
         ".error-table {\n"
         "    background-color: #ffffff;\n"
         "    color: #000000;\n"
@@ -33,6 +34,26 @@ static void apply_error_window_css() {
         ".error-table:selected {\n"
         "    background-color: #0080c0;\n"
         "    color: #ffffff;\n"
+        "}\n"
+
+        "/* Headers responsivos */\n"
+        ".error-table-header {\n"
+        "    background: linear-gradient(to bottom, #e0e0e0 0%, #c0c0c0 50%, #a0a0a0 100%);\n"
+        "    color: #000000;\n"
+        "    font-weight: bold;\n"
+        "    border-top: 2px solid #ffffff;\n"
+        "    border-left: 2px solid #ffffff;\n"
+        "    border-bottom: 2px solid #808080;\n"
+        "    border-right: 2px solid #808080;\n"
+        "    padding: 4px;\n"
+        "    min-width: 50px;\n"
+        "}\n"
+
+        "/* Celdas con ajuste de texto */\n"
+        ".error-table cell {\n"
+        "    padding: 2px 4px;\n"
+        "    text-overflow: ellipsis;\n"
+        "    overflow: hidden;\n"
         "}\n"
 
         "/* Botones estilo Win98 */\n"
@@ -48,6 +69,7 @@ static void apply_error_window_css() {
         "    border-right: 2px solid #808080;\n"
         "    padding: 4px 16px;\n"
         "    margin: 2px;\n"
+        "    min-width: 80px;\n"
         "}\n"
 
         ".win98-button:hover {\n"
@@ -62,16 +84,23 @@ static void apply_error_window_css() {
         "    background: linear-gradient(to bottom, #a0a0a0 0%, #c0c0c0 50%, #e0e0e0 100%);\n"
         "}\n"
 
-        "/* Headers de tabla */\n"
-        ".error-table-header {\n"
-        "    background: linear-gradient(to bottom, #e0e0e0 0%, #c0c0c0 50%, #a0a0a0 100%);\n"
-        "    color: #000000;\n"
-        "    font-weight: bold;\n"
+        "/* Ventana responsiva */\n"
+        ".win98-frame {\n"
+        "    background-color: #c0c0c0;\n"
         "    border-top: 2px solid #ffffff;\n"
         "    border-left: 2px solid #ffffff;\n"
         "    border-bottom: 2px solid #808080;\n"
         "    border-right: 2px solid #808080;\n"
         "    padding: 4px;\n"
+        "}\n"
+
+        ".win98-inset {\n"
+        "    border-top: 2px solid #808080;\n"
+        "    border-left: 2px solid #808080;\n"
+        "    border-bottom: 2px solid #ffffff;\n"
+        "    border-right: 2px solid #ffffff;\n"
+        "    background-color: #ffffff;\n"
+        "    padding: 2px;\n"
         "}\n";
 
     gtk_css_provider_load_from_data(provider, error_window_css, -1, NULL);
@@ -101,9 +130,10 @@ static GtkListStore* create_error_table_model() {
     return gtk_list_store_new(NUM_COLS,
                              G_TYPE_INT,     // ID
                              G_TYPE_STRING,  // Tipo
+                             G_TYPE_STRING,  // Descripción
+                             G_TYPE_STRING,  // Ámbito
                              G_TYPE_INT,     // Línea
                              G_TYPE_INT,     // Columna
-                             G_TYPE_STRING,  // Mensaje
                              G_TYPE_STRING); // Token
 }
 
@@ -112,57 +142,73 @@ static GtkWidget* create_error_tree_view(GtkListStore *store) {
     GtkWidget *tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_style_context_add_class(gtk_widget_get_style_context(tree_view), "error-table");
 
-    // Columna ID
+    // Columna ID (fijo pequeño)
     GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
     GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-        "#", renderer, "text", COL_ID, NULL);
+        "No.", renderer, "text", COL_ID, NULL);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_fixed_width(column, 50);
-    gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(column)), "error-table-header");
+    gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-    // Columna Tipo
+    // Columna Descripción (responsiva - más espacio)
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "wrap-mode", PANGO_WRAP_WORD_CHAR, NULL);
+    g_object_set(renderer, "wrap-width", 300, NULL);
+    column = gtk_tree_view_column_new_with_attributes(
+        "Descripcion", renderer, "text", COL_DESCRIPTION, NULL);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+    gtk_tree_view_column_set_expand(column, TRUE);  // EXPANDIR
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 200);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+    // Columna Ámbito (responsiva - mediano)
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-        "Tipo", renderer, "text", COL_TYPE, NULL);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 100);
+        "Ambito", renderer, "text", COL_SCOPE, NULL);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+    gtk_tree_view_column_set_expand(column, FALSE);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 100);
+    gtk_tree_view_column_set_max_width(column, 200);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-    // Columna Línea
+    // Columna Línea (fijo pequeño)
     renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.5, NULL); // Centrar
     column = gtk_tree_view_column_new_with_attributes(
         "Linea", renderer, "text", COL_LINE, NULL);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 80);
+    gtk_tree_view_column_set_fixed_width(column, 70);
+    gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-    // Columna Columna
+    // Columna Columna (fijo pequeño)
     renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.5, NULL); // Centrar
     column = gtk_tree_view_column_new_with_attributes(
         "Columna", renderer, "text", COL_COLUMN, NULL);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 80);
+    gtk_tree_view_column_set_fixed_width(column, 70);
+    gtk_tree_view_column_set_resizable(column, FALSE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-    // Columna Mensaje
+    // Columna Token (responsiva - pequeño)
     renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-        "Mensaje", renderer, "text", COL_MESSAGE, NULL);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 300);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
-
-    // Columna Token
-    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "family", "monospace", NULL); // Fuente monoespaciada
     column = gtk_tree_view_column_new_with_attributes(
         "Token", renderer, "text", COL_TOKEN, NULL);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 100);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+    gtk_tree_view_column_set_expand(column, FALSE);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 60);
+    gtk_tree_view_column_set_max_width(column, 120);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     return tree_view;
 }
+
 
 // Crear barra de título Win98
 static GtkWidget* create_error_titlebar(const char *title, GtkLabel **status_label) {
@@ -189,19 +235,24 @@ void error_report_window_populate_table(ErrorReportWindow* window) {
         return;
     }
 
+    printf("DEBUG: Poblando tabla de errores...\n");
+
     // Limpiar tabla
     gtk_list_store_clear(window->list_store);
 
     if (!error_manager_has_errors(window->error_manager)) {
+        printf("DEBUG: No hay errores registrados\n");
+
         // Mostrar mensaje de "sin errores"
         GtkTreeIter iter;
         gtk_list_store_append(window->list_store, &iter);
         gtk_list_store_set(window->list_store, &iter,
                           COL_ID, 0,
                           COL_TYPE, "INFO",
+                          COL_DESCRIPTION, "No hay errores registrados",
+                          COL_SCOPE, "N/A",
                           COL_LINE, 0,
                           COL_COLUMN, 0,
-                          COL_MESSAGE, "No hay errores registrados",
                           COL_TOKEN, "",
                           -1);
 
@@ -213,15 +264,27 @@ void error_report_window_populate_table(ErrorReportWindow* window) {
     ErrorNode* current = window->error_manager->head;
     int id = 1;
 
+    printf("DEBUG: Recorriendo %d errores...\n",
+           error_manager_get_total_count(window->error_manager));
+
     while (current) {
+        printf("DEBUG: Error %d - Linea: %d, Columna: %d, Msg: '%s', Token: '%s'\n",
+               id, current->line, current->column,
+               current->message ? current->message : "NULL",
+               current->token_text ? current->token_text : "NULL");
+
         GtkTreeIter iter;
         gtk_list_store_append(window->list_store, &iter);
+
+        const char* scope_display = error_manager_get_scope_display(current->type, current->scope);
+
         gtk_list_store_set(window->list_store, &iter,
                           COL_ID, id++,
                           COL_TYPE, error_type_name(current->type),
+                          COL_DESCRIPTION, current->message ? current->message : "",
+                          COL_SCOPE, scope_display,
                           COL_LINE, current->line,
                           COL_COLUMN, current->column,
-                          COL_MESSAGE, current->message ? current->message : "",
                           COL_TOKEN, current->token_text ? current->token_text : "",
                           -1);
 
@@ -238,6 +301,8 @@ void error_report_window_populate_table(ErrorReportWindow* window) {
              error_manager_get_semantico_count(window->error_manager));
 
     gtk_label_set_text(GTK_LABEL(window->status_label), status_text);
+
+    printf("DEBUG: Tabla poblada exitosamente\n");
 }
 
 // Crear ventana principal
@@ -252,8 +317,12 @@ ErrorReportWindow* error_report_window_create(ErrorManager* error_manager, MainV
     // Crear ventana
     window->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window->window), "JavaLang - Reporte de Errores");
-    gtk_window_set_default_size(GTK_WINDOW(window->window), 800, 500);
+    gtk_window_set_default_size(GTK_WINDOW(window->window), 900, 600); // Un poco más grande
     gtk_window_set_position(GTK_WINDOW(window->window), GTK_WIN_POS_CENTER);
+
+    /* HACER VENTANA REDIMENSIONABLE */
+    gtk_window_set_resizable(GTK_WINDOW(window->window), TRUE);
+    gtk_window_set_type_hint(GTK_WINDOW(window->window), GDK_WINDOW_TYPE_HINT_NORMAL);
 
     // Container principal
     GtkWidget *main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -278,6 +347,7 @@ ErrorReportWindow* error_report_window_create(ErrorManager* error_manager, MainV
                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_container_add(GTK_CONTAINER(scroll), window->tree_view);
 
+    /* CONFIGURAR EXPANSIÓN */
     gtk_box_pack_start(GTK_BOX(table_container), scroll, TRUE, TRUE, 4);
 
     // Área de botones
@@ -294,9 +364,9 @@ ErrorReportWindow* error_report_window_create(ErrorManager* error_manager, MainV
 
     gtk_box_pack_end(GTK_BOX(button_box), window->close_button, FALSE, FALSE, 8);
 
-    // Ensamblar ventana
+    // Ensamblar ventana CON EXPANSIÓN CORRECTA
     gtk_box_pack_start(GTK_BOX(main_vbox), titlebar, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), table_container, TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(main_vbox), table_container, TRUE, TRUE, 4); /* EXPANDIR */
     gtk_box_pack_start(GTK_BOX(main_vbox), button_box, FALSE, FALSE, 4);
 
     gtk_container_add(GTK_CONTAINER(window->window), main_vbox);
@@ -305,9 +375,10 @@ ErrorReportWindow* error_report_window_create(ErrorManager* error_manager, MainV
     g_signal_connect(window->window, "destroy",
                      G_CALLBACK(gtk_widget_destroyed), &window->window);
 
-    printf("DEBUG: Ventana de reporte de errores creada\n");
+    printf("DEBUG: Ventana de reporte de errores RESPONSIVA creada\n");
     return window;
 }
+
 
 void error_report_window_show(ErrorReportWindow* window) {
     if (window && window->window) {

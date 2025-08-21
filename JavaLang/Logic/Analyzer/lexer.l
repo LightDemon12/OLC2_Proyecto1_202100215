@@ -2,18 +2,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../Headers/tokens.h"
+#include "parser.tab.h"
 #include "../../Headers/error_manager.h"
+
 /* Variables para tracking de posición */
-int yyline = 1;
+extern FILE* yyin;
+extern char* yytext;
+extern int yyleng;
+extern int yylineno;
+extern ErrorManager* global_error_manager;
+
+/* Variables globales correctas */
 int yycolumn = 1;
 ErrorManager* error_manager = NULL;
-/* Actualizar posición */
-#define YY_USER_ACTION yycolumn += yyleng;
+
+/* DECLARACIONES DE FUNCIONES */
+void lexer_print_errors();
+void lexer_init_error_manager();
+void lexer_cleanup();
+/* Actualizar posición segura */
+#define YY_USER_ACTION do { \
+    yycolumn += yyleng; \
+} while(0);
 %}
+
 /* Opciones de Flex */
 %option noyywrap
 %option yylineno
+
 /* Definiciones de patrones */
 DIGIT       [0-9]
 LETTER      [a-zA-ZáéíóúÁÉÍÓÚñÑ]
@@ -25,10 +41,12 @@ CHARACTER   \'[^\\]\'
 STRING      \"([^\"\n\r]|(\\.))*\"
 COMMENT_LINE    "//".*
 COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
+
 %%
+
 {COMMENT_LINE}              { /* Ignorar comentarios de línea */ }
 {COMMENT_BLOCK}             { /* Ignorar comentarios de bloque */ }
-{INTEGER}                    { return TOKEN_TYPE_INT; }
+{INTEGER}                   { return TOKEN_TYPE_INT; }
 {FLOAT}                     { return TOKEN_TYPE_FLOAT; }
 {STRING}                    { return TOKEN_TYPE_STRING; }
 {CHARACTER}                 { return TOKEN_TYPE_CHAR; }
@@ -61,8 +79,8 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "do"                        { return TOKEN_DO; }
 "String.valueOf"            { return TOKEN_VALUEOF; }
 "Arrays.indexOf"            { return TOKEN_INDEXOF; }
-".length"                    { return TOKEN_LENGTH; }
-".add"                       { return TOKEN_ADD; }
+".length"                   { return TOKEN_LENGTH; }
+".add"                      { return TOKEN_ADD; }
 "new"                       { return TOKEN_NEW; }
 "<<="                       { return TOKEN_SHIFT_LEFT_ASSIGN; }
 ">>="                       { return TOKEN_SHIFT_RIGHT_ASSIGN; }
@@ -101,67 +119,67 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 ","                         { return TOKEN_COMMA; }
 "."                         { return TOKEN_DOT; }
 {WHITESPACE}                { /* Ignorar */ }
-\n                          { yyline++; yycolumn = 1; }
+\n                          { yycolumn = 1; }
 {IDENTIFIER}                { return TOKEN_IDENTIFIER; }
-.                           { 
-                            if (error_manager) {
-                                char message[128];
-                                snprintf(message, sizeof(message),
-                                        "Caracter no reconocido: '%c' (ASCII: %d)",
-                                        yytext[0], (unsigned char)yytext[0]);
-                                error_manager_add_lexico(error_manager, yyline, yycolumn,
-                                                        message, yytext);
+
+.                           {
+                            /* USAR GLOBAL_ERROR_MANAGER EN LUGAR DE LOCAL */
+                            if (!global_error_manager) {
+                                global_error_manager = error_manager_create();
                             }
-                            return TOKEN_ERROR; 
+                            
+                            /* AGREGAR ERROR LEXICO AL MANAGER GLOBAL */
+                            char message[128];
+                            snprintf(message, sizeof(message),
+                                    "Caracter no reconocido: '%c' (ASCII: %d)",
+                                    yytext[0], (unsigned char)yytext[0]);
+                            error_manager_add_lexico(global_error_manager, yylineno, yycolumn,
+                                                    message, yytext);
+                            
+                            /* IMPRIMIR DEBUG INMEDIATO */
+                            printf("DEBUG LEXER: Error lexico agregado - Linea %d, Columna %d: %s\n",
+                                   yylineno, yycolumn, message);
+                            
+                            return TOKEN_ERROR;
+                            }
+
+<<EOF>>                     {
+                            /* IMPRIMIR ERRORES ANTES DE TERMINAR */
+                            lexer_print_errors();
+                            return 0;
                             }
 %%
-int main(int argc, char** argv) {
-    // CREAR ERROR MANAGER
-    error_manager = error_manager_create();
-    if (!error_manager) {
-        printf("Error: No se pudo crear el manejador de errores\n");
-        return 1;
-    }
 
-    if (argc > 1) {
-        yyin = fopen(argv[1], "r");
-        if (!yyin) {
-            printf("Error: No se pudo abrir %s\n", argv[1]);
-            error_manager_destroy(error_manager);
-            return 1;
+void lexer_init_error_manager() {
+    if (!global_error_manager) {
+        global_error_manager = error_manager_create();
+        printf("DEBUG: Error manager global inicializado en lexer\n");
+    }
+}
+
+void lexer_print_errors() {
+    if (!global_error_manager) {
+        printf("DEBUG: No hay global_error_manager para imprimir\n");
+        return;
+    }
+    
+    int total_errors = error_manager_get_total_count(global_error_manager);
+    printf("DEBUG: Global error manager tiene %d errores\n", total_errors);
+    
+    if (total_errors > 0) {
+        printf("\n=== ERRORES LEXICOS ===\n");
+        error_manager_print_all(global_error_manager);
+        char* summary = error_manager_get_summary(global_error_manager);
+        if (summary) {
+            printf("%s\n", summary);
+            free(summary);
         }
-    }
-
-    int token;
-    printf("=== ANALISIS LEXICO ===\n");  // ← Sin tildes
-
-    while ((token = yylex()) != 0) {
-        printf("Token: %s, Texto: '%s', Linea: %d\n",  // ← Sin tildes
-            token_name(token), yytext, yyline);
-    }
-
-    printf("=== FIN ===\n");
-
-    // GUARDAR SI HAY ERRORES ANTES DE DESTRUIR
-    int has_errors = error_manager_has_errors(error_manager);
-
-    // MOSTRAR RESUMEN DE ERRORES
-    if (has_errors) {
-        printf("\n");
-        error_manager_print_all(error_manager);
-        char* summary = error_manager_get_summary(error_manager);
-        printf("%s\n", summary);
-        free(summary);
     } else {
-        printf("Analisis completado sin errores\n");  // ← Sin tildes
+        printf("DEBUG: No hay errores lexicos para mostrar\n");
     }
+}
 
-    if (yyin && yyin != stdin) {
-        fclose(yyin);
-    }
-
-    // LIMPIAR ERROR MANAGER
-    error_manager_destroy(error_manager);
-
-    return has_errors ? 1 : 0;
+void lexer_cleanup() {
+    /* NO DESTRUIR EL GLOBAL_ERROR_MANAGER AQUÍ */
+    printf("DEBUG: Lexer cleanup - global_error_manager preservado\n");
 }

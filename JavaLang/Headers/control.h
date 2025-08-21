@@ -21,5 +21,5 @@ int control_rebuild_and_analyze_with_output(GtkTextBuffer* code_buffer, MainView
 // Funciones que NO necesitan MainView
 int control_rebuild_and_analyze(GtkTextBuffer* code_buffer);
 int control_analyze_only(GtkTextBuffer* code_buffer);
-
+int control_test_parser(MainView* mainview);
 #endif // CONTROL_H

@@ -289,11 +289,26 @@ static void on_lexico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
 
     int result = control_rebuild_and_analyze_with_output(mainview->code_buffer, mainview);
 
-    // ✅ VERIFICAR RESULTADO CORRECTO
-    if (result == 0) {
-        mainview_append_output(mainview, "✅ Análisis léxico completado exitosamente");
+    /* VERIFICAR TANTO RESULTADO COMO ERRORES ACUMULADOS */
+    extern ErrorManager* global_error_manager;
+    int has_errors = 0;
+
+    if (global_error_manager) {
+        has_errors = error_manager_has_errors(global_error_manager);
+        printf("DEBUG: Global error manager tiene errores: %s (%d total)\n",
+               has_errors ? "SI" : "NO",
+               error_manager_get_total_count(global_error_manager));
+    }
+
+    /* DETERMINAR RESULTADO FINAL */
+    if (has_errors || result != 0) {
+        mainview_append_output(mainview, "Análisis léxico completado con errores");
+        printf("DEBUG: Análisis completado con errores - Result: %d, Errors: %d\n",
+               result, has_errors);
     } else {
-        mainview_append_output(mainview, "❌ Análisis léxico completado con errores");
+        mainview_append_output(mainview, "Análisis léxico completado exitosamente");
+        printf("DEBUG: Análisis completado exitosamente - Result: %d, Errors: %d\n",
+               result, has_errors);
     }
 
     printf("DEBUG: Análisis léxico ejecutado (resultado: %d)\n", result);
