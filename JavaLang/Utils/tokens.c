@@ -13,8 +13,12 @@ const char* token_name(TokenType type) {
         case TOKEN_CHAR: return "TOKEN_CHAR";
         case TOKEN_BOOLEAN: return "TOKEN_BOOLEAN";
         case TOKEN_EQUALS: return "TOKEN_EQUALS";
-        case TONEK_NEW: return "TOKEN_NEW";
+        case TOKEN_NEW: return "TOKEN_NEW";
         case TOKEN_NULL: return "TOKEN_NULL";
+        case TOKEN_PUBLIC:  return  "TOKEN_PUBLIC";
+        case TOKEN_STATIC:  return  "TOKEN_STATIC";
+        case TOKEN_VOID:   return "TOKEN_VOID";
+        case TOKEN_MAIN:  return "TOKEN_MAIN";
 
         // Identificadores
         case TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";

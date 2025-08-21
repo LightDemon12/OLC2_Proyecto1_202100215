@@ -47,7 +47,7 @@ static gboolean set_initial_content(gpointer user_data) {
 
     printf("DEBUG: Ejecutando callback para establecer contenido\n");
 
-    mainview_set_code(mainview, "// Escribe tu código JavaLang aquí\nint main() {\n    print(\"Hola Mundo\");\n    return 0;\n}");
+    gtk_text_buffer_set_text(mainview->code_buffer,"// JavaLang IDE v1.0\n""\n""public static void main() {\n""    System.out.println(\"Hello World\");\n""}", -1);
     mainview_append_output(mainview, "Intérprete JavaLang iniciado correctamente");
 
     g_free(data);

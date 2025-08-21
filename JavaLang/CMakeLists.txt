@@ -27,6 +27,10 @@ add_executable(JavaLang
         Logic/Files/control.c
         Headers/control.h
         Utils/tokens.c
+        Headers/error_manager.h
+        Utils/error_manager.c
+        Headers/error_report_window.h
+        GUI/error_report_window.c
 )
 
 # Configurar propiedades del target

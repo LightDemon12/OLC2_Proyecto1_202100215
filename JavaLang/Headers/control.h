@@ -6,10 +6,14 @@
 #define CONTROL_H
 
 #include <gtk/gtk.h>
+#include "error_manager.h"  // ← Sin ../../Headers/
 
 // Forward declaration usando la MISMA estructura que mainview.h
 struct MainView;
 typedef struct MainView MainView;
+
+// ✅ SOLO DECLARAR EXTERN (no definir)
+extern ErrorManager* global_error_manager;
 
 // Funciones que usan MainView
 int control_rebuild_and_analyze_with_output(GtkTextBuffer* code_buffer, MainView* mainview);

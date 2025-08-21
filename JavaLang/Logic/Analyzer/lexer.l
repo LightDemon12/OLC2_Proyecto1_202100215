@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../Headers/tokens.h"
+#include "../../Headers/error_manager.h"
 /* Variables para tracking de posición */
 int yyline = 1;
 int yycolumn = 1;
+ErrorManager* error_manager = NULL;
 /* Actualizar posición */
 #define YY_USER_ACTION yycolumn += yyleng;
 %}
@@ -30,6 +32,10 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 {FLOAT}                     { return TOKEN_TYPE_FLOAT; }
 {STRING}                    { return TOKEN_TYPE_STRING; }
 {CHARACTER}                 { return TOKEN_TYPE_CHAR; }
+"public"                    { return TOKEN_PUBLIC; }
+"static"                    { return TOKEN_STATIC; }
+"void"                      { return TOKEN_VOID; }
+"main"                      { return TOKEN_MAIN; }
 "System.out.println"        { return TOKEN_SOUT; }
 "Integer.parseInt"          { return TOKEN_PARSEINT; }
 "Float.parseFloat"          { return TOKEN_PARSEFLOAT; }
@@ -53,10 +59,11 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "for"                       { return TOKEN_FOR; }
 "if"                        { return TOKEN_IF; }
 "do"                        { return TOKEN_DO; }
-"valueOf"                   { return TOKEN_VALUEOF; }
-"indexOf"                   { return TOKEN_INDEXOF; }
-"length"                    { return TOKEN_LENGTH; }
-"add"                       { return TOKEN_ADD; }
+"String.valueOf"            { return TOKEN_VALUEOF; }
+"Arrays.indexOf"            { return TOKEN_INDEXOF; }
+".length"                    { return TOKEN_LENGTH; }
+".add"                       { return TOKEN_ADD; }
+"new"                       { return TOKEN_NEW; }
 "<<="                       { return TOKEN_SHIFT_LEFT_ASSIGN; }
 ">>="                       { return TOKEN_SHIFT_RIGHT_ASSIGN; }
 "++"                        { return TOKEN_INCREMENT; }
@@ -97,33 +104,64 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 \n                          { yyline++; yycolumn = 1; }
 {IDENTIFIER}                { return TOKEN_IDENTIFIER; }
 .                           { 
-                            printf("⚠️ Carácter no reconocido: '%c' (ASCII: %d) en línea %d\n", 
-                                    yytext[0], (unsigned char)yytext[0], yyline); 
+                            if (error_manager) {
+                                char message[128];
+                                snprintf(message, sizeof(message),
+                                        "Caracter no reconocido: '%c' (ASCII: %d)",
+                                        yytext[0], (unsigned char)yytext[0]);
+                                error_manager_add_lexico(error_manager, yyline, yycolumn,
+                                                        message, yytext);
+                            }
                             return TOKEN_ERROR; 
                             }
 %%
 int main(int argc, char** argv) {
+    // CREAR ERROR MANAGER
+    error_manager = error_manager_create();
+    if (!error_manager) {
+        printf("Error: No se pudo crear el manejador de errores\n");
+        return 1;
+    }
+
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         if (!yyin) {
             printf("Error: No se pudo abrir %s\n", argv[1]);
+            error_manager_destroy(error_manager);
             return 1;
         }
     }
-    
+
     int token;
-    printf("=== ANÁLISIS LÉXICO ===\n");
-    
+    printf("=== ANALISIS LEXICO ===\n");  // ← Sin tildes
+
     while ((token = yylex()) != 0) {
-        printf("Token: %s, Texto: '%s', Línea: %d\n", 
+        printf("Token: %s, Texto: '%s', Linea: %d\n",  // ← Sin tildes
             token_name(token), yytext, yyline);
     }
-    
+
     printf("=== FIN ===\n");
-    
+
+    // GUARDAR SI HAY ERRORES ANTES DE DESTRUIR
+    int has_errors = error_manager_has_errors(error_manager);
+
+    // MOSTRAR RESUMEN DE ERRORES
+    if (has_errors) {
+        printf("\n");
+        error_manager_print_all(error_manager);
+        char* summary = error_manager_get_summary(error_manager);
+        printf("%s\n", summary);
+        free(summary);
+    } else {
+        printf("Analisis completado sin errores\n");  // ← Sin tildes
+    }
+
     if (yyin && yyin != stdin) {
         fclose(yyin);
     }
-    
-    return 0;
+
+    // LIMPIAR ERROR MANAGER
+    error_manager_destroy(error_manager);
+
+    return has_errors ? 1 : 0;
 }

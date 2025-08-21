@@ -11,6 +11,10 @@
 #include "../Headers/file_manager.h"
 #include <gtk/gtk.h>
 #include "../Headers/control.h"
+#include "../Headers/error_report_window.h"
+#include "../Headers/error_manager.h"
+
+extern ErrorManager* global_error_manager;
 
 // Paleta de 8 colores para palabras (más suaves para Win98)
 static const char *word_colors[8] = {
@@ -208,7 +212,56 @@ static void apply_win98_finish() {
                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
     g_object_unref(provider);
 }
+// Función para validar y corregir UTF-8 para GTK
+static char* sanitize_utf8_for_gtk(const char *input) {
+    if (!input) return NULL;
 
+    // Verificar si ya es UTF-8 válido
+    if (g_utf8_validate(input, -1, NULL)) {
+        return g_strdup(input);
+    }
+
+    // Si no es válido, convertir caracteres problemáticos
+    size_t len = strlen(input);
+    GString *output = g_string_new("");
+
+    for (size_t i = 0; i < len; i++) {
+        unsigned char c = (unsigned char)input[i];
+
+        if (c < 128) {
+            // ASCII válido
+            g_string_append_c(output, c);
+        } else {
+            // Caracteres no ASCII - reemplazar con representación
+            if (c >= 160 && c <= 255) {
+                // Caracteres Latin-1 comunes
+                switch(c) {
+                    case 0xE1: g_string_append(output, "á"); break;  // á
+                    case 0xE9: g_string_append(output, "é"); break;  // é
+                    case 0xED: g_string_append(output, "í"); break;  // í
+                    case 0xF3: g_string_append(output, "ó"); break;  // ó
+                    case 0xFA: g_string_append(output, "ú"); break;  // ú
+                    case 0xF1: g_string_append(output, "ñ"); break;  // ñ
+                    case 0xC1: g_string_append(output, "Á"); break;  // Á
+                    case 0xC9: g_string_append(output, "É"); break;  // É
+                    case 0xCD: g_string_append(output, "Í"); break;  // Í
+                    case 0xD3: g_string_append(output, "Ó"); break;  // Ó
+                    case 0xDA: g_string_append(output, "Ú"); break;  // Ú
+                    case 0xD1: g_string_append(output, "Ñ"); break;  // Ñ
+                    default:
+                        g_string_append_c(output, '?');
+                        break;
+                }
+            } else {
+                g_string_append_c(output, '?');
+            }
+        }
+    }
+
+    char *result = g_strdup(output->str);
+    g_string_free(output, TRUE);
+    return result;
+}
 // === CALLBACKS DE MENÚS ===
 
 // Callbacks del menú Archivo
@@ -236,13 +289,14 @@ static void on_lexico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
 
     int result = control_rebuild_and_analyze_with_output(mainview->code_buffer, mainview);
 
+    // ✅ VERIFICAR RESULTADO CORRECTO
     if (result == 0) {
         mainview_append_output(mainview, "✅ Análisis léxico completado exitosamente");
     } else {
-        mainview_append_output(mainview, "❌ Error en el análisis léxico");
+        mainview_append_output(mainview, "❌ Análisis léxico completado con errores");
     }
 
-    printf("DEBUG: Análisis léxico ejecutado\n");
+    printf("DEBUG: Análisis léxico ejecutado (resultado: %d)\n", result);
 }
 
 static void on_sintactico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
@@ -279,13 +333,20 @@ static void on_ast_clicked(GtkMenuItem *menuitem, gpointer user_data) {
 
 static void on_errores_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     MainView *mainview = (MainView *)user_data;
-    mainview_clear_output(mainview);
-    mainview_append_output(mainview, "=== REPORTE DE ERRORES ===");
-    mainview_append_output(mainview, "Errores léxicos: 0");
-    mainview_append_output(mainview, "Errores sintácticos: 0");
-    mainview_append_output(mainview, "Errores semánticos: 0");
-    mainview_append_output(mainview, "No hay errores que reportar");
-    printf("DEBUG: Reporte de errores\n");
+
+    printf("DEBUG: Abriendo ventana de reporte de errores\n");
+
+    // Crear y mostrar ventana de errores
+    ErrorReportWindow* error_window = error_report_window_create(global_error_manager, mainview);
+
+    if (error_window) {
+        error_report_window_show(error_window);
+    } else {
+        // Fallback al output si falla la ventana
+        mainview_clear_output(mainview);
+        mainview_append_output(mainview, "=== REPORTE DE ERRORES ===");
+        mainview_append_output(mainview, "Error: No se pudo abrir la ventana de errores");
+    }
 }
 
 static void on_sintactico_reporte_clicked(GtkMenuItem *menuitem, gpointer user_data) {
@@ -586,9 +647,8 @@ MainView* mainview_create(GtkApplication *app) {
     gtk_text_buffer_set_text(mainview->code_buffer,
         "// JavaLang IDE v1.0\n"
         "// Windows 98 Classic Look\n\n"
-        "int main() {\n"
-        "    printf(\"Hello Retro World!\");\n"
-        "    return 0;\n"
+        "	public static void main() {\n"
+        "    		System.out.println(\"Hello World\");\n"
         "}", -1);
 
     gtk_text_buffer_set_text(mainview->output_buffer,
@@ -645,21 +705,35 @@ void mainview_set_code(const MainView *mainview, const char *code) {
     }
 }
 
+// Actualizar mainview_append_output para usar UTF-8 seguro
 void mainview_append_output(const MainView *mainview, const char *output) {
     if (mainview && mainview->output_buffer && output) {
+        // Sanitizar texto antes de insertar
+        char *safe_text = sanitize_utf8_for_gtk(output);
+
         GtkTextIter iter;
         gtk_text_buffer_get_end_iter(mainview->output_buffer, &iter);
-        gtk_text_buffer_insert(mainview->output_buffer, &iter, output, -1);
+        gtk_text_buffer_insert(mainview->output_buffer, &iter, safe_text, -1);
         gtk_text_buffer_insert(mainview->output_buffer, &iter, "\n", -1);
+
+        // Scroll automático al final
+        GtkTextMark *mark = gtk_text_buffer_get_insert(mainview->output_buffer);
+        gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(mainview->output_textview), mark);
+
+        g_free(safe_text);
     }
 }
 
 void mainview_append_console(const MainView *mainview, const char *console_text) {
     if (mainview && mainview->console_buffer && console_text) {
+        char *safe_text = sanitize_utf8_for_gtk(console_text);
+
         GtkTextIter iter;
         gtk_text_buffer_get_end_iter(mainview->console_buffer, &iter);
-        gtk_text_buffer_insert(mainview->console_buffer, &iter, console_text, -1);
+        gtk_text_buffer_insert(mainview->console_buffer, &iter, safe_text, -1);
         gtk_text_buffer_insert(mainview->console_buffer, &iter, "\n", -1);
+
+        g_free(safe_text);
     }
 }
 

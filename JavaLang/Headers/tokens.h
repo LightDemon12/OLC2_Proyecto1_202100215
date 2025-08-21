@@ -12,7 +12,11 @@ typedef enum {
     TOKEN_CHAR,     // char
     TOKEN_BOOLEAN,  // boolean
     TOKEN_EQUALS,   // equals
-    TONEK_NEW,      // new
+    TOKEN_NEW,      // new
+    TOKEN_PUBLIC,   // public
+    TOKEN_STATIC,   // static
+    TOKEN_VOID,     // void
+    TOKEN_MAIN,     // main
     // Valor nulo
     TOKEN_NULL,     // null
     // Identificadores
