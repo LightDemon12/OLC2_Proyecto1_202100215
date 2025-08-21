@@ -10,9 +10,10 @@
 enum {
     COL_ID = 0,
     COL_TYPE,
+    COL_DESCRIPTION,  // ← Renombrar COL_MESSAGE
+    COL_SCOPE,        // ← NUEVA COLUMNA
     COL_LINE,
     COL_COLUMN,
-    COL_MESSAGE,
     COL_TOKEN,
     NUM_COLS
 };
@@ -101,9 +102,10 @@ static GtkListStore* create_error_table_model() {
     return gtk_list_store_new(NUM_COLS,
                              G_TYPE_INT,     // ID
                              G_TYPE_STRING,  // Tipo
+                             G_TYPE_STRING,  // Descripción
+                             G_TYPE_STRING,  // Ámbito
                              G_TYPE_INT,     // Línea
                              G_TYPE_INT,     // Columna
-                             G_TYPE_STRING,  // Mensaje
                              G_TYPE_STRING); // Token
 }
 
@@ -115,18 +117,25 @@ static GtkWidget* create_error_tree_view(GtkListStore *store) {
     // Columna ID
     GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
     GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-        "#", renderer, "text", COL_ID, NULL);
+        "No.", renderer, "text", COL_ID, NULL);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_fixed_width(column, 50);
-    gtk_style_context_add_class(gtk_widget_get_style_context(GTK_WIDGET(column)), "error-table-header");
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-    // Columna Tipo
+    // Columna Descripción
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-        "Tipo", renderer, "text", COL_TYPE, NULL);
+        "Descripcion", renderer, "text", COL_DESCRIPTION, NULL);
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 100);
+    gtk_tree_view_column_set_fixed_width(column, 250);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+    // ✅ NUEVA: Columna Ámbito
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+        "Ambito", renderer, "text", COL_SCOPE, NULL);
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_column_set_fixed_width(column, 150);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     // Columna Línea
@@ -145,24 +154,9 @@ static GtkWidget* create_error_tree_view(GtkListStore *store) {
     gtk_tree_view_column_set_fixed_width(column, 80);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-    // Columna Mensaje
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-        "Mensaje", renderer, "text", COL_MESSAGE, NULL);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 300);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
-
-    // Columna Token
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-        "Token", renderer, "text", COL_TOKEN, NULL);
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_fixed_width(column, 100);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
-
     return tree_view;
 }
+
 
 // Crear barra de título Win98
 static GtkWidget* create_error_titlebar(const char *title, GtkLabel **status_label) {
@@ -189,19 +183,24 @@ void error_report_window_populate_table(ErrorReportWindow* window) {
         return;
     }
 
+    printf("DEBUG: Poblando tabla de errores...\n");
+
     // Limpiar tabla
     gtk_list_store_clear(window->list_store);
 
     if (!error_manager_has_errors(window->error_manager)) {
+        printf("DEBUG: No hay errores registrados\n");
+
         // Mostrar mensaje de "sin errores"
         GtkTreeIter iter;
         gtk_list_store_append(window->list_store, &iter);
         gtk_list_store_set(window->list_store, &iter,
                           COL_ID, 0,
                           COL_TYPE, "INFO",
+                          COL_DESCRIPTION, "No hay errores registrados",
+                          COL_SCOPE, "N/A",
                           COL_LINE, 0,
                           COL_COLUMN, 0,
-                          COL_MESSAGE, "No hay errores registrados",
                           COL_TOKEN, "",
                           -1);
 
@@ -213,15 +212,27 @@ void error_report_window_populate_table(ErrorReportWindow* window) {
     ErrorNode* current = window->error_manager->head;
     int id = 1;
 
+    printf("DEBUG: Recorriendo %d errores...\n",
+           error_manager_get_total_count(window->error_manager));
+
     while (current) {
+        printf("DEBUG: Error %d - Linea: %d, Columna: %d, Msg: '%s', Token: '%s'\n",
+               id, current->line, current->column,
+               current->message ? current->message : "NULL",
+               current->token_text ? current->token_text : "NULL");
+
         GtkTreeIter iter;
         gtk_list_store_append(window->list_store, &iter);
+
+        const char* scope_display = error_manager_get_scope_display(current->type, current->scope);
+
         gtk_list_store_set(window->list_store, &iter,
                           COL_ID, id++,
                           COL_TYPE, error_type_name(current->type),
+                          COL_DESCRIPTION, current->message ? current->message : "",
+                          COL_SCOPE, scope_display,
                           COL_LINE, current->line,
                           COL_COLUMN, current->column,
-                          COL_MESSAGE, current->message ? current->message : "",
                           COL_TOKEN, current->token_text ? current->token_text : "",
                           -1);
 
@@ -238,6 +249,8 @@ void error_report_window_populate_table(ErrorReportWindow* window) {
              error_manager_get_semantico_count(window->error_manager));
 
     gtk_label_set_text(GTK_LABEL(window->status_label), status_text);
+
+    printf("DEBUG: Tabla poblada exitosamente\n");
 }
 
 // Crear ventana principal

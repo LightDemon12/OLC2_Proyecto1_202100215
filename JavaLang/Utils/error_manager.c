@@ -17,7 +17,8 @@ const char* error_type_name(ErrorType type) {
 
 // Crear nuevo nodo de error
 static ErrorNode* create_error_node(ErrorType type, int line, int column,
-                                   const char* message, const char* token_text) {
+                                   const char* message, const char* token_text,
+                                   const char* scope) {
     ErrorNode* node = malloc(sizeof(ErrorNode));
     if (!node) return NULL;
 
@@ -26,16 +27,25 @@ static ErrorNode* create_error_node(ErrorType type, int line, int column,
     node->column = column;
     node->message = message ? strdup(message) : NULL;
     node->token_text = token_text ? strdup(token_text) : NULL;
-    node->next = NULL;
 
+    // ✅ MANEJAR ÁMBITO SEGÚN TIPO DE ERROR
+    if (type == ERROR_SEMANTICO && scope) {
+        node->scope = strdup(scope);
+    } else {
+        // Para errores léxicos y sintácticos
+        node->scope = strdup("Sin ambito");
+    }
+
+    node->next = NULL;
     return node;
 }
 
-// Liberar nodo de error
+// ✅ ACTUALIZAR FUNCIÓN DE LIBERACIÓN:
 static void free_error_node(ErrorNode* node) {
     if (node) {
         free(node->message);
         free(node->token_text);
+        free(node->scope);  // ← AGREGAR
         free(node);
     }
 }
@@ -63,45 +73,108 @@ void error_manager_destroy(ErrorManager* manager) {
     free(manager);
 }
 
-// Función genérica para agregar errores
-static void add_error(ErrorManager* manager, ErrorType type, int line, int column,
-                     const char* message, const char* token_text) {
-    if (!manager) return;
 
-    ErrorNode* node = create_error_node(type, line, column, message, token_text);
-    if (!node) return;
-
-    // Insertar al final de la lista
-    if (manager->tail) {
-        manager->tail->next = node;
-        manager->tail = node;
-    } else {
-        // Primera inserción
-        manager->head = manager->tail = node;
-    }
-
-    // Actualizar contadores
-    switch(type) {
-        case ERROR_LEXICO: manager->lexico_count++; break;
-        case ERROR_SINTACTICO: manager->sintactico_count++; break;
-        case ERROR_SEMANTICO: manager->semantico_count++; break;
-    }
-    manager->total_count++;
-}
 
 void error_manager_add_lexico(ErrorManager* manager, int line, int column,
                              const char* message, const char* token_text) {
-    add_error(manager, ERROR_LEXICO, line, column, message, token_text);
+    /* ✅ VALIDACIONES SEGURAS */
+    if (!manager) {
+        fprintf(stderr, "ERROR: error_manager es NULL\n");
+        return;
+    }
+
+    if (!message) {
+        fprintf(stderr, "ERROR: message es NULL\n");
+        return;
+    }
+
+    /* ✅ CREAR NODO CON VERIFICACIONES */
+    ErrorNode* node = malloc(sizeof(ErrorNode));
+    if (!node) {
+        fprintf(stderr, "ERROR: No se pudo allocar memoria para ErrorNode\n");
+        return;
+    }
+
+    node->type = ERROR_LEXICO;
+    node->line = line;
+    node->column = column;
+    node->message = strdup(message);
+    node->token_text = token_text ? strdup(token_text) : NULL;
+    node->scope = strdup("Sin ambito");
+    node->next = NULL;
+
+    /* ✅ VERIFICAR DUPLICACIÓN DE STRINGS */
+    if (!node->message || !node->scope) {
+        fprintf(stderr, "ERROR: No se pudo duplicar strings\n");
+        free(node->message);
+        free(node->token_text);
+        free(node->scope);
+        free(node);
+        return;
+    }
+
+    /* ✅ INSERTAR EN LISTA */
+    if (!manager->head) {
+        manager->head = manager->tail = node;
+    } else {
+        manager->tail->next = node;
+        manager->tail = node;
+    }
+
+    manager->lexico_count++;
+    manager->total_count++;
 }
 
 void error_manager_add_sintactico(ErrorManager* manager, int line, int column,
                                  const char* message, const char* token_text) {
-    add_error(manager, ERROR_SINTACTICO, line, column, message, token_text);
+    if (!manager) return;
+
+    ErrorNode* node = create_error_node(ERROR_SINTACTICO, line, column,
+                                       message, token_text, NULL);
+    if (!node) return;
+
+    if (!manager->head) {
+        manager->head = manager->tail = node;
+    } else {
+        manager->tail->next = node;
+        manager->tail = node;
+    }
+
+    manager->sintactico_count++;
+    manager->total_count++;
 }
 
 void error_manager_add_semantico(ErrorManager* manager, int line, int column,
-                                const char* message, const char* token_text) {
-    add_error(manager, ERROR_SEMANTICO, line, column, message, token_text);
+                                const char* message, const char* token_text,
+                                const char* scope) {
+    if (!manager) return;
+
+    ErrorNode* node = create_error_node(ERROR_SEMANTICO, line, column,
+                                       message, token_text, scope);
+    if (!node) return;
+
+    if (!manager->head) {
+        manager->head = manager->tail = node;
+    } else {
+        manager->tail->next = node;
+        manager->tail = node;
+    }
+
+    manager->semantico_count++;
+    manager->total_count++;
+}
+
+const char* error_manager_get_scope_display(ErrorType type, const char* scope) {
+    switch(type) {
+        case ERROR_LEXICO:
+            return "Error tipo lexico sin ambito";
+        case ERROR_SINTACTICO:
+            return "Error tipo sintactico sin ambito";
+        case ERROR_SEMANTICO:
+            return scope ? scope : "Ambito desconocido";
+        default:
+            return "Sin ambito";
+    }
 }
 
 // === CONSULTAS ===

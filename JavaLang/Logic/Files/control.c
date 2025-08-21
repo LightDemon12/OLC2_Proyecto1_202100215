@@ -188,48 +188,45 @@ static void cleanup_old_temp_files() {
     system(command);
 }
 
-// ✅ PARSEAR OUTPUT DEL LEXER PARA POBLAR ERROR_MANAGER
 static void parse_lexer_output_for_errors(const char* line) {
     if (!global_error_manager || !line) return;
 
-    // Buscar patrones de errores en la salida
+    // ✅ SOLO PARSEAR REPORTES DETALLADOS [LEXICO]
     if (strstr(line, "[LEXICO]")) {
-        // Ejemplo: "1. [LEXICO] Linea 1, Columna 2: Caracter no reconocido: '@' (ASCII: 64) | Token: '@'"
-        int line_num = 1, column_num = 1;
-        char error_msg[256] = "Error lexico detectado";
-        char token_text[64] = "";
+        // Formato: "1. [LEXICO] Línea 2, Columna 2: Caracter no reconocido: '@' (ASCII: 64) | Token: '@'"
+        int error_id, line_num, column_num;
+        char description[256] = "";
+        char token_text[32] = "";
 
-        // Intentar parsear línea y columna
-        sscanf(line, "%*d. [LEXICO] Linea %d, Columna %d:", &line_num, &column_num);
-        
-        // Buscar el mensaje de error
-        char* msg_start = strstr(line, ": ");
-        if (msg_start) {
-            msg_start += 2; // Saltar ": "
-            char* token_start = strstr(msg_start, " | Token: ");
-            if (token_start) {
-                size_t msg_len = token_start - msg_start;
-                if (msg_len < sizeof(error_msg)) {
-                    strncpy(error_msg, msg_start, msg_len);
-                    error_msg[msg_len] = '\0';
-                }
-                
-                // Extraer token
-                token_start += 10; // Saltar " | Token: "
-                if (strlen(token_start) < sizeof(token_text)) {
-                    strcpy(token_text, token_start);
-                    // Remover comillas si las hay
-                    if (token_text[0] == '\'' && token_text[strlen(token_text)-1] == '\'') {
-                        token_text[strlen(token_text)-1] = '\0';
-                        memmove(token_text, token_text + 1, strlen(token_text));
-                    }
-                }
+        // ✅ PARSEAR LÍNEA COMPLETA
+        int parsed = sscanf(line, "%d. [LEXICO] Línea %d, Columna %d: %255[^|] | Token: %31s",
+                           &error_id, &line_num, &column_num, description, token_text);
+
+        if (parsed >= 4) {
+            // Limpiar descripción (quitar espacios finales)
+            char* end = description + strlen(description) - 1;
+            while (end > description && (*end == ' ' || *end == '\t')) {
+                *end = '\0';
+                end--;
             }
-        }
 
-        error_manager_add_lexico(global_error_manager, line_num, column_num, 
-                                error_msg, token_text);
+            // Limpiar token (quitar comillas si las hay)
+            if (token_text[0] == '\'' && token_text[strlen(token_text)-1] == '\'') {
+                token_text[strlen(token_text)-1] = '\0';
+                memmove(token_text, token_text + 1, strlen(token_text));
+            }
+
+            printf("DEBUG: Parseado - Linea: %d, Columna: %d, Desc: '%s', Token: '%s'\n",
+                   line_num, column_num, description, token_text);
+
+            // ✅ AGREGAR ERROR CON DATOS REALES
+            error_manager_add_lexico(global_error_manager, line_num, column_num,
+                                    description, token_text);
+        }
     }
+
+    // ❌ ELIMINAR ESTE BLOQUE COMPLETO (causa duplicados):
+    // NO parsear TOKEN_ERROR aquí
 }
 
 static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView* mainview) {
@@ -244,7 +241,7 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
     const char* base_dir = get_working_directory();
     cleanup_old_temp_files();
 
-    // ✅ INICIALIZAR GLOBAL ERROR MANAGER
+    // ✅ LIMPIAR ERROR MANAGER AL INICIO
     if (!global_error_manager) {
         global_error_manager = error_manager_create();
     } else {
@@ -312,32 +309,28 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
                 free(clean_line);
             }
 
-            // ✅ PARSEAR ERRORES PARA GLOBAL_ERROR_MANAGER
+            // ✅ PARSEAR SOLO [LEXICO]
             parse_lexer_output_for_errors(line);
 
-            // Contar tokens y errores
+            // ✅ CONTAR PARA ESTADÍSTICAS
             if (strstr(line, "Token:")) {
                 token_count++;
-                if (strstr(line, "TOKEN_ERROR")) {
-                    error_count++;
-                }
-            }
-
-            if (strstr(line, "[LEXICO]") || strstr(line, "Caracter no reconocido")) {
-                error_count++;
             }
         }
     }
 
     int result = pclose(pipe);
 
+    // ✅ USAR ERRORES DEL MANAGER
+    int actual_errors = error_manager_get_total_count(global_error_manager);
+
     if (mainview) {
         char summary[256];
         mainview_append_output(mainview, "─────────────────────────");
 
-        if (error_count > 0) {
+        if (actual_errors > 0) {
             snprintf(summary, sizeof(summary), "Tokens: %d | Errores: %d",
-                    token_count, error_count);
+                    token_count, actual_errors);
         } else {
             snprintf(summary, sizeof(summary), "Tokens: %d | Sin errores",
                     token_count);
@@ -349,9 +342,10 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
     free(temp_file);
     g_free(content);
 
-    return (error_count > 0) ? -1 : result;
+    return (actual_errors > 0) ? -1 : result;
 }
 
+// ✅ MANTENER TUS OTRAS FUNCIONES IGUALES
 int control_rebuild_and_analyze_with_output(GtkTextBuffer* code_buffer, MainView* mainview) {
     printf("Iniciando rebuild del lexer...\n");
 

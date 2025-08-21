@@ -4,16 +4,27 @@
 #include <string.h>
 #include "../../Headers/tokens.h"
 #include "../../Headers/error_manager.h"
+
 /* Variables para tracking de posición */
-int yyline = 1;
+extern FILE* yyin;
+extern char* yytext;
+extern int yyleng;
+extern int yylineno;
+
+/* Variables globales correctas */
 int yycolumn = 1;
 ErrorManager* error_manager = NULL;
-/* Actualizar posición */
-#define YY_USER_ACTION yycolumn += yyleng;
+
+/* Actualizar posición segura */
+#define YY_USER_ACTION do { \
+    yycolumn += yyleng; \
+} while(0);
 %}
+
 /* Opciones de Flex */
 %option noyywrap
 %option yylineno
+
 /* Definiciones de patrones */
 DIGIT       [0-9]
 LETTER      [a-zA-ZáéíóúÁÉÍÓÚñÑ]
@@ -25,10 +36,12 @@ CHARACTER   \'[^\\]\'
 STRING      \"([^\"\n\r]|(\\.))*\"
 COMMENT_LINE    "//".*
 COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
+
 %%
+
 {COMMENT_LINE}              { /* Ignorar comentarios de línea */ }
 {COMMENT_BLOCK}             { /* Ignorar comentarios de bloque */ }
-{INTEGER}                    { return TOKEN_TYPE_INT; }
+{INTEGER}                   { return TOKEN_TYPE_INT; }
 {FLOAT}                     { return TOKEN_TYPE_FLOAT; }
 {STRING}                    { return TOKEN_TYPE_STRING; }
 {CHARACTER}                 { return TOKEN_TYPE_CHAR; }
@@ -61,8 +74,8 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "do"                        { return TOKEN_DO; }
 "String.valueOf"            { return TOKEN_VALUEOF; }
 "Arrays.indexOf"            { return TOKEN_INDEXOF; }
-".length"                    { return TOKEN_LENGTH; }
-".add"                       { return TOKEN_ADD; }
+".length"                   { return TOKEN_LENGTH; }
+".add"                      { return TOKEN_ADD; }
 "new"                       { return TOKEN_NEW; }
 "<<="                       { return TOKEN_SHIFT_LEFT_ASSIGN; }
 ">>="                       { return TOKEN_SHIFT_RIGHT_ASSIGN; }
@@ -101,22 +114,26 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 ","                         { return TOKEN_COMMA; }
 "."                         { return TOKEN_DOT; }
 {WHITESPACE}                { /* Ignorar */ }
-\n                          { yyline++; yycolumn = 1; }
+\n                          { yycolumn = 1; }
 {IDENTIFIER}                { return TOKEN_IDENTIFIER; }
-.                           { 
+
+.                           {
+                            /* ✅ SOLO AGREGAR AL ERROR_MANAGER LOCAL */
                             if (error_manager) {
                                 char message[128];
                                 snprintf(message, sizeof(message),
                                         "Caracter no reconocido: '%c' (ASCII: %d)",
                                         yytext[0], (unsigned char)yytext[0]);
-                                error_manager_add_lexico(error_manager, yyline, yycolumn,
+                                error_manager_add_lexico(error_manager, yylineno, yycolumn,
                                                         message, yytext);
                             }
-                            return TOKEN_ERROR; 
+                            return TOKEN_ERROR;
                             }
+
 %%
+
 int main(int argc, char** argv) {
-    // CREAR ERROR MANAGER
+    // CREAR ERROR MANAGER LOCAL
     error_manager = error_manager_create();
     if (!error_manager) {
         printf("Error: No se pudo crear el manejador de errores\n");
@@ -133,11 +150,11 @@ int main(int argc, char** argv) {
     }
 
     int token;
-    printf("=== ANALISIS LEXICO ===\n");  // ← Sin tildes
+    printf("=== ANALISIS LEXICO ===\n");
 
     while ((token = yylex()) != 0) {
-        printf("Token: %s, Texto: '%s', Linea: %d\n",  // ← Sin tildes
-            token_name(token), yytext, yyline);
+        printf("Token: %s, Texto: '%s', Linea: %d\n",
+            token_name(token), yytext, yylineno);
     }
 
     printf("=== FIN ===\n");
@@ -150,10 +167,12 @@ int main(int argc, char** argv) {
         printf("\n");
         error_manager_print_all(error_manager);
         char* summary = error_manager_get_summary(error_manager);
-        printf("%s\n", summary);
-        free(summary);
+        if (summary) {
+            printf("%s\n", summary);
+            free(summary);
+        }
     } else {
-        printf("Analisis completado sin errores\n");  // ← Sin tildes
+        printf("Analisis completado sin errores\n");
     }
 
     if (yyin && yyin != stdin) {
