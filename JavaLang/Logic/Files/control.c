@@ -34,6 +34,32 @@ static const char* get_working_directory() {
     return working_dir;
 }
 
+// Función para validar y limpiar UTF-8
+static char* sanitize_utf8(const char* input) {
+    if (!input) return NULL;
+
+    size_t len = strlen(input);
+    char* output = malloc(len + 1);
+    size_t out_pos = 0;
+
+    for (size_t i = 0; i < len; i++) {
+        unsigned char c = (unsigned char)input[i];
+
+        // Solo permitir caracteres ASCII imprimibles y espacios
+        if (c >= 32 && c <= 126) {
+            output[out_pos++] = c;
+        } else if (c == '\n' || c == '\t') {
+            output[out_pos++] = c;
+        } else {
+            // Reemplazar caracteres problemáticos con '?'
+            output[out_pos++] = '?';
+        }
+    }
+
+    output[out_pos] = '\0';
+    return output;
+}
+
 static int execute_command(const char* command, const char* working_dir) {
     char full_command[1024];
     const char* base_dir = get_working_directory();
@@ -193,7 +219,9 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
         if (strlen(line) > 0) {
             printf("%s\n", line);
             if (mainview) {
-                mainview_append_output(mainview, line);
+                char* clean_line = sanitize_utf8(line);
+                mainview_append_output(mainview, clean_line);
+                free(clean_line);
             }
 
             if (strstr(line, "Token:")) {
@@ -241,3 +269,4 @@ int control_analyze_only(GtkTextBuffer* code_buffer) {
     printf("🔍 Analizando código...\n");
     return analyze_code_from_buffer_with_output(code_buffer, NULL);
 }
+

@@ -14,32 +14,93 @@ int yycolumn = 1;
 %option yylineno
 /* Definiciones de patrones */
 DIGIT       [0-9]
-LETTER      [a-zA-Z]
+LETTER      [a-zA-ZáéíóúÁÉÍÓÚñÑ]
 IDENTIFIER  {LETTER}({LETTER}|{DIGIT}|_)*
 INTEGER     {DIGIT}+
 FLOAT       {DIGIT}+\.{DIGIT}+
 WHITESPACE  [ \t]+
 CHARACTER   \'[^\\]\'
 STRING      \"([^\"\n\r]|(\\.))*\"
+COMMENT_LINE    "//".*
+COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 %%
-{INTEGER}       { return TOKEN_TYPE_INT; }
-{FLOAT}         { return TOKEN_TYPE_FLOAT; }
-{STRING}        { return TOKEN_TYPE_STRING; }
-{CHARACTER}     { return TOKEN_TYPE_CHAR; }
-"true"          { return TOKEN_TYPE_TRUE; }
-"false"         { return TOKEN_TYPE_FALSE; }
-"null"          { return TOKEN_NULL; }
-{WHITESPACE}    { /* Ignorar */ }
-"++"            { return TOKEN_INCREMENT; }
-"+"             { return TOKEN_PLUS; }
-"--"            { return TOKEN_DECREMENT; }
-"-"             { return TOKEN_MINUS; }
-"*"             { return TOKEN_MULTIPLICATION; }
-"/"             { return TOKEN_DIVISION; }
-"%"             { return TOKEN_MODULE; }
-"="             { return TOKEN_ASSIGN; }
-"System.out.println" { return TOKEN_SOUT; }
-{IDENTIFIER}    { return TOKEN_IDENTIFIER; }
+{COMMENT_LINE}              { /* Ignorar comentarios de línea */ }
+{COMMENT_BLOCK}             { /* Ignorar comentarios de bloque */ }
+{INTEGER}                    { return TOKEN_TYPE_INT; }
+{FLOAT}                     { return TOKEN_TYPE_FLOAT; }
+{STRING}                    { return TOKEN_TYPE_STRING; }
+{CHARACTER}                 { return TOKEN_TYPE_CHAR; }
+"System.out.println"        { return TOKEN_SOUT; }
+"Integer.parseInt"          { return TOKEN_PARSEINT; }
+"Float.parseFloat"          { return TOKEN_PARSEFLOAT; }
+"Double.parseDouble"        { return TOKEN_PARSEDOUBLE; }
+"String.join"               { return TOKEN_STRINGJOIN; }
+"true"                      { return TOKEN_TYPE_TRUE; }
+"false"                     { return TOKEN_TYPE_FALSE; }
+"boolean"                   { return TOKEN_BOOLEAN; }
+"string"                    { return TOKEN_STRING; }
+"float"                     { return TOKEN_FLOAT; }
+"char"                      { return TOKEN_CHAR; }
+"int"                       { return TOKEN_INT; }
+"null"                      { return TOKEN_NULL; }
+"continue"                  { return TOKEN_CONTINUE; }
+"return"                    { return TOKEN_RETURN; }
+"switch"                    { return TOKEN_SWITCH; }
+"break"                     { return TOKEN_BREAK; }
+"while"                     { return TOKEN_WHILE; }
+"else"                      { return TOKEN_ELSE; }
+"case"                      { return TOKEN_CASE; }
+"for"                       { return TOKEN_FOR; }
+"if"                        { return TOKEN_IF; }
+"do"                        { return TOKEN_DO; }
+"valueOf"                   { return TOKEN_VALUEOF; }
+"indexOf"                   { return TOKEN_INDEXOF; }
+"length"                    { return TOKEN_LENGTH; }
+"add"                       { return TOKEN_ADD; }
+"<<="                       { return TOKEN_SHIFT_LEFT_ASSIGN; }
+">>="                       { return TOKEN_SHIFT_RIGHT_ASSIGN; }
+"++"                        { return TOKEN_INCREMENT; }
+"--"                        { return TOKEN_DECREMENT; }
+"+="                        { return TOKEN_PLUS_ASSIGN; }
+"-="                        { return TOKEN_MINUS_ASSIGN; }
+"*="                        { return TOKEN_MULT_ASSIGN; }
+"/="                        { return TOKEN_DIV_ASSIGN; }
+"%="                        { return TOKEN_MOD_ASSIGN; }
+"&="                        { return TOKEN_AND_ASSIGN; }
+"|="                        { return TOKEN_OR_ASSIGN; }
+"^="                        { return TOKEN_XOR_ASSIGN; }
+"=="                        { return TOKEN_EQUAL; }
+"!="                        { return TOKEN_UNEQUAL; }
+">="                        { return TOKEN_GREATER_EQUAL; }
+"<="                        { return TOKEN_LESS_EQUAL; }
+"&&"                        { return TOKEN_AND; }
+"||"                        { return TOKEN_OR; }
+"+"                         { return TOKEN_PLUS; }
+"-"                         { return TOKEN_MINUS; }
+"*"                         { return TOKEN_MULTIPLICATION; }
+"/"                         { return TOKEN_DIVISION; }
+"%"                         { return TOKEN_MODULE; }
+"="                         { return TOKEN_ASSIGN; }
+">"                         { return TOKEN_GREATER; }
+"<"                         { return TOKEN_LESS; }
+"!"                         { return TOKEN_NOT; }
+"("                         { return TOKEN_PAREN_LEFT; }
+")"                         { return TOKEN_PAREN_RIGHT; }
+"{"                         { return TOKEN_BRACE_LEFT; }
+"}"                         { return TOKEN_BRACE_RIGHT; }
+"["                         { return TOKEN_BRACKET_LEFT; }
+"]"                         { return TOKEN_BRACKET_RIGHT; }
+";"                         { return TOKEN_SEMICOLON; }
+","                         { return TOKEN_COMMA; }
+"."                         { return TOKEN_DOT; }
+{WHITESPACE}                { /* Ignorar */ }
+\n                          { yyline++; yycolumn = 1; }
+{IDENTIFIER}                { return TOKEN_IDENTIFIER; }
+.                           { 
+                            printf("⚠️ Carácter no reconocido: '%c' (ASCII: %d) en línea %d\n", 
+                                    yytext[0], (unsigned char)yytext[0], yyline); 
+                            return TOKEN_ERROR; 
+                            }
 %%
 int main(int argc, char** argv) {
     if (argc > 1) {
@@ -55,7 +116,7 @@ int main(int argc, char** argv) {
     
     while ((token = yylex()) != 0) {
         printf("Token: %s, Texto: '%s', Línea: %d\n", 
-               token_name(token), yytext, yyline);
+            token_name(token), yytext, yyline);
     }
     
     printf("=== FIN ===\n");
