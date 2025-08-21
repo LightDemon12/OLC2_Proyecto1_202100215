@@ -24,6 +24,9 @@ add_executable(JavaLang
         Headers/file_manager.h
         Logic/Files/file_manager.c
         Headers/tokens.h
+        Logic/Files/control.c
+        Headers/control.h
+        Utils/tokens.c
 )
 
 # Configurar propiedades del target

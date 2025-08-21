@@ -10,7 +10,7 @@
 #include "../Headers/mainview.h"
 #include "../Headers/file_manager.h"
 #include <gtk/gtk.h>
-
+#include "../Headers/control.h"
 
 // Paleta de 8 colores para palabras (más suaves para Win98)
 static const char *word_colors[8] = {
@@ -230,12 +230,19 @@ static void on_guardar_clicked(GtkMenuItem *menuitem, gpointer user_data) {
 // Callbacks del menú Compilar
 static void on_lexico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     MainView *mainview = (MainView *)user_data;
+
     mainview_clear_output(mainview);
     mainview_append_output(mainview, "=== ANÁLISIS LÉXICO ===");
-    mainview_append_output(mainview, "Procesando tokens...");
-    mainview_append_output(mainview, "Tokens encontrados: 25");
-    mainview_append_output(mainview, "Análisis léxico completado exitosamente");
-    printf("DEBUG: Análisis léxico\n");
+
+    int result = control_rebuild_and_analyze_with_output(mainview->code_buffer, mainview);
+
+    if (result == 0) {
+        mainview_append_output(mainview, "✅ Análisis léxico completado exitosamente");
+    } else {
+        mainview_append_output(mainview, "❌ Error en el análisis léxico");
+    }
+
+    printf("DEBUG: Análisis léxico ejecutado\n");
 }
 
 static void on_sintactico_clicked(GtkMenuItem *menuitem, gpointer user_data) {

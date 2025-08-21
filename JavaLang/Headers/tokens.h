@@ -5,16 +5,18 @@
 #ifndef JAVALANG_TOKENS_H
 #define JAVALANG_TOKENS_H
 typedef enum {
-    // Tipos de datos primitivos
-    TOKEN_INT = 256,
-    TOKEN_FLOAT,
-    TOKEN_STRING,
-    TOKEN_CHAR,
-    TOKEN_BOOLEAN,
+    // RESERVADAS
+    TOKEN_INT = 256, // int
+    TOKEN_FLOAT,     // float
+    TOKEN_STRING,   // string
+    TOKEN_CHAR,     // char
+    TOKEN_BOOLEAN,  // boolean
+    TOKEN_EQUALS,   // equals
+    TONEK_NEW,      // new
     // Valor nulo
-    TOKEN_NULL,
+    TOKEN_NULL,     // null
     // Identificadores
-    TOKEN_IDENTIFIER,
+    TOKEN_IDENTIFIER,         // id
     // Operaciones aritméticas
     TOKEN_PLUS,               // +
     TOKEN_MINUS,              // -
@@ -32,6 +34,7 @@ typedef enum {
     TOKEN_XOR_ASSIGN,         // ^=
     TOKEN_SHIFT_LEFT_ASSIGN,  // <<=
     TOKEN_SHIFT_RIGHT_ASSIGN, // >>=
+    TOKEN_ASSIGN,             // =
     //  Operaciones de comparación
     TOKEN_EQUAL,              // ==
     TOKEN_UNEQUAL,            // !=
@@ -57,38 +60,42 @@ typedef enum {
     TOKEN_QUOTE_DOUBLE,       // " "
     TOKEN_QUOTE_SINGLE,       // ' '
     // Sentencias de control de flujo
-    TOKEN_IF,
-    TOKEN_ELSE,
-    TOKEN_SWITCH,
-    TOKEN_CASE,
-    TOKEN_WHILE,
-    TOKEN_DO,
-    TOKEN_FOR,
+    TOKEN_IF,                 // if
+    TOKEN_ELSE,               // else
+    TOKEN_SWITCH,             // switch
+    TOKEN_CASE,               // case
+    TOKEN_WHILE,              // case
+    TOKEN_DO,                 // do
+    TOKEN_FOR,                // for
     // Sentencias de transferencia
-    TOKEN_BREAK,
-    TOKEN_CONTINUE,
-    TOKEN_RETURN,
+    TOKEN_BREAK,              // break
+    TOKEN_CONTINUE,           // continue
+    TOKEN_RETURN,             // return
     // Funciones embebidas
-    TOKEN_SOUT,
-    TOKEN_PARSEINT,
-    TOKEN_PARSEFLOAT,
-    TOKEN_PARSEDOUBLE,
-    TOKEN_VALUEOF,
-    TOKEN_STRINGJOIN,
-    TOKEN_INDEXOF,
-    TOKEN_LENGTH,
-    TOKEN_ADD,
+    TOKEN_SOUT,               // System.out.println
+    TOKEN_PARSEINT,           // Integer.parseInt
+    TOKEN_PARSEFLOAT,         // Float.parseFloat
+    TOKEN_PARSEDOUBLE,        // Double.parseDouble
+    TOKEN_VALUEOF,            // String.valueOf
+    TOKEN_STRINGJOIN,         // String.join
+    TOKEN_INDEXOF,            // Arrays.indexOf
+    TOKEN_LENGTH,             // .length
+    TOKEN_ADD,                // .add
     // Secuencias de escape
     TOKEN_ESCAPE,
-    // RESERVADAS
-    TOKEN_EQUALS,
-    TONEK_NEW,
     // operadores sentencias
-    TOKEN_PLUSPLUS,         // ++
-    TOKEN_MINUSMINUS,       // --
+    TOKEN_INCREMENT,         // ++
+    TOKEN_DECREMENT,       // --
     // Especiales
-    TOKEN_EOF,
-    TOKEN_ERROR
+    TOKEN_EOF,          // fin archivo
+    TOKEN_ERROR,        // error
+    // Tipos de datos primitivos
+    TOKEN_TYPE_INT,     // numero
+    TOKEN_TYPE_FLOAT,    // decimal
+    TOKEN_TYPE_STRING,  // cadena
+    TOKEN_TYPE_CHAR,    // char
+    TOKEN_TYPE_TRUE,    // verdadero
+    TOKEN_TYPE_FALSE    // false
 
 } TokenType;
 

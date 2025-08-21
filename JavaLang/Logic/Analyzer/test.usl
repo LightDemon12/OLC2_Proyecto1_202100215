@@ -1,0 +1,7 @@
+int x = 123;
+float pi = 3.14;
+String name = "JavaLang";
+char letter = 'A';
+boolean flag = true;
+x++;
+System.out.println("Hello");
