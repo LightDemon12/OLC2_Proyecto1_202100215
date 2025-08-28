@@ -1,6 +1,5 @@
 //
 // Created by lightdemon on 27/08/25.
-<<<<<<< HEAD
 //
 
 
@@ -10,6 +9,4 @@
 /* DEFINIR VARIABLES GLOBALES AQUÍ - UNA SOLA VEZ */
 ErrorManager* global_error_manager = NULL;
 ASTNode* ast_root = NULL;
-=======
-//
->>>>>>> origin/main
+
