@@ -16,9 +16,14 @@
 #include "../../Headers/mainview.h"
 #include "../../Headers/control.h"
 #include "../../Headers/error_manager.h"
+#include "../../Headers/ast.h"
+
 
 // DECLARACION GLOBAL UNICA
 ErrorManager* global_error_manager = NULL;
+extern ASTNode* ast_root;
+
+extern int parser_main(int argc, char** argv);
 
 // Funcion para obtener directorio de trabajo relativo
 static const char* get_working_directory() {
@@ -142,7 +147,7 @@ static int build_integrated_analyzer(MainView* mainview) {
     }
 
     // 3. Compilar analizador integrado (lexer + parser) con flag STANDALONE_PARSER
-    const char* compile_cmd = "gcc -DSTANDALONE_PARSER parser.tab.c lex.yy.c ../../Utils/error_manager.c -lfl -o parser";
+    const char* compile_cmd = "gcc -DSTANDALONE_PARSER parser.tab.c lex.yy.c ../../Logic/AST/ast.c ../../Utils/error_manager.c -lfl -o parser";
 
     result = execute_command(compile_cmd, analyzer_dir);
     if (result != 0) {
@@ -254,11 +259,7 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
     GtkTextIter start, end;
     char* content;
     char* temp_file;
-    char command[512];
-    FILE* pipe;
-    char line[256];
     int result;
-    const char* base_dir = get_working_directory();
     cleanup_old_temp_files();
 
     // LIMPIAR ERROR MANAGER AL INICIO
@@ -266,6 +267,12 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
         global_error_manager = error_manager_create();
     } else {
         error_manager_clear(global_error_manager);
+    }
+
+    /* LIMPIAR AST GLOBAL AL INICIO */
+    if (ast_root) {
+        free_node(ast_root);
+        ast_root = NULL;
     }
 
     if (!buffer) {
@@ -305,40 +312,16 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
         return -1;
     }
 
-    // USAR ANALIZADOR INTEGRADO (que incluye lexer + parser)
-    snprintf(command, sizeof(command), "cd %s/Logic/Analyzer && ./parser %s",
-             base_dir, temp_file);
-    pipe = popen(command, "r");
+    /* LLAMAR AL PARSER DIRECTAMENTE EN EL MISMO PROCESO */
+    printf("DEBUG: Llamando parser_main directamente...\n");
+    char* argv_fake[] = {"parser", temp_file, NULL};
+    result = parser_main(2, argv_fake);
 
-    if (!pipe) {
-        if (mainview) {
-            mainview_append_output(mainview, "Error ejecutando analizador integrado");
-        }
-        unlink(temp_file);
-        free(temp_file);
-        g_free(content);
-        return -1;
-    }
+    /* VERIFICAR SI EL AST SE CONSTRUYÓ CORRECTAMENTE */
+    printf("DEBUG: AST después del análisis: %s\n",
+           ast_root ? "Disponible" : "NULL");
 
-    /* MODIFICAR FUNCIÓN analyze_code_from_buffer_with_output */
-    while (fgets(line, sizeof(line), pipe) != NULL) {
-        line[strcspn(line, "\n")] = 0;
-
-        if (strlen(line) > 0) {
-            printf("%s\n", line);
-
-            /* PARSEAR ERRORES DEL OUTPUT */
-            parse_analyzer_output_for_errors(line);
-
-            if (mainview) {
-                char* clean_line = sanitize_utf8(line);
-                mainview_append_output(mainview, clean_line);
-                free(clean_line);
-            }
-        }
-    }
-
-    /* AL FINAL, VERIFICAR ERRORES PARSEADOS */
+    /* MOSTRAR RESULTADO */
     if (mainview) {
         int actual_errors = 0;
         if (global_error_manager) {

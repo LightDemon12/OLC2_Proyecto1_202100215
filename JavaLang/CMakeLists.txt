@@ -13,7 +13,7 @@ pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 include_directories(${GTK3_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/Headers)
-
+include_directories(${CMAKE_SOURCE_DIR}/Logic/Analyzer)
 # Configurar flags de compilación
 add_compile_options(${GTK3_CFLAGS_OTHER})
 
@@ -31,8 +31,19 @@ add_executable(JavaLang
         Utils/error_manager.c
         Headers/error_report_window.h
         GUI/error_report_window.c
+        Headers/ast.h
+        Logic/AST/ast.c
 )
+# VERIFICAR SI EXISTEN LOS ARCHIVOS GENERADOS Y AGREGARLOS
+if(EXISTS "${CMAKE_SOURCE_DIR}/Logic/Analyzer/parser.tab.c")
+    list(APPEND SOURCES Logic/Analyzer/parser.tab.c)
+    message(STATUS "Agregando parser.tab.c al build")
+endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/Logic/Analyzer/lex.yy.c")
+    list(APPEND SOURCES Logic/Analyzer/lex.yy.c)
+    message(STATUS "Agregando lex.yy.c al build")
+endif()
 # Configurar propiedades del target
 target_include_directories(JavaLang PRIVATE
         ${GTK3_INCLUDE_DIRS}

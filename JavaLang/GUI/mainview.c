@@ -13,6 +13,7 @@
 #include "../Headers/control.h"
 #include "../Headers/error_report_window.h"
 #include "../Headers/error_manager.h"
+#include "../Headers/ast.h"
 
 extern ErrorManager* global_error_manager;
 
@@ -341,9 +342,14 @@ static void on_ast_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     MainView *mainview = (MainView *)user_data;
     mainview_clear_output(mainview);
     mainview_append_output(mainview, "=== REPORTE AST ===");
-    mainview_append_output(mainview, "Generando árbol sintáctico abstracto...");
-    mainview_append_output(mainview, "AST guardado en: /tmp/ast_report.html");
-    printf("DEBUG: Reporte AST\n");
+    mainview_append_output(mainview, "AST impreso en consola (ver terminal)");
+
+    /* SÚPER SIMPLE - SOLO LLAMAR print_node SIN PARÁMETROS */
+    printf("\n=== ÁRBOL SINTÁCTICO ABSTRACTO (DESDE GUI) ===\n");
+    print_node(NULL, 0);  /* ← NULL usa automáticamente ast_root global */
+    printf("=== FIN AST ===\n\n");
+
+    printf("DEBUG: Reporte AST solicitado\n");
 }
 
 static void on_errores_clicked(GtkMenuItem *menuitem, gpointer user_data) {

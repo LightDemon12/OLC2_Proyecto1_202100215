@@ -655,12 +655,13 @@ extern FILE* yyin;
 extern char* yytext;
 extern int yyleng;
 extern int yylineno;
-extern ErrorManager* global_error_manager;
 
 /* Variables globales correctas */
 int yycolumn = 1;
-ErrorManager* error_manager = NULL;
-
+extern ErrorManager* global_error_manager;
+/* MACRO PARA DEBUG DE TOKENS */
+#define DEBUG_TOKEN(token_name) \
+    printf("DEBUG LEXER: %s reconocido: '%s' en linea %d\n", token_name, yytext, yylineno)
 /* DECLARACIONES DE FUNCIONES */
 void lexer_print_errors();
 void lexer_init_error_manager();
@@ -669,10 +670,10 @@ void lexer_cleanup();
 #define YY_USER_ACTION do { \
     yycolumn += yyleng; \
 } while(0);
-#line 672 "lex.yy.c"
+#line 673 "lex.yy.c"
 /* Opciones de Flex */
 /* Definiciones de patrones */
-#line 675 "lex.yy.c"
+#line 676 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -889,10 +890,10 @@ YY_DECL
 		}
 
 	{
-#line 45 "lexer.l"
+#line 46 "lexer.l"
 
 
-#line 895 "lex.yy.c"
+#line 896 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -961,396 +962,400 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 47 "lexer.l"
+#line 48 "lexer.l"
 { /* Ignorar comentarios de línea */ }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 48 "lexer.l"
+#line 49 "lexer.l"
 { /* Ignorar comentarios de bloque */ }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 49 "lexer.l"
-{ return TOKEN_TYPE_INT; }
+#line 50 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_TYPE_INT"); return TOKEN_TYPE_INT; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 50 "lexer.l"
-{ return TOKEN_TYPE_FLOAT; }
+#line 51 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 51 "lexer.l"
-{ return TOKEN_TYPE_STRING; }
+#line 52 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_TYPE_STRING"); return TOKEN_TYPE_STRING; }
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 52 "lexer.l"
-{ return TOKEN_TYPE_CHAR; }
+#line 53 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_TYPE_CHAR"); return TOKEN_TYPE_CHAR; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 53 "lexer.l"
-{ return TOKEN_PUBLIC; }
+#line 54 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PUBLIC"); return TOKEN_PUBLIC; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 54 "lexer.l"
-{ return TOKEN_STATIC; }
+#line 55 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_STATIC"); return TOKEN_STATIC; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 55 "lexer.l"
-{ return TOKEN_VOID; }
+#line 56 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_VOID"); return TOKEN_VOID; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 56 "lexer.l"
-{ return TOKEN_MAIN; }
+#line 57 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MAIN"); return TOKEN_MAIN; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 57 "lexer.l"
-{ return TOKEN_SOUT; }
+#line 58 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_SOUT"); return TOKEN_SOUT; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 58 "lexer.l"
-{ return TOKEN_PARSEINT; }
+#line 59 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PARSEINT"); return TOKEN_PARSEINT; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 59 "lexer.l"
-{ return TOKEN_PARSEFLOAT; }
+#line 60 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PARSEFLOAT"); return TOKEN_PARSEFLOAT; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 60 "lexer.l"
-{ return TOKEN_PARSEDOUBLE; }
+#line 61 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PARSEDOUBLE"); return TOKEN_PARSEDOUBLE; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 61 "lexer.l"
-{ return TOKEN_STRINGJOIN; }
+#line 62 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_STRINGJOIN"); return TOKEN_STRINGJOIN; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 62 "lexer.l"
-{ return TOKEN_TYPE_TRUE; }
+#line 63 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_TYPE_TRUE"); return TOKEN_TYPE_TRUE; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 63 "lexer.l"
-{ return TOKEN_TYPE_FALSE; }
+#line 64 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_TYPE_FALSE"); return TOKEN_TYPE_FALSE; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 64 "lexer.l"
-{ return TOKEN_BOOLEAN; }
+#line 65 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_BOOLEAN"); return TOKEN_BOOLEAN; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 65 "lexer.l"
-{ return TOKEN_STRING; }
+#line 66 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_STRING"); return TOKEN_STRING; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 66 "lexer.l"
-{ return TOKEN_FLOAT; }
+#line 67 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_FLOAT"); return TOKEN_FLOAT; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 67 "lexer.l"
-{ return TOKEN_CHAR; }
+#line 68 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_CHAR"); return TOKEN_CHAR; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 68 "lexer.l"
-{ return TOKEN_INT; }
+#line 69 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_INT"); return TOKEN_INT; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 69 "lexer.l"
-{ return TOKEN_NULL; }
+#line 70 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_NULL"); return TOKEN_NULL; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 70 "lexer.l"
-{ return TOKEN_CONTINUE; }
+#line 71 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_CONTINUE"); return TOKEN_CONTINUE; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 71 "lexer.l"
-{ return TOKEN_RETURN; }
+#line 72 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_RETURN"); return TOKEN_RETURN; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 72 "lexer.l"
-{ return TOKEN_SWITCH; }
+#line 73 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_SWITCH"); return TOKEN_SWITCH; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 73 "lexer.l"
-{ return TOKEN_BREAK; }
+#line 74 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_BREAK"); return TOKEN_BREAK; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 74 "lexer.l"
-{ return TOKEN_WHILE; }
+#line 75 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_WHILE"); return TOKEN_WHILE; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 75 "lexer.l"
-{ return TOKEN_ELSE; }
+#line 76 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_ELSE"); return TOKEN_ELSE; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 76 "lexer.l"
-{ return TOKEN_CASE; }
+#line 77 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_CASE"); return TOKEN_CASE; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 77 "lexer.l"
-{ return TOKEN_FOR; }
+#line 78 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_FOR"); return TOKEN_FOR; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 78 "lexer.l"
-{ return TOKEN_IF; }
+#line 79 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_IF"); return TOKEN_IF; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 79 "lexer.l"
-{ return TOKEN_DO; }
+#line 80 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_DO"); return TOKEN_DO; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 80 "lexer.l"
-{ return TOKEN_VALUEOF; }
+#line 81 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_VALUEOF"); return TOKEN_VALUEOF; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 81 "lexer.l"
-{ return TOKEN_INDEXOF; }
+#line 82 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_INDEXOF"); return TOKEN_INDEXOF; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 82 "lexer.l"
-{ return TOKEN_LENGTH; }
+#line 83 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_LENGTH"); return TOKEN_LENGTH; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 83 "lexer.l"
-{ return TOKEN_ADD; }
+#line 84 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_ADD"); return TOKEN_ADD; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 84 "lexer.l"
-{ return TOKEN_NEW; }
+#line 85 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_NEW"); return TOKEN_NEW; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 85 "lexer.l"
-{ return TOKEN_SHIFT_LEFT_ASSIGN; }
+#line 86 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_SHIFT_LEFT_ASSIGN"); return TOKEN_SHIFT_LEFT_ASSIGN; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 86 "lexer.l"
-{ return TOKEN_SHIFT_RIGHT_ASSIGN; }
+#line 87 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_SHIFT_RIGHT_ASSIGN"); return TOKEN_SHIFT_RIGHT_ASSIGN; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 87 "lexer.l"
-{ return TOKEN_INCREMENT; }
+#line 88 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_INCREMENT"); return TOKEN_INCREMENT; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 88 "lexer.l"
-{ return TOKEN_DECREMENT; }
+#line 89 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_DECREMENT"); return TOKEN_DECREMENT; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 89 "lexer.l"
-{ return TOKEN_PLUS_ASSIGN; }
+#line 90 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PLUS_ASSIGN"); return TOKEN_PLUS_ASSIGN; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 90 "lexer.l"
-{ return TOKEN_MINUS_ASSIGN; }
+#line 91 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MINUS_ASSIGN"); return TOKEN_MINUS_ASSIGN; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 91 "lexer.l"
-{ return TOKEN_MULT_ASSIGN; }
+#line 92 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MULT_ASSIGN"); return TOKEN_MULT_ASSIGN; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 92 "lexer.l"
-{ return TOKEN_DIV_ASSIGN; }
+#line 93 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_DIV_ASSIGN"); return TOKEN_DIV_ASSIGN; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 93 "lexer.l"
-{ return TOKEN_MOD_ASSIGN; }
+#line 94 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MOD_ASSIGN"); return TOKEN_MOD_ASSIGN; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 94 "lexer.l"
-{ return TOKEN_AND_ASSIGN; }
+#line 95 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_AND_ASSIGN"); return TOKEN_AND_ASSIGN; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 95 "lexer.l"
-{ return TOKEN_OR_ASSIGN; }
+#line 96 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_OR_ASSIGN"); return TOKEN_OR_ASSIGN; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 96 "lexer.l"
-{ return TOKEN_XOR_ASSIGN; }
+#line 97 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_XOR_ASSIGN"); return TOKEN_XOR_ASSIGN; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 97 "lexer.l"
-{ return TOKEN_EQUAL; }
+#line 98 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_EQUAL"); return TOKEN_EQUAL; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 98 "lexer.l"
-{ return TOKEN_UNEQUAL; }
+#line 99 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_UNEQUAL"); return TOKEN_UNEQUAL; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 99 "lexer.l"
-{ return TOKEN_GREATER_EQUAL; }
+#line 100 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_GREATER_EQUAL"); return TOKEN_GREATER_EQUAL; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 100 "lexer.l"
-{ return TOKEN_LESS_EQUAL; }
+#line 101 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_LESS_EQUAL"); return TOKEN_LESS_EQUAL; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 101 "lexer.l"
-{ return TOKEN_AND; }
+#line 102 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_AND"); return TOKEN_AND; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 102 "lexer.l"
-{ return TOKEN_OR; }
+#line 103 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_OR"); return TOKEN_OR; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 103 "lexer.l"
-{ return TOKEN_PLUS; }
+#line 104 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PLUS"); return TOKEN_PLUS; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 104 "lexer.l"
-{ return TOKEN_MINUS; }
+#line 105 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MINUS"); return TOKEN_MINUS; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 105 "lexer.l"
-{ return TOKEN_MULTIPLICATION; }
+#line 106 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MULTIPLICATION"); return TOKEN_MULTIPLICATION; }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 106 "lexer.l"
-{ return TOKEN_DIVISION; }
+#line 107 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_DIVISION"); return TOKEN_DIVISION; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 107 "lexer.l"
-{ return TOKEN_MODULE; }
+#line 108 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_MODULE"); return TOKEN_MODULE; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 108 "lexer.l"
-{ return TOKEN_ASSIGN; }
+#line 109 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_ASSIGN"); return TOKEN_ASSIGN; }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 109 "lexer.l"
-{ return TOKEN_GREATER; }
+#line 110 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_GREATER"); return TOKEN_GREATER; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 110 "lexer.l"
-{ return TOKEN_LESS; }
+#line 111 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_LESS"); return TOKEN_LESS; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 111 "lexer.l"
-{ return TOKEN_NOT; }
+#line 112 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_NOT"); return TOKEN_NOT; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 112 "lexer.l"
-{ return TOKEN_PAREN_LEFT; }
+#line 113 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PAREN_LEFT"); return TOKEN_PAREN_LEFT; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 113 "lexer.l"
-{ return TOKEN_PAREN_RIGHT; }
+#line 114 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_PAREN_RIGHT"); return TOKEN_PAREN_RIGHT; }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 114 "lexer.l"
-{ return TOKEN_BRACE_LEFT; }
+#line 115 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_BRACE_LEFT"); return TOKEN_BRACE_LEFT; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 115 "lexer.l"
-{ return TOKEN_BRACE_RIGHT; }
+#line 116 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_BRACE_RIGHT"); return TOKEN_BRACE_RIGHT; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 116 "lexer.l"
-{ return TOKEN_BRACKET_LEFT; }
+#line 117 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_BRACKET_LEFT"); return TOKEN_BRACKET_LEFT; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 117 "lexer.l"
-{ return TOKEN_BRACKET_RIGHT; }
+#line 118 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_BRACKET_RIGHT"); return TOKEN_BRACKET_RIGHT; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 118 "lexer.l"
-{ return TOKEN_SEMICOLON; }
+#line 119 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_SEMICOLON"); return TOKEN_SEMICOLON; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 119 "lexer.l"
-{ return TOKEN_COMMA; }
+#line 120 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_COMMA"); return TOKEN_COMMA; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 120 "lexer.l"
-{ return TOKEN_DOT; }
+#line 121 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_DOT"); return TOKEN_DOT; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 121 "lexer.l"
+#line 122 "lexer.l"
 { /* Ignorar */ }
 	YY_BREAK
 case 76:
 /* rule 76 can match eol */
 YY_RULE_SETUP
-#line 122 "lexer.l"
+#line 123 "lexer.l"
 { yycolumn = 1; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 123 "lexer.l"
-{ return TOKEN_IDENTIFIER; }
+#line 124 "lexer.l"
+{ DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
 #line 125 "lexer.l"
 {
+                            /* DEBUG PARA ERROR */
+                            printf("DEBUG LEXER: TOKEN_ERROR reconocido: '%s' (ASCII: %d) en linea %d\n", 
+                                yytext, (unsigned char)yytext[0], yylineno);
+                            
                             /* USAR GLOBAL_ERROR_MANAGER EN LUGAR DE LOCAL */
                             if (!global_error_manager) {
                                 global_error_manager = error_manager_create();
@@ -1364,16 +1369,13 @@ YY_RULE_SETUP
                             error_manager_add_lexico(global_error_manager, yylineno, yycolumn,
                                                     message, yytext);
                             
-                            /* IMPRIMIR DEBUG INMEDIATO */
-                            printf("DEBUG LEXER: Error lexico agregado - Linea %d, Columna %d: %s\n",
-                                   yylineno, yycolumn, message);
-                            
                             return TOKEN_ERROR;
                             }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 146 "lexer.l"
+#line 145 "lexer.l"
 {
+                            printf("DEBUG LEXER: TOKEN_EOF encontrado en linea %d\n", yylineno);
                             /* IMPRIMIR ERRORES ANTES DE TERMINAR */
                             lexer_print_errors();
                             return 0;
@@ -1384,7 +1386,7 @@ YY_RULE_SETUP
 #line 151 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 1387 "lex.yy.c"
+#line 1389 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2434,4 +2436,5 @@ void lexer_print_errors() {
 void lexer_cleanup() {
     /* NO DESTRUIR EL GLOBAL_ERROR_MANAGER AQUÍ */
     printf("DEBUG: Lexer cleanup - global_error_manager preservado\n");
-}
+}extern ErrorManager* global_error_manager;
+

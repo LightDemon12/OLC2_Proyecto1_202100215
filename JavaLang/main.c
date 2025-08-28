@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include "Headers/mainview.h"
-#include "Headers/file_manager.h"
+
+
 
 // Función para aplicar tema Windows clásico
 static void apply_windows_classic_theme() {
@@ -61,7 +62,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
     MainView *mainview = mainview_create(app);
     mainview_show(mainview);
 
-    mainview_append_console(mainview, ">>> Consola lista para comandos");
 
     CallbackData *callback_data = g_malloc(sizeof(CallbackData));
     callback_data->mainview = mainview;

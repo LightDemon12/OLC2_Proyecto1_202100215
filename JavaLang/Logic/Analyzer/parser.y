@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../Headers/error_manager.h"
+#include "../../Headers/ast.h"
+
+/* DECLARACIÓN SIMPLE COMO EN EL EJEMPLO */
+ASTNode* ast_root = NULL;
 
 /*DECLARACIONES MÍNIMAS */
 extern int yylex();
@@ -15,7 +19,19 @@ ErrorManager* global_error_manager = NULL;
 /*FUNCIÓN DE ERROR SIMPLE */
 void yyerror(const char* s);
 %}
-%expect-rr 0
+
+
+%code requires {
+    typedef struct ASTNode ASTNode;
+}
+
+
+%union {
+    ASTNode* node;
+}
+
+%type <node> program main_method instrucciones instruccion sout
+
 %define parse.error verbose
 
 /*PALABRAS RESERVADAS */
@@ -113,17 +129,95 @@ void yyerror(const char* s);
 %token TOKEN_TYPE_CHAR    // char
 %token TOKEN_TYPE_TRUE    // verdadero
 %token TOKEN_TYPE_FALSE   // false
+
+/* PRECEDENCIA Y ASOCIATIVIDAD - De menor a mayor precedencia */
+
+/*
+Asignación (=, +=, -=, etc.)
+OR lógico (||)
+AND lógico (&&)
+Igualdad (==, !=)
+Relacionales (>, <, >=, <=)
+Suma/Resta (+, -)
+Multiplicación/División/Módulo (*, /, %)
+Unarios (!, ++, --)
+Paréntesis ((, ))
+*/
+
+/* Operadores de asignación (menor precedencia) */
+%right TOKEN_ASSIGN TOKEN_PLUS_ASSIGN TOKEN_MINUS_ASSIGN TOKEN_MULT_ASSIGN TOKEN_DIV_ASSIGN TOKEN_MOD_ASSIGN TOKEN_AND_ASSIGN TOKEN_OR_ASSIGN TOKEN_XOR_ASSIGN TOKEN_SHIFT_LEFT_ASSIGN TOKEN_SHIFT_RIGHT_ASSIGN
+
+/* Operadores lógicos OR */
+%left TOKEN_OR           // ||
+
+/* Operadores lógicos AND */
+%left TOKEN_AND          // &&
+
+/* Operadores de igualdad */
+%left TOKEN_EQUAL TOKEN_UNEQUAL
+
+/* Operadores relacionales */
+%left TOKEN_GREATER TOKEN_LESS TOKEN_GREATER_EQUAL TOKEN_LESS_EQUAL
+
+/* Operadores aritméticos de suma y resta */
+%left TOKEN_PLUS TOKEN_MINUS
+
+/* Operadores aritméticos de multiplicación, división y módulo */
+%left TOKEN_MULTIPLICATION TOKEN_DIVISION TOKEN_MODULE
+
+/* Operadores unarios (mayor precedencia) */
+%right TOKEN_NOT TOKEN_INCREMENT TOKEN_DECREMENT
+
+/* Agrupadores de expresiones */
+%left TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT
+
 %%
 
-/* GRAMATICA SUPER SIMPLE CON DEBUG */
 program:
-    TOKEN_SEMICOLON
+    main_method
     {
-        printf("PARSER: Punto y coma detectado\n");
+        ast_root = create_node("PROGRAM", @1.first_line, @1.first_column);
+        add_child(ast_root, $1);
+        printf("AST construido exitosamente\n");
+        $$ = ast_root;
     }
-    | /* vacio */
+    ;
+
+main_method:
+    TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
-        printf("PARSER: Entrada vacia\n");
+        $$ = create_node("MAIN_METHOD", @1.first_line, @1.first_column);
+        add_child($$, $8);  /* agregar instrucciones */
+    }
+    ;
+
+instrucciones:
+    instruccion
+    {
+        $$ = create_node("INSTRUCTIONS", @1.first_line, @1.first_column);
+        add_child($$, $1);
+    }
+    | instrucciones instruccion
+    {
+        $$ = $1;
+        add_child($$, $2);
+    }
+    ;
+
+instruccion:
+    sout
+    {
+        $$ = $1;
+    }
+    ;
+
+sout:
+    TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON
+    {
+        $$ = create_node("PRINT_STATEMENT", @1.first_line, @1.first_column);
+        ASTNode* string_literal = create_node("STRING_LITERAL", @3.first_line, @3.first_column);
+        set_value(string_literal, yytext);
+        add_child($$, string_literal);
     }
     ;
 
@@ -174,6 +268,13 @@ int parser_main(int argc, char** argv) {
     int result = yyparse();
     printf("DEBUG: yyparse() termino con codigo: %d\n", result);
 
+    /* IMPRIMIR EL AST SI SE GENERÓ CORRECTAMENTE */
+    if (result == 0 && ast_root != NULL) {
+        printf("\n=== ÁRBOL SINTÁCTICO ABSTRACTO ===\n");
+        print_node(ast_root, 0);
+        printf("=== FIN AST ===\n\n");
+    }
+
     /* IMPRIMIR ERRORES ACUMULADOS EN FORMATO PARSEABLE */
     if (global_error_manager && error_manager_has_errors(global_error_manager)) {
         printf("=== ERRORES DETECTADOS ===\n");
@@ -198,6 +299,14 @@ int parser_main(int argc, char** argv) {
     } else {
         printf("FALLO: Error en analisis\n");
     }
+
+    /* LIBERAR MEMORIA SOLO CUANDO ES STANDALONE */
+    #ifdef STANDALONE_PARSER
+    if (ast_root) {
+        free_node(ast_root);
+        ast_root = NULL;
+    }
+    #endif
 
     if (yyin && yyin != stdin) {
         fclose(yyin);
