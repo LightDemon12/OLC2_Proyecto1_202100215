@@ -15,17 +15,12 @@
 // INCLUDES CORRECTOS
 #include "../../Headers/mainview.h"
 #include "../../Headers/control.h"
-#include "../../Headers/error_manager.h"
-#include "../../Headers/ast.h"
+#include "../../Headers/globals.h"  // ← YA DECLARA LAS VARIABLES COMO EXTERN
 
+// DECLARAR FUNCIÓN DEL PARSER GENERADO POR BISON
+extern int parse_java_code(const char* filename);
 
-// DECLARACION GLOBAL UNICA
-ErrorManager* global_error_manager = NULL;
-extern ASTNode* ast_root;
-
-extern int parser_main(int argc, char** argv);
-
-// Funcion para obtener directorio de trabajo relativo
+// Función para obtener directorio de trabajo relativo
 static const char* get_working_directory() {
     static char working_dir[256];
     static int initialized = 0;
@@ -46,7 +41,7 @@ static const char* get_working_directory() {
     return working_dir;
 }
 
-// Funcion para validar y limpiar UTF-8
+// Función para validar y limpiar UTF-8
 static char* sanitize_utf8(const char* input) {
     if (!input) return NULL;
 
@@ -68,101 +63,6 @@ static char* sanitize_utf8(const char* input) {
 
     output[out_pos] = '\0';
     return output;
-}
-
-static int execute_command(const char* command, const char* working_dir) {
-    char full_command[1024];
-    const char* base_dir = get_working_directory();
-
-    if (working_dir) {
-        snprintf(full_command, sizeof(full_command), "cd %s/%s && %s",
-                base_dir, working_dir, command);
-    } else {
-        snprintf(full_command, sizeof(full_command), "cd %s && %s",
-                base_dir, command);
-    }
-
-    printf("Ejecutando: %s\n", full_command);
-
-    int result = system(full_command);
-    return WEXITSTATUS(result);
-}
-
-static void clean_generated_files(MainView* mainview) {
-    const char* analyzer_dir = "Logic/Analyzer";
-
-    printf("Limpiando archivos generados...\n");
-    if (mainview) {
-        mainview_append_output(mainview, "Limpiando archivos generados...");
-    }
-
-    execute_command("rm -f lex.yy.c", analyzer_dir);
-    execute_command("rm -f lexer parser", analyzer_dir);
-    execute_command("rm -f parser.tab.c parser.tab.h", analyzer_dir);
-
-    printf("Archivos limpiados\n");
-    if (mainview) {
-        mainview_append_output(mainview, "Archivos limpiados");
-    }
-}
-
-// FUNCION PARA CONSTRUIR ANALIZADOR INTEGRADO (lexer + parser)
-static int build_integrated_analyzer(MainView* mainview) {
-    const char* analyzer_dir = "Logic/Analyzer";
-    int result;
-
-    printf("Generando analizador lexico-sintactico integrado...\n");
-    if (mainview) {
-        mainview_append_output(mainview, "Generando analizador con Bison...");
-    }
-
-    // 1. Generar parser con Bison
-    result = execute_command("bison -d parser.y", analyzer_dir);
-    if (result != 0) {
-        printf("Error generando analizador sintactico con bison\n");
-        if (mainview) {
-            mainview_append_output(mainview, "Error generando analizador sintactico con Bison");
-        }
-        return -1;
-    }
-
-    printf("Generando analizador lexico...\n");
-    if (mainview) {
-        mainview_append_output(mainview, "Generando analizador lexico con Flex...");
-    }
-
-    // 2. Generar lexer con Flex
-    result = execute_command("flex lexer.l", analyzer_dir);
-    if (result != 0) {
-        printf("Error generando analizador lexico con flex\n");
-        if (mainview) {
-            mainview_append_output(mainview, "Error generando analizador lexico con Flex");
-        }
-        return -1;
-    }
-
-    printf("Compilando analizador lexico-sintactico integrado...\n");
-    if (mainview) {
-        mainview_append_output(mainview, "Compilando analizador lexico-sintactico...");
-    }
-
-    // 3. Compilar analizador integrado (lexer + parser) con flag STANDALONE_PARSER
-    const char* compile_cmd = "gcc -DSTANDALONE_PARSER parser.tab.c lex.yy.c ../../Logic/AST/ast.c ../../Utils/error_manager.c -lfl -o parser";
-
-    result = execute_command(compile_cmd, analyzer_dir);
-    if (result != 0) {
-        printf("Error compilando analizador integrado\n");
-        if (mainview) {
-            mainview_append_output(mainview, "Error compilando analizador integrado");
-        }
-        return -1;
-    }
-
-    printf("Analizador lexico-sintactico generado exitosamente\n");
-    if (mainview) {
-        mainview_append_output(mainview, "Analizador lexico-sintactico compilado exitosamente");
-    }
-    return 0;
 }
 
 static char* create_temp_file(const char* content) {
@@ -254,7 +154,7 @@ static void parse_analyzer_output_for_errors(const char* line) {
     }
 }
 
-// FUNCION MODIFICADA PARA USAR ANALIZADOR INTEGRADO
+// FUNCIÓN PRINCIPAL DE ANÁLISIS - USANDO PARSER INTEGRADO EN MISMO PROCESO
 static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView* mainview) {
     GtkTextIter start, end;
     char* content;
@@ -312,10 +212,13 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
         return -1;
     }
 
-    /* LLAMAR AL PARSER DIRECTAMENTE EN EL MISMO PROCESO */
-    printf("DEBUG: Llamando parser_main directamente...\n");
-    char* argv_fake[] = {"parser", temp_file, NULL};
-    result = parser_main(2, argv_fake);
+    /* LLAMAR AL PARSER DIRECTAMENTE EN EL MISMO PROCESO ← INTEGRADO CON BISON/FLEX */
+    printf("DEBUG: Llamando parse_java_code directamente...\n");
+    if (mainview) {
+        mainview_append_output(mainview, "Ejecutando analizador lexico-sintactico integrado...");
+    }
+
+    result = parse_java_code(temp_file);
 
     /* VERIFICAR SI EL AST SE CONSTRUYÓ CORRECTAMENTE */
     printf("DEBUG: AST después del análisis: %s\n",
@@ -348,46 +251,84 @@ static int analyze_code_from_buffer_with_output(GtkTextBuffer* buffer, MainView*
     return result;
 }
 
-// FUNCION PRINCIPAL MODIFICADA
+// FUNCIÓN PRINCIPAL SIMPLIFICADA - NO NECESITA REBUILD (BISON/FLEX YA INTEGRADOS)
 int control_rebuild_and_analyze_with_output(GtkTextBuffer* code_buffer, MainView* mainview) {
-    printf("Iniciando rebuild del analizador lexico-sintactico...\n");
-
-    clean_generated_files(mainview);
-
-    // CONSTRUIR ANALIZADOR INTEGRADO (lexer + parser)
-    if (build_integrated_analyzer(mainview) != 0) {
-        return -1;
-    }
+    printf("Iniciando analisis lexico-sintactico integrado...\n");
 
     if (mainview) {
-        mainview_append_output(mainview, "Ejecutando analisis lexico-sintactico...");
+        mainview_append_output(mainview, "=== ANALIZADOR JAVA INTEGRADO ===");
+        mainview_append_output(mainview, "Parser y Lexer compilados con el proyecto");
+        mainview_append_output(mainview, "==========================================");
     }
 
     return analyze_code_from_buffer_with_output(code_buffer, mainview);
 }
 
-// MANTENER FUNCIONES EXISTENTES
+// MANTENER FUNCIONES EXISTENTES PARA COMPATIBILIDAD
 int control_rebuild_and_analyze(GtkTextBuffer* code_buffer) {
     return control_rebuild_and_analyze_with_output(code_buffer, NULL);
 }
 
 int control_analyze_only(GtkTextBuffer* code_buffer) {
-    printf("Analizando codigo con analizador existente...\n");
+    printf("Analizando codigo con analizador integrado...\n");
     return analyze_code_from_buffer_with_output(code_buffer, NULL);
 }
 
-// FUNCION PUBLICA PARA PROBAR ANALIZADOR
+// FUNCIÓN DE PRUEBA SIMPLIFICADA
 int control_test_parser(MainView* mainview) {
-    printf("Probando analizador lexico-sintactico...\n");
-
-    if (build_integrated_analyzer(mainview) != 0) {
-        return -1;
-    }
+    printf("Probando analizador lexico-sintactico integrado...\n");
 
     if (mainview) {
+        mainview_append_output(mainview, "=== PRUEBA DEL ANALIZADOR INTEGRADO ===");
         mainview_append_output(mainview, "Analizador lexico-sintactico listo");
+        mainview_append_output(mainview, "Parser: Compilado con Bison");
+        mainview_append_output(mainview, "Lexer: Compilado con Flex");
+        mainview_append_output(mainview, "AST: Sistema de nodos integrado");
+        mainview_append_output(mainview, "Error Manager: Sistema de errores integrado");
+        mainview_append_output(mainview, "==========================================");
         mainview_append_output(mainview, "Use 'Reconstruir y Analizar' para analizar codigo");
     }
 
+    /* VERIFICAR QUE EL SISTEMA ESTÉ LISTO */
+    if (!global_error_manager) {
+        global_error_manager = error_manager_create();
+    }
+
+    printf("Sistema integrado listo para análisis\n");
     return 0;
+}
+
+/* FUNCIÓN ADICIONAL PARA OBTENER ESTADO DEL AST */
+int control_get_ast_status() {
+    if (ast_root) {
+        printf("AST Status: Disponible (%s)\n", ast_root->type ? ast_root->type : "Sin tipo");
+        return 1;
+    } else {
+        printf("AST Status: No disponible\n");
+        return 0;
+    }
+}
+
+/* FUNCIÓN ADICIONAL PARA OBTENER ESTADO DE ERRORES */
+int control_get_error_count() {
+    if (global_error_manager) {
+        return error_manager_get_total_count(global_error_manager);
+    }
+    return 0;
+}
+
+/* FUNCIÓN ADICIONAL PARA LIMPIAR ESTADO */
+void control_reset_state() {
+    printf("Reiniciando estado del analizador...\n");
+
+    if (ast_root) {
+        free_node(ast_root);
+        ast_root = NULL;
+    }
+
+    if (global_error_manager) {
+        error_manager_clear(global_error_manager);
+    }
+
+    printf("Estado reiniciado\n");
 }

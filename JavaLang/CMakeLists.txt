@@ -9,52 +9,75 @@ find_package(PkgConfig REQUIRED)
 # Buscar GTK3
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
+# BUSCAR BISON Y FLEX
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
 # Configurar directorios de include
 include_directories(${GTK3_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/Headers)
 include_directories(${CMAKE_SOURCE_DIR}/Logic/Analyzer)
+
 # Configurar flags de compilación
 add_compile_options(${GTK3_CFLAGS_OTHER})
 
-# Crear ejecutable
-add_executable(JavaLang
+# GENERAR ARCHIVOS CON BISON Y FLEX
+set(PARSER_Y "${CMAKE_SOURCE_DIR}/Logic/Analyzer/parser.y")
+set(LEXER_L "${CMAKE_SOURCE_DIR}/Logic/Analyzer/lexer.l")
+
+# Generar parser con Bison
+BISON_TARGET(JavaParser
+        ${PARSER_Y}
+        ${CMAKE_SOURCE_DIR}/Logic/Analyzer/parser.tab.c
+        DEFINES_FILE ${CMAKE_SOURCE_DIR}/Logic/Analyzer/parser.tab.h
+)
+
+# Generar lexer con Flex
+FLEX_TARGET(JavaLexer
+        ${LEXER_L}
+        ${CMAKE_SOURCE_DIR}/Logic/Analyzer/lex.yy.c
+)
+
+# Hacer que el lexer dependa del parser (necesita parser.tab.h)
+ADD_FLEX_BISON_DEPENDENCY(JavaLexer JavaParser)
+
+# DEFINIR TODAS LAS FUENTES
+set(SOURCES
         main.c
         GUI/mainview.c
-        Headers/file_manager.h
         Logic/Files/file_manager.c
-        Headers/tokens.h
         Logic/Files/control.c
-        Headers/control.h
         Utils/tokens.c
-        Headers/error_manager.h
         Utils/error_manager.c
-        Headers/error_report_window.h
         GUI/error_report_window.c
-        Headers/ast.h
         Logic/AST/ast.c
+        # AGREGAR ARCHIVOS GENERADOS
+        ${BISON_JavaParser_OUTPUTS}
+        ${FLEX_JavaLexer_OUTPUTS}
+        Utils/globals.c
+        Headers/globals.h
 )
-# VERIFICAR SI EXISTEN LOS ARCHIVOS GENERADOS Y AGREGARLOS
-if(EXISTS "${CMAKE_SOURCE_DIR}/Logic/Analyzer/parser.tab.c")
-    list(APPEND SOURCES Logic/Analyzer/parser.tab.c)
-    message(STATUS "Agregando parser.tab.c al build")
-endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/Logic/Analyzer/lex.yy.c")
-    list(APPEND SOURCES Logic/Analyzer/lex.yy.c)
-    message(STATUS "Agregando lex.yy.c al build")
-endif()
+# Crear ejecutable
+add_executable(JavaLang ${SOURCES})
+
 # Configurar propiedades del target
 target_include_directories(JavaLang PRIVATE
         ${GTK3_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/Headers
+        ${CMAKE_SOURCE_DIR}/Logic/Analyzer  # Para parser.tab.h
 )
 
 target_compile_options(JavaLang PRIVATE ${GTK3_CFLAGS_OTHER})
-target_link_libraries(JavaLang ${GTK3_LIBRARIES})
+target_link_libraries(JavaLang ${GTK3_LIBRARIES} fl)  # ← AGREGAR fl para flex
 target_link_directories(JavaLang PRIVATE ${GTK3_LIBRARY_DIRS})
 
 # Debug info
 message(STATUS "GTK3 Include Dirs: ${GTK3_INCLUDE_DIRS}")
 message(STATUS "GTK3 Libraries: ${GTK3_LIBRARIES}")
+message(STATUS "Bison encontrado: ${BISON_EXECUTABLE}")
+message(STATUS "Flex encontrado: ${FLEX_EXECUTABLE}")
+message(STATUS "Archivos del parser: ${BISON_JavaParser_OUTPUTS}")
+message(STATUS "Archivos del lexer: ${FLEX_JavaLexer_OUTPUTS}")

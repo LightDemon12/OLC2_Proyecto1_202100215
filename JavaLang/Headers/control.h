@@ -14,6 +14,7 @@ typedef struct MainView MainView;
 
 // ✅ SOLO DECLARAR EXTERN (no definir)
 extern ErrorManager* global_error_manager;
+extern int parse_java_code(const char* filename);
 
 // Funciones que usan MainView
 int control_rebuild_and_analyze_with_output(GtkTextBuffer* code_buffer, MainView* mainview);

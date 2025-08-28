@@ -67,27 +67,28 @@
 
 
 /* First part of user prologue.  */
-#line 1 "parser.y"
+#line 1 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../../Headers/error_manager.h"
+#include "../../Headers/ast.h"
 
+/* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
+extern ASTNode* ast_root;
+extern ErrorManager* global_error_manager;
 
-/*DECLARACIONES MÍNIMAS */
+/* DECLARACIONES MÍNIMAS */
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE* yyin;
 
-ErrorManager* global_error_manager = NULL;
-
-/*FUNCIÓN DE ERROR SIMPLE */
+/* FUNCIÓN DE ERROR */
 void yyerror(const char* s);
 
-
-#line 91 "parser.tab.c"
+#line 92 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -208,19 +209,6 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 
-/* Unqualified %code blocks.  */
-#line 29 "parser.y"
-
-    #include "../../Headers/ast.h"
-    
-    /* DEFINIR ast_root SOLO CUANDO ES STANDALONE */
-    #ifdef STANDALONE_PARSER
-    ASTNode* ast_root = NULL;
-    #else
-    extern ASTNode* ast_root;  /* Para compilación con GUI */
-    #endif
-
-#line 224 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -612,7 +600,7 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   189,   189,   199,   207,   212,   220,   227
+       0,   173,   173,   183,   191,   196,   204,   211
 };
 #endif
 
@@ -1582,64 +1570,64 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: main_method  */
-#line 190 "parser.y"
+#line 174 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         ast_root = create_node("PROGRAM", (yylsp[0]).first_line, (yylsp[0]).first_column);
         add_child(ast_root, (yyvsp[0].node));
         printf("AST construido exitosamente\n");
         (yyval.node) = ast_root;
     }
-#line 1593 "parser.tab.c"
+#line 1581 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 3: /* main_method: TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
-#line 200 "parser.y"
+#line 184 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = create_node("MAIN_METHOD", (yylsp[-8]).first_line, (yylsp[-8]).first_column);
-        add_child((yyval.node), (yyvsp[-1].node));  /* agregar instrucciones */
+        add_child((yyval.node), (yyvsp[-1].node));
     }
-#line 1602 "parser.tab.c"
+#line 1590 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 4: /* instrucciones: instruccion  */
-#line 208 "parser.y"
+#line 192 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = create_node("INSTRUCTIONS", (yylsp[0]).first_line, (yylsp[0]).first_column);
         add_child((yyval.node), (yyvsp[0].node));
     }
-#line 1611 "parser.tab.c"
+#line 1599 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 5: /* instrucciones: instrucciones instruccion  */
-#line 213 "parser.y"
+#line 197 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = (yyvsp[-1].node);
         add_child((yyval.node), (yyvsp[0].node));
     }
-#line 1620 "parser.tab.c"
+#line 1608 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 6: /* instruccion: sout  */
-#line 221 "parser.y"
+#line 205 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = (yyvsp[0].node);
     }
-#line 1628 "parser.tab.c"
+#line 1616 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 7: /* sout: TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON  */
-#line 228 "parser.y"
+#line 212 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = create_node("PRINT_STATEMENT", (yylsp[-4]).first_line, (yylsp[-4]).first_column);
         ASTNode* string_literal = create_node("STRING_LITERAL", (yylsp[-2]).first_line, (yylsp[-2]).first_column);
         set_value(string_literal, yytext);
         add_child((yyval.node), string_literal);
     }
-#line 1639 "parser.tab.c"
+#line 1627 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
 
-#line 1643 "parser.tab.c"
+#line 1631 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
 
       default: break;
     }
@@ -1868,46 +1856,43 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 236 "parser.y"
+#line 220 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
 
 void yyerror(const char* s) {
     printf("ERROR SINTACTICO en linea %d: %s (token actual: '%s')\n",
            yylineno, s, yytext ? yytext : "NULL");
     
-    /* AGREGAR ERROR SINTACTICO AL MANAGER GLOBAL */
     if (!global_error_manager) {
         global_error_manager = error_manager_create();
     }
     
-    /* MENSAJE GENÉRICO Y SIMPLE */
     char simple_message[256];
     char token_display[64];
     
-    /* FORMATEAR TOKEN PARA MOSTRAR */
     if (yytext && strlen(yytext) > 0) {
         snprintf(token_display, sizeof(token_display), "'%s'", yytext);
     } else {
         strcpy(token_display, "desconocido");
     }
     
-    /* MENSAJE SIMPLE Y GENÉRICO */
     snprintf(simple_message, sizeof(simple_message),
             "Error de sintaxis en el token %s", token_display);
     
     error_manager_add_sintactico(global_error_manager, yylineno, 0, simple_message, yytext);
 }
 
-int parser_main(int argc, char** argv) {
-    printf("=== PARSER MINIMO ===\n");
+/* FUNCIÓN DEL PARSER PARA SER LLAMADA DESDE CONTROL.C */
+int parse_java_code(const char* filename) {
+    printf("=== ANALIZADOR LEXICO-SINTACTICO JAVA ===\n");
 
-    if (argc > 1) {
-        yyin = fopen(argv[1], "r");
+    if (filename) {
+        yyin = fopen(filename, "r");
         if (!yyin) {
-            printf("Error: No se pudo abrir %s\n", argv[1]);
+            printf("Error: No se pudo abrir %s\n", filename);
             return 1;
         }
-        printf("DEBUG: Archivo %s abierto correctamente\n", argv[1]);
+        printf("DEBUG: Archivo %s abierto correctamente\n", filename);
     } else {
         printf("DEBUG: Leyendo desde stdin\n");
     }
@@ -1923,11 +1908,10 @@ int parser_main(int argc, char** argv) {
         printf("=== FIN AST ===\n\n");
     }
 
-    /* IMPRIMIR ERRORES ACUMULADOS EN FORMATO PARSEABLE */
+    /* IMPRIMIR ERRORES */
     if (global_error_manager && error_manager_has_errors(global_error_manager)) {
         printf("=== ERRORES DETECTADOS ===\n");
         ErrorNode* current = global_error_manager->head;
-        int count = 1;
         
         while (current) {
             printf("[ERROR_%s] %d|%d|%s|%s\n",
@@ -1937,7 +1921,6 @@ int parser_main(int argc, char** argv) {
                    current->message ? current->message : "",
                    current->token_text ? current->token_text : "");
             current = current->next;
-            count++;
         }
         printf("=== FIN ERRORES ===\n");
     }
@@ -1948,24 +1931,9 @@ int parser_main(int argc, char** argv) {
         printf("FALLO: Error en analisis\n");
     }
 
-    /* LIBERAR MEMORIA SOLO CUANDO ES STANDALONE */
-    #ifdef STANDALONE_PARSER
-    if (ast_root) {
-        free_node(ast_root);
-        ast_root = NULL;
-    }
-    #endif
-
     if (yyin && yyin != stdin) {
         fclose(yyin);
-        printf("DEBUG: Archivo cerrado\n");
     }
 
     return result;
 }
-
-#ifdef STANDALONE_PARSER
-int main(int argc, char** argv) {
-    return parser_main(argc, argv);
-}
-#endif

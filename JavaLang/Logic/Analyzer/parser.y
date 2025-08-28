@@ -5,26 +5,23 @@
 #include "../../Headers/error_manager.h"
 #include "../../Headers/ast.h"
 
-/* DECLARACIÓN SIMPLE COMO EN EL EJEMPLO */
-ASTNode* ast_root = NULL;
+/* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
+extern ASTNode* ast_root;
+extern ErrorManager* global_error_manager;
 
-/*DECLARACIONES MÍNIMAS */
+/* DECLARACIONES MÍNIMAS */
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE* yyin;
 
-ErrorManager* global_error_manager = NULL;
-
-/*FUNCIÓN DE ERROR SIMPLE */
+/* FUNCIÓN DE ERROR */
 void yyerror(const char* s);
 %}
-
 
 %code requires {
     typedef struct ASTNode ASTNode;
 }
-
 
 %union {
     ASTNode* node;
@@ -33,7 +30,6 @@ void yyerror(const char* s);
 %type <node> program main_method instrucciones instruccion sout
 
 %define parse.error verbose
-
 /*PALABRAS RESERVADAS */
 %token TOKEN_INT          // int
 %token TOKEN_FLOAT        // float  
@@ -187,7 +183,7 @@ main_method:
     TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
         $$ = create_node("MAIN_METHOD", @1.first_line, @1.first_column);
-        add_child($$, $8);  /* agregar instrucciones */
+        add_child($$, $8);
     }
     ;
 
@@ -227,39 +223,36 @@ void yyerror(const char* s) {
     printf("ERROR SINTACTICO en linea %d: %s (token actual: '%s')\n",
            yylineno, s, yytext ? yytext : "NULL");
     
-    /* AGREGAR ERROR SINTACTICO AL MANAGER GLOBAL */
     if (!global_error_manager) {
         global_error_manager = error_manager_create();
     }
     
-    /* MENSAJE GENÉRICO Y SIMPLE */
     char simple_message[256];
     char token_display[64];
     
-    /* FORMATEAR TOKEN PARA MOSTRAR */
     if (yytext && strlen(yytext) > 0) {
         snprintf(token_display, sizeof(token_display), "'%s'", yytext);
     } else {
         strcpy(token_display, "desconocido");
     }
     
-    /* MENSAJE SIMPLE Y GENÉRICO */
     snprintf(simple_message, sizeof(simple_message),
             "Error de sintaxis en el token %s", token_display);
     
     error_manager_add_sintactico(global_error_manager, yylineno, 0, simple_message, yytext);
 }
 
-int parser_main(int argc, char** argv) {
-    printf("=== PARSER MINIMO ===\n");
+/* FUNCIÓN DEL PARSER PARA SER LLAMADA DESDE CONTROL.C */
+int parse_java_code(const char* filename) {
+    printf("=== ANALIZADOR LEXICO-SINTACTICO JAVA ===\n");
 
-    if (argc > 1) {
-        yyin = fopen(argv[1], "r");
+    if (filename) {
+        yyin = fopen(filename, "r");
         if (!yyin) {
-            printf("Error: No se pudo abrir %s\n", argv[1]);
+            printf("Error: No se pudo abrir %s\n", filename);
             return 1;
         }
-        printf("DEBUG: Archivo %s abierto correctamente\n", argv[1]);
+        printf("DEBUG: Archivo %s abierto correctamente\n", filename);
     } else {
         printf("DEBUG: Leyendo desde stdin\n");
     }
@@ -275,11 +268,10 @@ int parser_main(int argc, char** argv) {
         printf("=== FIN AST ===\n\n");
     }
 
-    /* IMPRIMIR ERRORES ACUMULADOS EN FORMATO PARSEABLE */
+    /* IMPRIMIR ERRORES */
     if (global_error_manager && error_manager_has_errors(global_error_manager)) {
         printf("=== ERRORES DETECTADOS ===\n");
         ErrorNode* current = global_error_manager->head;
-        int count = 1;
         
         while (current) {
             printf("[ERROR_%s] %d|%d|%s|%s\n",
@@ -289,7 +281,6 @@ int parser_main(int argc, char** argv) {
                    current->message ? current->message : "",
                    current->token_text ? current->token_text : "");
             current = current->next;
-            count++;
         }
         printf("=== FIN ERRORES ===\n");
     }
@@ -300,24 +291,9 @@ int parser_main(int argc, char** argv) {
         printf("FALLO: Error en analisis\n");
     }
 
-    /* LIBERAR MEMORIA SOLO CUANDO ES STANDALONE */
-    #ifdef STANDALONE_PARSER
-    if (ast_root) {
-        free_node(ast_root);
-        ast_root = NULL;
-    }
-    #endif
-
     if (yyin && yyin != stdin) {
         fclose(yyin);
-        printf("DEBUG: Archivo cerrado\n");
     }
 
     return result;
 }
-
-#ifdef STANDALONE_PARSER
-int main(int argc, char** argv) {
-    return parser_main(argc, argv);
-}
-#endif

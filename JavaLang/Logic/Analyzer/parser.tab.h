@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_PARSER_TAB_H_INCLUDED
-# define YY_YY_PARSER_TAB_H_INCLUDED
+#ifndef YY_YY_HOME_LIGHTDEMON_ESCRITORIO_OLC2_PROYECTO1_202100215_JAVALANG_LOGIC_ANALYZER_PARSER_TAB_H_INCLUDED
+# define YY_YY_HOME_LIGHTDEMON_ESCRITORIO_OLC2_PROYECTO1_202100215_JAVALANG_LOGIC_ANALYZER_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -45,11 +45,11 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 23 "parser.y"
+#line 22 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
     typedef struct ASTNode ASTNode;
 
-#line 53 "parser.tab.h"
+#line 53 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -147,11 +147,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 41 "parser.y"
+#line 26 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
     ASTNode* node;
 
-#line 155 "parser.tab.h"
+#line 155 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -180,4 +180,4 @@ extern YYLTYPE yylloc;
 int yyparse (void);
 
 
-#endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_YY_HOME_LIGHTDEMON_ESCRITORIO_OLC2_PROYECTO1_202100215_JAVALANG_LOGIC_ANALYZER_PARSER_TAB_H_INCLUDED  */
