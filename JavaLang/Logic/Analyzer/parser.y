@@ -4,6 +4,11 @@
 #include <string.h>
 #include "../../Headers/error_manager.h"
 #include "../../Headers/ast.h"
+#include "../../Headers/builder_program.h"
+#include "../../Headers/builder_bloque_main.h"
+#include "../../Headers/builder_instrucciones.h"
+#include "../../Headers/builder_sout.h"
+#include "../../Headers/builder_declaraciones.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -25,9 +30,9 @@ void yyerror(const char* s);
 
 %union {
     ASTNode* node;
+    char* str; 
 }
 
-%type <node> program main_method instrucciones instruccion sout
 
 %define parse.error verbose
 /*PALABRAS RESERVADAS */
@@ -45,7 +50,7 @@ void yyerror(const char* s);
 /*VALOR NULO */
 %token TOKEN_NULL         // null
 /*IDENTIFICADORES */
-%token TOKEN_IDENTIFIER   // id
+%token <str> TOKEN_IDENTIFIER    // id
 /*OPERACIONES ARITMÉTICAS */
 %token TOKEN_PLUS         // +
 %token TOKEN_MINUS        // -
@@ -119,12 +124,12 @@ void yyerror(const char* s);
 %token TOKEN_EOF          // fin archivo
 %token TOKEN_ERROR        // error
 /*TIPOS DE DATOS PRIMITIVOS */
-%token TOKEN_TYPE_INT     // numero
-%token TOKEN_TYPE_FLOAT   // decimal
-%token TOKEN_TYPE_STRING  // cadena
-%token TOKEN_TYPE_CHAR    // char
-%token TOKEN_TYPE_TRUE    // verdadero
-%token TOKEN_TYPE_FALSE   // false
+%token <str> TOKEN_TYPE_INT     // numero
+%token <str> TOKEN_TYPE_FLOAT   // decimal
+%token <str> TOKEN_TYPE_STRING  // cadena
+%token <str> TOKEN_TYPE_CHAR    // char
+%token <str> TOKEN_TYPE_TRUE    // verdadero
+%token <str> TOKEN_TYPE_FALSE   // false
 
 /* PRECEDENCIA Y ASOCIATIVIDAD - De menor a mayor precedencia */
 
@@ -167,53 +172,97 @@ Paréntesis ((, ))
 /* Agrupadores de expresiones */
 %left TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT
 
+%type <node> program bloque_main instrucciones instruccion sout declaraciones tipo dato lista_declaraciones lista_declaracion
+
+
 %%
 
 program:
-    main_method
+    bloque_main
     {
-        ast_root = create_node("PROGRAM", @1.first_line, @1.first_column);
-        add_child(ast_root, $1);
-        printf("AST construido exitosamente\n");
+        ast_root = build_program_node($1, @1.first_line, @1.first_column);
         $$ = ast_root;
     }
     ;
 
-main_method:
+bloque_main:
     TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
-        $$ = create_node("MAIN_METHOD", @1.first_line, @1.first_column);
-        add_child($$, $8);
+        $$ = build_bloque_main_node($8, @1.first_line, @1.first_column);
     }
     ;
 
 instrucciones:
     instruccion
     {
-        $$ = create_node("INSTRUCTIONS", @1.first_line, @1.first_column);
-        add_child($$, $1);
+        $$ = build_instrucciones_single($1, @1.first_line, @1.first_column);
     }
     | instrucciones instruccion
     {
-        $$ = $1;
-        add_child($$, $2);
+        $$ = build_instrucciones_add($1, $2);
     }
     ;
+
 
 instruccion:
     sout
     {
         $$ = $1;
     }
+    | declaraciones
+    {
+        $$ = $1;
+    }
     ;
+
+declaraciones:
+    tipo TOKEN_IDENTIFIER TOKEN_ASSIGN dato TOKEN_SEMICOLON
+    {
+        $$ = build_declaracion_single($1, $2, $4, @1.first_line, @1.first_column);
+    }
+    | tipo lista_declaraciones TOKEN_SEMICOLON
+    {
+        $$ = build_declaracion_multiple($1, $2, @1.first_line, @1.first_column);
+    }
+    ;
+
+tipo:
+    TOKEN_STRING
+    {
+        $$ = build_tipo_node("string", @1.first_line, @1.first_column);
+    }
+    ;
+
+dato:
+    TOKEN_TYPE_STRING
+    {
+        $$ = build_dato_node($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+lista_declaraciones:
+    lista_declaracion
+    {
+        $$ = build_lista_declaraciones_single($1, @1.first_line, @1.first_column);
+    }
+    | lista_declaraciones TOKEN_COMMA lista_declaracion
+    {
+        $$ = build_lista_declaraciones_add($1, $3);
+    }
+    ;
+
+lista_declaracion:
+    TOKEN_IDENTIFIER TOKEN_ASSIGN dato
+    {
+        $$ = build_lista_declaracion_node($1, $3, @1.first_line, @1.first_column);
+    }
+    ;
+
 
 sout:
     TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON
     {
-        $$ = create_node("PRINT_STATEMENT", @1.first_line, @1.first_column);
-        ASTNode* string_literal = create_node("STRING_LITERAL", @3.first_line, @3.first_column);
-        set_value(string_literal, yytext);
-        add_child($$, string_literal);
+        $$ = build_sout_node($3, @1.first_line, @1.first_column);
     }
     ;
 

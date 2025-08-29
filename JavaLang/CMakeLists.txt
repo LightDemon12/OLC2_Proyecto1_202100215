@@ -57,6 +57,20 @@ set(SOURCES
         ${FLEX_JavaLexer_OUTPUTS}
         Utils/globals.c
         Headers/globals.h
+        Headers/ast_visualizer.h
+        Logic/AST/ast_visualizer.c
+        Headers/builder_program.h
+        Logic/Builders/program_builder..c
+        Headers/builder_bloque_main.h
+        Logic/Builders/builder_bloque_main.c
+        Headers/builder_instrucciones.h
+        Logic/Builders/builder_instrucciones.c
+        Headers/builder_sout.h
+        Logic/Builders/builder_sout.c
+        Headers/builder_datos.h
+        Logic/Builders/builder_datos.c
+        Headers/builder_declaraciones.h
+        Logic/Builders/builder_declaraciones.c
 )
 
 # Crear ejecutable

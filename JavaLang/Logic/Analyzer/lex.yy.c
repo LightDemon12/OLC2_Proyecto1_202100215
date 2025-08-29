@@ -975,23 +975,23 @@ YY_RULE_SETUP
 case 3:
 YY_RULE_SETUP
 #line 50 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_TYPE_INT"); return TOKEN_TYPE_INT; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_INT"); return TOKEN_TYPE_INT; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
 #line 51 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
 #line 52 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_TYPE_STRING"); return TOKEN_TYPE_STRING; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_STRING"); return TOKEN_TYPE_STRING; }
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
 #line 53 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_TYPE_CHAR"); return TOKEN_TYPE_CHAR; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_CHAR"); return TOKEN_TYPE_CHAR; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
@@ -1041,12 +1041,12 @@ YY_RULE_SETUP
 case 16:
 YY_RULE_SETUP
 #line 63 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_TYPE_TRUE"); return TOKEN_TYPE_TRUE; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_TRUE"); return TOKEN_TYPE_TRUE; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
 #line 64 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_TYPE_FALSE"); return TOKEN_TYPE_FALSE; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FALSE"); return TOKEN_TYPE_FALSE; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
@@ -1347,7 +1347,7 @@ YY_RULE_SETUP
 case 77:
 YY_RULE_SETUP
 #line 124 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP

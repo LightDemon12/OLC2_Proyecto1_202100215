@@ -74,6 +74,11 @@
 #include <string.h>
 #include "../../Headers/error_manager.h"
 #include "../../Headers/ast.h"
+#include "../../Headers/builder_program.h"
+#include "../../Headers/builder_bloque_main.h"
+#include "../../Headers/builder_instrucciones.h"
+#include "../../Headers/builder_sout.h"
+#include "../../Headers/builder_declaraciones.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -88,7 +93,7 @@ extern FILE* yyin;
 /* FUNCIÓN DE ERROR */
 void yyerror(const char* s);
 
-#line 92 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 97 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -200,10 +205,15 @@ enum yysymbol_kind_t
   YYSYMBOL_TOKEN_TYPE_FALSE = 81,          /* TOKEN_TYPE_FALSE  */
   YYSYMBOL_YYACCEPT = 82,                  /* $accept  */
   YYSYMBOL_program = 83,                   /* program  */
-  YYSYMBOL_main_method = 84,               /* main_method  */
+  YYSYMBOL_bloque_main = 84,               /* bloque_main  */
   YYSYMBOL_instrucciones = 85,             /* instrucciones  */
   YYSYMBOL_instruccion = 86,               /* instruccion  */
-  YYSYMBOL_sout = 87                       /* sout  */
+  YYSYMBOL_declaraciones = 87,             /* declaraciones  */
+  YYSYMBOL_tipo = 88,                      /* tipo  */
+  YYSYMBOL_dato = 89,                      /* dato  */
+  YYSYMBOL_lista_declaraciones = 90,       /* lista_declaraciones  */
+  YYSYMBOL_lista_declaracion = 91,         /* lista_declaracion  */
+  YYSYMBOL_sout = 92                       /* sout  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -534,16 +544,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   15
+#define YYLAST   58
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  82
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  6
+#define YYNNTS  11
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  7
+#define YYNRULES  15
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  21
+#define YYNSTATES  37
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   336
@@ -598,9 +608,10 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
-       0,   173,   173,   183,   191,   196,   204,   211
+       0,   181,   181,   189,   196,   200,   208,   212,   219,   223,
+     230,   237,   244,   248,   255,   263
 };
 #endif
 
@@ -638,7 +649,9 @@ static const char *const yytname[] =
   "TOKEN_ESCAPE", "TOKEN_INCREMENT", "TOKEN_DECREMENT", "TOKEN_EOF",
   "TOKEN_ERROR", "TOKEN_TYPE_INT", "TOKEN_TYPE_FLOAT", "TOKEN_TYPE_STRING",
   "TOKEN_TYPE_CHAR", "TOKEN_TYPE_TRUE", "TOKEN_TYPE_FALSE", "$accept",
-  "program", "main_method", "instrucciones", "instruccion", "sout", YY_NULLPTR
+  "program", "bloque_main", "instrucciones", "instruccion",
+  "declaraciones", "tipo", "dato", "lista_declaraciones",
+  "lista_declaracion", "sout", YY_NULLPTR
 };
 
 static const char *
@@ -648,7 +661,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-68)
+#define YYPACT_NINF (-66)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -662,9 +675,10 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -9,    -8,     2,   -68,    -7,   -68,    -6,   -37,   -36,   -38,
-     -53,   -31,   -47,   -68,   -68,   -67,   -68,   -68,   -30,   -29,
-     -68
+      -7,    -6,     6,   -66,    -3,   -66,    -2,   -34,   -32,   -38,
+      -4,   -66,   -29,    -5,   -66,   -66,    -1,   -66,   -65,   -66,
+     -66,   -16,   -41,   -66,   -26,   -61,   -66,     3,   -24,   -66,
+     -23,   -10,   -66,   -66,   -66,   -61,   -66
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -673,20 +687,23 @@ static const yytype_int8 yypact[] =
 static const yytype_int8 yydefact[] =
 {
        0,     0,     0,     2,     0,     1,     0,     0,     0,     0,
-       0,     0,     0,     4,     6,     0,     3,     5,     0,     0,
-       7
+       0,    10,     0,     0,     4,     7,     0,     6,     0,     3,
+       5,     0,     0,    12,     0,     0,     9,     0,     0,    11,
+      14,     0,    13,    15,     8,     0,    14
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -68,   -68,   -68,   -68,     1,   -68
+     -66,   -66,   -66,   -66,     9,   -66,   -66,   -12,   -66,     0,
+     -66
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     2,     3,    12,    13,    14
+       0,     2,     3,    13,    14,    15,    16,    30,    22,    23,
+      17
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -694,14 +711,22 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      16,     1,     5,     4,     8,     6,     9,     7,    10,    11,
-      15,    18,    19,    17,    20,    11
+      11,    11,    26,     1,    27,     4,     5,     8,    10,     6,
+       9,     7,    18,    24,    21,    25,    28,    29,    31,    33,
+      34,    35,    20,    36,     0,     0,     0,    32,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,    19,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    12,    12
 };
 
 static const yytype_int8 yycheck[] =
 {
-      47,    10,     0,    11,    41,    12,    42,    13,    46,    62,
-      41,    78,    42,    12,    43,    62
+       5,     5,    43,    10,    45,    11,     0,    41,    46,    12,
+      42,    13,    41,    78,    15,    31,    42,    78,    15,    43,
+      43,    31,    13,    35,    -1,    -1,    -1,    27,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    47,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    62,    62
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -709,20 +734,23 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,    10,    83,    84,    11,     0,    12,    13,    41,    42,
-      46,    62,    85,    86,    87,    41,    47,    86,    78,    42,
-      43
+      46,     5,    62,    85,    86,    87,    88,    92,    41,    47,
+      86,    15,    90,    91,    78,    31,    43,    45,    42,    78,
+      89,    15,    91,    43,    43,    31,    89
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    82,    83,    84,    85,    85,    86,    87
+       0,    82,    83,    84,    85,    85,    86,    86,    87,    87,
+      88,    89,    90,    90,    91,    92
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     9,     1,     2,     1,     5
+       0,     2,     1,     9,     1,     2,     1,     1,     5,     3,
+       1,     1,     1,     3,     3,     5
 };
 
 
@@ -1569,65 +1597,121 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* program: main_method  */
-#line 174 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 2: /* program: bloque_main  */
+#line 182 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
-        ast_root = create_node("PROGRAM", (yylsp[0]).first_line, (yylsp[0]).first_column);
-        add_child(ast_root, (yyvsp[0].node));
-        printf("AST construido exitosamente\n");
+        ast_root = build_program_node((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
         (yyval.node) = ast_root;
     }
-#line 1581 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1607 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 3: /* main_method: TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
-#line 184 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 3: /* bloque_main: TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
+#line 190 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
-        (yyval.node) = create_node("MAIN_METHOD", (yylsp[-8]).first_line, (yylsp[-8]).first_column);
-        add_child((yyval.node), (yyvsp[-1].node));
+        (yyval.node) = build_bloque_main_node((yyvsp[-1].node), (yylsp[-8]).first_line, (yylsp[-8]).first_column);
     }
-#line 1590 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1615 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 4: /* instrucciones: instruccion  */
-#line 192 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 197 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
-        (yyval.node) = create_node("INSTRUCTIONS", (yylsp[0]).first_line, (yylsp[0]).first_column);
-        add_child((yyval.node), (yyvsp[0].node));
+        (yyval.node) = build_instrucciones_single((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1599 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1623 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 5: /* instrucciones: instrucciones instruccion  */
-#line 197 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 201 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
-        (yyval.node) = (yyvsp[-1].node);
-        add_child((yyval.node), (yyvsp[0].node));
+        (yyval.node) = build_instrucciones_add((yyvsp[-1].node), (yyvsp[0].node));
     }
-#line 1608 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1631 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 6: /* instruccion: sout  */
-#line 205 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 209 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = (yyvsp[0].node);
     }
-#line 1616 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1639 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 7: /* sout: TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON  */
-#line 212 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 7: /* instruccion: declaraciones  */
+#line 213 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
-        (yyval.node) = create_node("PRINT_STATEMENT", (yylsp[-4]).first_line, (yylsp[-4]).first_column);
-        ASTNode* string_literal = create_node("STRING_LITERAL", (yylsp[-2]).first_line, (yylsp[-2]).first_column);
-        set_value(string_literal, yytext);
-        add_child((yyval.node), string_literal);
+        (yyval.node) = (yyvsp[0].node);
     }
-#line 1627 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1647 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 8: /* declaraciones: tipo TOKEN_IDENTIFIER TOKEN_ASSIGN dato TOKEN_SEMICOLON  */
+#line 220 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_declaracion_single((yyvsp[-4].node), (yyvsp[-3].str), (yyvsp[-1].node), (yylsp[-4]).first_line, (yylsp[-4]).first_column);
+    }
+#line 1655 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 9: /* declaraciones: tipo lista_declaraciones TOKEN_SEMICOLON  */
+#line 224 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_declaracion_multiple((yyvsp[-2].node), (yyvsp[-1].node), (yylsp[-2]).first_line, (yylsp[-2]).first_column);
+    }
+#line 1663 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 10: /* tipo: TOKEN_STRING  */
+#line 231 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_tipo_node("string", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 1671 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 11: /* dato: TOKEN_TYPE_STRING  */
+#line 238 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_dato_node((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 1679 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 12: /* lista_declaraciones: lista_declaracion  */
+#line 245 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_lista_declaraciones_single((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 1687 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 13: /* lista_declaraciones: lista_declaraciones TOKEN_COMMA lista_declaracion  */
+#line 249 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_lista_declaraciones_add((yyvsp[-2].node), (yyvsp[0].node));
+    }
+#line 1695 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 14: /* lista_declaracion: TOKEN_IDENTIFIER TOKEN_ASSIGN dato  */
+#line 256 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_lista_declaracion_node((yyvsp[-2].str), (yyvsp[0].node), (yylsp[-2]).first_line, (yylsp[-2]).first_column);
+    }
+#line 1703 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 15: /* sout: TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON  */
+#line 264 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_sout_node((yyvsp[-2].str), (yylsp[-4]).first_line, (yylsp[-4]).first_column);
+    }
+#line 1711 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
 
-#line 1631 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1715 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
 
       default: break;
     }
@@ -1856,7 +1940,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 220 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 269 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
 
 void yyerror(const char* s) {

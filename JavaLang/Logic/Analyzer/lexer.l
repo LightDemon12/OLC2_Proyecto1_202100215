@@ -47,10 +47,10 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 
 {COMMENT_LINE}              { /* Ignorar comentarios de línea */ }
 {COMMENT_BLOCK}             { /* Ignorar comentarios de bloque */ }
-{INTEGER}                   { DEBUG_TOKEN("TOKEN_TYPE_INT"); return TOKEN_TYPE_INT; }
-{FLOAT}                     { DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
-{STRING}                    { DEBUG_TOKEN("TOKEN_TYPE_STRING"); return TOKEN_TYPE_STRING; }
-{CHARACTER}                 { DEBUG_TOKEN("TOKEN_TYPE_CHAR"); return TOKEN_TYPE_CHAR; }
+{INTEGER}                   { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_INT"); return TOKEN_TYPE_INT; }
+{FLOAT}                     { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
+{STRING}                    { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_STRING"); return TOKEN_TYPE_STRING; }
+{CHARACTER}                 { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_CHAR"); return TOKEN_TYPE_CHAR; }
 "public"                    { DEBUG_TOKEN("TOKEN_PUBLIC"); return TOKEN_PUBLIC; }
 "static"                    { DEBUG_TOKEN("TOKEN_STATIC"); return TOKEN_STATIC; }
 "void"                      { DEBUG_TOKEN("TOKEN_VOID"); return TOKEN_VOID; }
@@ -60,8 +60,8 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "Float.parseFloat"          { DEBUG_TOKEN("TOKEN_PARSEFLOAT"); return TOKEN_PARSEFLOAT; }
 "Double.parseDouble"        { DEBUG_TOKEN("TOKEN_PARSEDOUBLE"); return TOKEN_PARSEDOUBLE; }
 "String.join"               { DEBUG_TOKEN("TOKEN_STRINGJOIN"); return TOKEN_STRINGJOIN; }
-"true"                      { DEBUG_TOKEN("TOKEN_TYPE_TRUE"); return TOKEN_TYPE_TRUE; }
-"false"                     { DEBUG_TOKEN("TOKEN_TYPE_FALSE"); return TOKEN_TYPE_FALSE; }
+"true"                      { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_TRUE"); return TOKEN_TYPE_TRUE; }
+"false"                     { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FALSE"); return TOKEN_TYPE_FALSE; }
 "boolean"                   { DEBUG_TOKEN("TOKEN_BOOLEAN"); return TOKEN_BOOLEAN; }
 "string"                    { DEBUG_TOKEN("TOKEN_STRING"); return TOKEN_STRING; }
 "float"                     { DEBUG_TOKEN("TOKEN_FLOAT"); return TOKEN_FLOAT; }
@@ -121,7 +121,7 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "."                         { DEBUG_TOKEN("TOKEN_DOT"); return TOKEN_DOT; }
 {WHITESPACE}                { /* Ignorar */ }
 \n                          { yycolumn = 1; }
-{IDENTIFIER}                { DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
+{IDENTIFIER}                { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
 .                           {
                             /* DEBUG PARA ERROR */
                             printf("DEBUG LEXER: TOKEN_ERROR reconocido: '%s' (ASCII: %d) en linea %d\n", 

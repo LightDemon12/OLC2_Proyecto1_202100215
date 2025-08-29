@@ -14,8 +14,10 @@
 #include "../Headers/error_report_window.h"
 #include "../Headers/error_manager.h"
 #include "../Headers/ast.h"
+#include "../Headers/ast_visualizer.h"
 
 extern ErrorManager* global_error_manager;
+extern ASTNode* ast_root;
 
 // Paleta de 8 colores para palabras (más suaves para Win98)
 static const char *word_colors[8] = {
@@ -342,14 +344,48 @@ static void on_ast_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     MainView *mainview = (MainView *)user_data;
     mainview_clear_output(mainview);
     mainview_append_output(mainview, "=== REPORTE AST ===");
-    mainview_append_output(mainview, "AST impreso en consola (ver terminal)");
 
-    /* SÚPER SIMPLE - SOLO LLAMAR print_node SIN PARÁMETROS */
-    printf("\n=== ÁRBOL SINTÁCTICO ABSTRACTO (DESDE GUI) ===\n");
-    print_node(NULL, 0);  /* ← NULL usa automáticamente ast_root global */
+    if (!ast_root) {
+        mainview_append_output(mainview, "No hay AST disponible");
+        mainview_append_output(mainview, "Ejecute 'Reconstruir y Analizar' primero");
+        return;
+    }
+
+    /* GENERAR Y ABRIR VISUALIZACIÓN */
+    mainview_append_output(mainview, "Generando visualización...");
+
+    ASTVisualizationResult* result = generate_global_ast_visual("png");
+
+    if (result && result->success) {
+        mainview_append_output(mainview, "Visualización generada exitosamente");
+
+        /* ABRIR AUTOMÁTICAMENTE */
+        char cmd[1024];
+        snprintf(cmd, sizeof(cmd), "xdg-open \"%s\" &", result->image_file_path);
+        system(cmd);
+
+        mainview_append_output(mainview, "Imagen abierta automáticamente");
+
+        /* INFO DE ARCHIVOS */
+        char info[256];
+        snprintf(info, sizeof(info), "Archivos: Logic/AST/AST.png, Logic/AST/AST.dot");
+        mainview_append_output(mainview, info);
+
+    } else {
+        mainview_append_output(mainview, "Error generando visualización");
+        if (!check_graphviz_available()) {
+            mainview_append_output(mainview, "Instale: sudo apt install graphviz");
+        }
+    }
+
+    /* AST EN CONSOLA */
+    mainview_append_output(mainview, "AST en consola (ver terminal)");
+    printf("\n=== AST DESDE GUI ===\n");
+    print_node(NULL, 0);
     printf("=== FIN AST ===\n\n");
 
-    printf("DEBUG: Reporte AST solicitado\n");
+    free_visualization_result(result);
+    mainview_append_output(mainview, "=== FIN REPORTE ===");
 }
 
 static void on_errores_clicked(GtkMenuItem *menuitem, gpointer user_data) {
