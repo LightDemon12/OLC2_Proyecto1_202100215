@@ -33,26 +33,6 @@ ASTNode* build_declaracion_single(ASTNode* tipo_node, const char* identifier, AS
 ASTNode* build_declaracion_multiple(ASTNode* tipo_node, ASTNode* lista_declaraciones_node, int line, int column);
 
 /**
- * Construye el nodo TIPO
- *
- * @param tipo_token - Tipo como string ("string", "int", etc.)
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo TIPO creado
- */
-ASTNode* build_tipo_node(const char* tipo_token, int line, int column);
-
-/**
- * Construye el nodo DATO (valor de la variable)
- *
- * @param valor - Valor como string
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo DATO creado
- */
-ASTNode* build_dato_node(const char* valor, int line, int column);
-
-/**
  * Construye el nodo LISTA_DECLARACIONES con una sola declaración
  *
  * @param declaracion_node - Nodo de una declaración individual

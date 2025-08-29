@@ -71,6 +71,8 @@ set(SOURCES
         Logic/Builders/builder_datos.c
         Headers/builder_declaraciones.h
         Logic/Builders/builder_declaraciones.c
+        Headers/builder_tipos_datos.h
+        Logic/Builders/builder_tipos_datos.c
 )
 
 # Crear ejecutable

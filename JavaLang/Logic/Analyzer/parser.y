@@ -9,6 +9,7 @@
 #include "../../Headers/builder_instrucciones.h"
 #include "../../Headers/builder_sout.h"
 #include "../../Headers/builder_declaraciones.h" 
+#include "../../Headers/builder_tipos_datos.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -203,7 +204,6 @@ instrucciones:
     }
     ;
 
-
 instruccion:
     sout
     {
@@ -231,12 +231,28 @@ tipo:
     {
         $$ = build_tipo_node("string", @1.first_line, @1.first_column);
     }
+    | TOKEN_INT 
+    {
+        $$ = build_tipo_node("int", @1.first_line, @1.first_column);
+    }
+    | TOKEN_FLOAT  
+    {
+        $$ = build_tipo_node("float", @1.first_line, @1.first_column);
+    }
     ;
 
 dato:
     TOKEN_TYPE_STRING
     {
-        $$ = build_dato_node($1, @1.first_line, @1.first_column);
+        $$ = build_dato_string($1, @1.first_line, @1.first_column);
+    }
+    | TOKEN_TYPE_INT  
+    {
+        $$ = build_dato_int($1, @1.first_line, @1.first_column);
+    }
+    | TOKEN_TYPE_FLOAT  
+    {
+        $$ = build_dato_float($1, @1.first_line, @1.first_column);
     }
     ;
 
@@ -257,7 +273,6 @@ lista_declaracion:
         $$ = build_lista_declaracion_node($1, $3, @1.first_line, @1.first_column);
     }
     ;
-
 
 sout:
     TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON
