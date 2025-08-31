@@ -1,5 +1,44 @@
-// Nuevo archivo JavaLang
-int main() {
-    // Tu código aquí
-    return 0;
+public static void main() {
+    boolean activo = true;
+    boolean inactivo = false;
+    char letra = 'A';
+    int numero1 = 10;
+    int numero2 = 5;
+    int resultado = numero1 + numero2 * 3;
+    boolean esValido = numero1 > numero2 && numero1 != 0;
+    char inicial = 'J';
+    string mensaje = "Hola " + nombre;
+    string resultado = "El valor es: " + (5 * 3 + 2);
+    System.out.println("Hola " + nombre + ", tienes " + edad + " años");
+    System.out.println(edad * 12 + " meses de vida");
+    string activo = true && !false || condicion;
+    // comentario
+    string mayor = numero1 > numero2 && numero1 >= 10;
+    // ASIGNACIONES
+    int a = 1;
+    a += 3;
+    int a = 1;
+    a += a+3 + 5 / 8;
+    int a = 1;
+    a *= 4 * (45 / 5);
+    int resultado = 10;
+    resultado += numero1 + numero2;
+    // ifs
+    if (x > 5) {
+    System.out.println("Mayor");
+    }
+    if (edad >= 18) {
+        System.out.println("Adulto");
+    } else {
+        System.out.println("Menor");
+    }
+    if (nota >= 90) {
+        System.out.println("A");
+    } else if (nota >= 80) {
+        System.out.println("B");
+    } else if (nota >= 70) {
+        System.out.println("C");
+    } else {
+        System.out.println("F");
+    }
 }

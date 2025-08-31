@@ -1,20 +1,26 @@
-//
-// Created by lightdemon on 29/08/25.
-//
-
 #ifndef BUILDER_SOUT_H
 #define BUILDER_SOUT_H
 
 #include "ast.h"
 
 /**
- * Construye el nodo SOUT con un string literal
+ * Construye un nodo SOUT que acepta una expresión
  *
- * @param string_value - Valor del string (incluyendo comillas)
+ * @param expresion_node - Nodo de expresión a imprimir
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo SOUT creado con su STRING_LITERAL
+ * @return ASTNode* - Nodo SOUT creado
  */
-ASTNode* build_sout_node(const char* string_value, int line, int column);
+ASTNode* build_sout_node(ASTNode* expresion_node, int line, int column);
+
+/**
+ * Construye un nodo SOUT con string literal (función de compatibilidad)
+ *
+ * @param string_value - Valor string literal
+ * @param line - Línea del token
+ * @param column - Columna del token
+ * @return ASTNode* - Nodo SOUT creado
+ */
+ASTNode* build_sout_string(const char* string_value, int line, int column);
 
 #endif // BUILDER_SOUT_H

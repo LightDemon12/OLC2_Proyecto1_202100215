@@ -80,6 +80,10 @@
 #include "../../Headers/builder_sout.h"
 #include "../../Headers/builder_declaraciones.h" 
 #include "../../Headers/builder_tipos_datos.h" 
+#include "../../Headers/builder_expresion.h"
+#include "../../Headers/builder_asignacion.h" 
+#include "../../Headers/builder_if.h" 
+
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -94,7 +98,7 @@ extern FILE* yyin;
 /* FUNCIÓN DE ERROR */
 void yyerror(const char* s);
 
-#line 98 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 102 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -209,12 +213,21 @@ enum yysymbol_kind_t
   YYSYMBOL_bloque_main = 84,               /* bloque_main  */
   YYSYMBOL_instrucciones = 85,             /* instrucciones  */
   YYSYMBOL_instruccion = 86,               /* instruccion  */
-  YYSYMBOL_declaraciones = 87,             /* declaraciones  */
-  YYSYMBOL_tipo = 88,                      /* tipo  */
-  YYSYMBOL_dato = 89,                      /* dato  */
-  YYSYMBOL_lista_declaraciones = 90,       /* lista_declaraciones  */
-  YYSYMBOL_lista_declaracion = 91,         /* lista_declaracion  */
-  YYSYMBOL_sout = 92                       /* sout  */
+  YYSYMBOL_expresion = 87,                 /* expresion  */
+  YYSYMBOL_declaraciones = 88,             /* declaraciones  */
+  YYSYMBOL_asignacion_compuesta = 89,      /* asignacion_compuesta  */
+  YYSYMBOL_operador_asignacion = 90,       /* operador_asignacion  */
+  YYSYMBOL_tipo = 91,                      /* tipo  */
+  YYSYMBOL_dato = 92,                      /* dato  */
+  YYSYMBOL_lista_declaraciones = 93,       /* lista_declaraciones  */
+  YYSYMBOL_lista_declaracion = 94,         /* lista_declaracion  */
+  YYSYMBOL_sout = 95,                      /* sout  */
+  YYSYMBOL_sentencia_if = 96,              /* sentencia_if  */
+  YYSYMBOL_if_simple = 97,                 /* if_simple  */
+  YYSYMBOL_if_con_else = 98,               /* if_con_else  */
+  YYSYMBOL_if_con_else_if = 99,            /* if_con_else_if  */
+  YYSYMBOL_lista_else_if = 100,            /* lista_else_if  */
+  YYSYMBOL_else_if = 101                   /* else_if  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -545,16 +558,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   62
+#define YYLAST   486
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  82
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  11
+#define YYNNTS  20
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  19
+#define YYNRULES  66
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  41
+#define YYNSTATES  126
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   336
@@ -611,8 +624,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   182,   182,   190,   197,   201,   208,   212,   219,   223,
-     230,   234,   238,   245,   249,   253,   260,   264,   271,   278
+       0,   186,   186,   194,   201,   205,   212,   216,   220,   224,
+     228,   236,   240,   244,   248,   252,   258,   262,   268,   272,
+     276,   280,   286,   290,   296,   302,   308,   313,   321,   325,
+     329,   336,   344,   348,   352,   356,   360,   364,   368,   372,
+     376,   380,   384,   392,   396,   400,   404,   408,   415,   419,
+     423,   427,   431,   435,   442,   446,   453,   460,   467,   471,
+     475,   482,   489,   496,   503,   507,   514
 };
 #endif
 
@@ -650,9 +668,11 @@ static const char *const yytname[] =
   "TOKEN_ESCAPE", "TOKEN_INCREMENT", "TOKEN_DECREMENT", "TOKEN_EOF",
   "TOKEN_ERROR", "TOKEN_TYPE_INT", "TOKEN_TYPE_FLOAT", "TOKEN_TYPE_STRING",
   "TOKEN_TYPE_CHAR", "TOKEN_TYPE_TRUE", "TOKEN_TYPE_FALSE", "$accept",
-  "program", "bloque_main", "instrucciones", "instruccion",
-  "declaraciones", "tipo", "dato", "lista_declaraciones",
-  "lista_declaracion", "sout", YY_NULLPTR
+  "program", "bloque_main", "instrucciones", "instruccion", "expresion",
+  "declaraciones", "asignacion_compuesta", "operador_asignacion", "tipo",
+  "dato", "lista_declaraciones", "lista_declaracion", "sout",
+  "sentencia_if", "if_simple", "if_con_else", "if_con_else_if",
+  "lista_else_if", "else_if", YY_NULLPTR
 };
 
 static const char *
@@ -662,7 +682,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-71)
+#define YYPACT_NINF (-40)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -674,13 +694,21 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-static const yytype_int8 yypact[] =
+static const yytype_int16 yypact[] =
 {
-       2,    -1,    13,   -71,     3,   -71,     1,   -25,   -24,   -29,
-       0,   -71,   -71,   -71,   -22,    -3,   -71,   -71,     5,   -71,
-     -57,   -71,   -71,    -9,   -34,   -71,   -19,   -70,   -71,     9,
-     -18,   -71,   -71,   -71,   -17,    -4,   -71,   -71,   -71,   -70,
-     -71
+      29,    -2,    35,   -40,    28,   -40,    41,    14,    31,    10,
+     234,   -40,   -40,   -40,   -40,   -40,   455,   -13,   -13,    34,
+      38,   -40,   -40,   -40,   -40,   -40,   -40,    54,   -40,   436,
+     -40,   -40,    61,   -40,   -40,   -40,   -40,   -40,   -40,   -40,
+     -40,   -40,   -40,   -40,   -40,   -40,   -40,   -40,   -40,   -40,
+     -13,   -40,   -40,   360,   -13,   -13,   -40,   -40,   -13,   -13,
+     -13,   -13,   -13,   -13,   -13,   -13,   -13,   -13,   -13,   -13,
+     -13,    39,    -9,   -40,   304,   -40,   371,   398,    -1,    -1,
+     -40,   -40,   -40,    -5,    -5,   130,   130,   130,   130,   105,
+     -12,   -13,   -40,   -40,    65,   -40,    37,    42,   332,    55,
+     -40,   234,   -40,   -40,   -13,   104,   436,    36,   -36,    40,
+     -40,   234,    47,    25,   -40,   154,   -13,   234,   -40,   409,
+     204,    44,   -40,   234,   254,   -40
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -689,24 +717,32 @@ static const yytype_int8 yypact[] =
 static const yytype_int8 yydefact[] =
 {
        0,     0,     0,     2,     0,     1,     0,     0,     0,     0,
-       0,    11,    12,    10,     0,     0,     4,     7,     0,     6,
-       0,     3,     5,     0,     0,    16,     0,     0,     9,     0,
-       0,    14,    15,    13,    18,     0,    17,    19,     8,     0,
-      18
+       0,    44,    45,    43,    46,    47,    27,     0,     0,     0,
+       0,    49,    50,    48,    51,    52,    53,     0,     4,     9,
+       7,     8,     0,    26,     6,    10,    58,    59,    60,    32,
+      33,    34,    35,    36,    37,    38,    39,    40,    41,    42,
+       0,    27,    24,     0,     0,     0,     3,     5,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,    54,     0,    25,     0,     0,    11,    12,
+      13,    14,    15,    16,    17,    18,    19,    20,    21,    22,
+      23,     0,    30,    29,     0,    31,     0,     0,    56,     0,
+      55,     0,    57,    28,     0,     0,    56,    61,     0,     0,
+      65,     0,     0,     0,    64,     0,     0,     0,    62,     0,
+       0,     0,    63,     0,     0,    66
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -71,   -71,   -71,   -71,    14,   -71,   -71,   -11,   -71,     4,
-     -71
+     -40,   -40,   -40,   -39,   -24,   -17,   -40,   -40,   -40,   -40,
+     -40,   -40,     3,   -40,   -40,   -40,   -40,   -40,   -40,   -11
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     2,     3,    15,    16,    17,    18,    34,    24,    25,
-      19
+       0,     2,     3,    27,    28,    29,    30,    31,    50,    32,
+      33,    72,    73,    34,    35,    36,    37,    38,   109,   110
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -714,24 +750,108 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      11,    12,    13,    11,    12,    13,    31,    32,    33,    28,
-       4,    29,     1,     5,     7,     6,     8,    10,     9,    20,
-      23,    26,    27,    30,    35,    37,    38,    39,    40,    22,
-       0,     0,     0,    36,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,    21,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,    14,
-       0,     0,    14
+      52,    53,    51,    57,    58,    59,    60,    61,    62,     4,
+     111,    58,    59,    60,    61,    62,   112,    60,    61,    62,
+      63,    64,    65,    66,    67,    68,    69,    17,    18,    65,
+      66,    67,    68,    74,    93,     5,    94,    76,    77,     1,
+       6,    78,    79,    80,    81,    82,    83,    84,    85,    86,
+      87,    88,    89,    90,     7,     8,    10,    11,    12,    13,
+      14,    15,   105,    21,    22,    23,    24,    25,    26,    16,
+      91,   117,   115,     9,    98,    54,    71,   112,   120,    55,
+      99,    57,    92,   101,   124,   102,   104,   106,   116,   108,
+     123,    57,     0,   113,    17,    18,    57,   100,   114,   119,
+      57,    56,     0,     0,     0,     0,    19,    11,    12,    13,
+      14,    15,     0,     0,     0,     0,    20,     0,     0,    16,
+       0,    58,    59,    60,    61,    62,     0,     0,     0,     0,
+      21,    22,    23,    24,    25,    26,     0,    63,    64,    65,
+      66,    67,    68,     0,    17,    18,    58,    59,    60,    61,
+      62,   107,     0,     0,     0,     0,    19,    11,    12,    13,
+      14,    15,     0,     0,     0,     0,    20,     0,     0,    16,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      21,    22,    23,    24,    25,    26,     0,     0,     0,     0,
+       0,     0,     0,     0,    17,    18,     0,     0,     0,     0,
+       0,   118,     0,     0,     0,     0,    19,    11,    12,    13,
+      14,    15,     0,     0,     0,     0,    20,     0,     0,    16,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      21,    22,    23,    24,    25,    26,     0,    11,    12,    13,
+      14,    15,     0,     0,    17,    18,     0,     0,     0,    16,
+       0,   122,     0,     0,     0,     0,    19,    11,    12,    13,
+      14,    15,     0,     0,     0,     0,    20,     0,     0,    16,
+       0,     0,     0,     0,    17,    18,     0,     0,     0,     0,
+      21,    22,    23,    24,    25,    26,    19,     0,     0,     0,
+       0,     0,     0,     0,    17,    18,    20,     0,     0,     0,
+       0,   125,     0,     0,     0,     0,    19,     0,     0,     0,
+      21,    22,    23,    24,    25,    26,    20,     0,     0,     0,
+      58,    59,    60,    61,    62,     0,     0,     0,     0,     0,
+      21,    22,    23,    24,    25,    26,    63,    64,    65,    66,
+      67,    68,    69,    70,     0,     0,     0,    95,    58,    59,
+      60,    61,    62,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,    63,    64,    65,    66,    67,    68,
+      69,    70,     0,     0,     0,   103,    58,    59,    60,    61,
+      62,     0,     0,     0,     0,     0,     0,    58,    59,    60,
+      61,    62,    63,    64,    65,    66,    67,    68,    69,    70,
+       0,     0,    75,    63,    64,    65,    66,    67,    68,    69,
+      70,     0,     0,    96,    58,    59,    60,    61,    62,     0,
+       0,     0,     0,     0,     0,    58,    59,    60,    61,    62,
+      63,    64,    65,    66,    67,    68,    69,    70,     0,     0,
+      97,    63,    64,    65,    66,    67,    68,    69,    70,     0,
+       0,   121,    58,    59,    60,    61,    62,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,    63,    64,
+      65,    66,    67,    68,    69,    70,    39,    40,    41,    42,
+      43,    44,    45,    46,    47,    48,    49
 };
 
 static const yytype_int8 yycheck[] =
 {
-       3,     4,     5,     3,     4,     5,    76,    77,    78,    43,
-      11,    45,    10,     0,    13,    12,    41,    46,    42,    41,
-      15,    78,    31,    42,    15,    43,    43,    31,    39,    15,
-      -1,    -1,    -1,    29,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    47,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    62,
-      -1,    -1,    62
+      17,    18,    15,    27,    16,    17,    18,    19,    20,    11,
+      46,    16,    17,    18,    19,    20,    52,    18,    19,    20,
+      32,    33,    34,    35,    36,    37,    38,    40,    41,    34,
+      35,    36,    37,    50,    43,     0,    45,    54,    55,    10,
+      12,    58,    59,    60,    61,    62,    63,    64,    65,    66,
+      67,    68,    69,    70,    13,    41,    46,     3,     4,     5,
+       6,     7,   101,    76,    77,    78,    79,    80,    81,    15,
+      31,    46,   111,    42,    91,    41,    15,    52,   117,    41,
+      15,   105,    43,    46,   123,    43,    31,   104,    41,    53,
+      46,   115,    -1,    53,    40,    41,   120,    94,   109,   116,
+     124,    47,    -1,    -1,    -1,    -1,    52,     3,     4,     5,
+       6,     7,    -1,    -1,    -1,    -1,    62,    -1,    -1,    15,
+      -1,    16,    17,    18,    19,    20,    -1,    -1,    -1,    -1,
+      76,    77,    78,    79,    80,    81,    -1,    32,    33,    34,
+      35,    36,    37,    -1,    40,    41,    16,    17,    18,    19,
+      20,    47,    -1,    -1,    -1,    -1,    52,     3,     4,     5,
+       6,     7,    -1,    -1,    -1,    -1,    62,    -1,    -1,    15,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      76,    77,    78,    79,    80,    81,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    40,    41,    -1,    -1,    -1,    -1,
+      -1,    47,    -1,    -1,    -1,    -1,    52,     3,     4,     5,
+       6,     7,    -1,    -1,    -1,    -1,    62,    -1,    -1,    15,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      76,    77,    78,    79,    80,    81,    -1,     3,     4,     5,
+       6,     7,    -1,    -1,    40,    41,    -1,    -1,    -1,    15,
+      -1,    47,    -1,    -1,    -1,    -1,    52,     3,     4,     5,
+       6,     7,    -1,    -1,    -1,    -1,    62,    -1,    -1,    15,
+      -1,    -1,    -1,    -1,    40,    41,    -1,    -1,    -1,    -1,
+      76,    77,    78,    79,    80,    81,    52,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    40,    41,    62,    -1,    -1,    -1,
+      -1,    47,    -1,    -1,    -1,    -1,    52,    -1,    -1,    -1,
+      76,    77,    78,    79,    80,    81,    62,    -1,    -1,    -1,
+      16,    17,    18,    19,    20,    -1,    -1,    -1,    -1,    -1,
+      76,    77,    78,    79,    80,    81,    32,    33,    34,    35,
+      36,    37,    38,    39,    -1,    -1,    -1,    43,    16,    17,
+      18,    19,    20,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    32,    33,    34,    35,    36,    37,
+      38,    39,    -1,    -1,    -1,    43,    16,    17,    18,    19,
+      20,    -1,    -1,    -1,    -1,    -1,    -1,    16,    17,    18,
+      19,    20,    32,    33,    34,    35,    36,    37,    38,    39,
+      -1,    -1,    42,    32,    33,    34,    35,    36,    37,    38,
+      39,    -1,    -1,    42,    16,    17,    18,    19,    20,    -1,
+      -1,    -1,    -1,    -1,    -1,    16,    17,    18,    19,    20,
+      32,    33,    34,    35,    36,    37,    38,    39,    -1,    -1,
+      42,    32,    33,    34,    35,    36,    37,    38,    39,    -1,
+      -1,    42,    16,    17,    18,    19,    20,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    32,    33,
+      34,    35,    36,    37,    38,    39,    21,    22,    23,    24,
+      25,    26,    27,    28,    29,    30,    31
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -739,24 +859,42 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,    10,    83,    84,    11,     0,    12,    13,    41,    42,
-      46,     3,     4,     5,    62,    85,    86,    87,    88,    92,
-      41,    47,    86,    15,    90,    91,    78,    31,    43,    45,
-      42,    76,    77,    78,    89,    15,    91,    43,    43,    31,
-      89
+      46,     3,     4,     5,     6,     7,    15,    40,    41,    52,
+      62,    76,    77,    78,    79,    80,    81,    85,    86,    87,
+      88,    89,    91,    92,    95,    96,    97,    98,    99,    21,
+      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
+      90,    15,    87,    87,    41,    41,    47,    86,    16,    17,
+      18,    19,    20,    32,    33,    34,    35,    36,    37,    38,
+      39,    15,    93,    94,    87,    42,    87,    87,    87,    87,
+      87,    87,    87,    87,    87,    87,    87,    87,    87,    87,
+      87,    31,    43,    43,    45,    43,    42,    42,    87,    15,
+      94,    46,    43,    43,    31,    85,    87,    47,    53,   100,
+     101,    46,    52,    53,   101,    85,    41,    46,    47,    87,
+      85,    42,    47,    46,    85,    47
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    82,    83,    84,    85,    85,    86,    86,    87,    87,
-      88,    88,    88,    89,    89,    89,    90,    90,    91,    92
+       0,    82,    83,    84,    85,    85,    86,    86,    86,    86,
+      86,    87,    87,    87,    87,    87,    87,    87,    87,    87,
+      87,    87,    87,    87,    87,    87,    87,    87,    88,    88,
+      88,    89,    90,    90,    90,    90,    90,    90,    90,    90,
+      90,    90,    90,    91,    91,    91,    91,    91,    92,    92,
+      92,    92,    92,    92,    93,    93,    94,    95,    96,    96,
+      96,    97,    98,    99,   100,   100,   101
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     9,     1,     2,     1,     1,     5,     3,
-       1,     1,     1,     1,     1,     1,     1,     3,     3,     5
+       0,     2,     1,     9,     1,     2,     1,     1,     1,     1,
+       1,     3,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     2,     3,     1,     1,     5,     3,
+       3,     4,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     3,     3,     5,     1,     1,
+       1,     7,    11,    12,     2,     1,     8
 };
 
 
@@ -1604,152 +1742,528 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: bloque_main  */
-#line 183 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 187 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         ast_root = build_program_node((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
         (yyval.node) = ast_root;
     }
-#line 1613 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1751 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 3: /* bloque_main: TOKEN_PUBLIC TOKEN_STATIC TOKEN_VOID TOKEN_MAIN TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
-#line 191 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 195 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_bloque_main_node((yyvsp[-1].node), (yylsp[-8]).first_line, (yylsp[-8]).first_column);
     }
-#line 1621 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1759 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 4: /* instrucciones: instruccion  */
-#line 198 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 202 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_instrucciones_single((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1629 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1767 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 5: /* instrucciones: instrucciones instruccion  */
-#line 202 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 206 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_instrucciones_add((yyvsp[-1].node), (yyvsp[0].node));
     }
-#line 1637 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1775 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
   case 6: /* instruccion: sout  */
-#line 209 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
-    {
-        (yyval.node) = (yyvsp[0].node);
-    }
-#line 1645 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
-    break;
-
-  case 7: /* instruccion: declaraciones  */
 #line 213 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = (yyvsp[0].node);
     }
-#line 1653 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1783 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 8: /* declaraciones: tipo TOKEN_IDENTIFIER TOKEN_ASSIGN dato TOKEN_SEMICOLON  */
-#line 220 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 7: /* instruccion: declaraciones  */
+#line 217 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 1791 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 8: /* instruccion: asignacion_compuesta  */
+#line 221 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 1799 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 9: /* instruccion: expresion  */
+#line 225 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 1807 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 10: /* instruccion: sentencia_if  */
+#line 229 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 1815 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 11: /* expresion: expresion TOKEN_PLUS expresion  */
+#line 237 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "+", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1823 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 12: /* expresion: expresion TOKEN_MINUS expresion  */
+#line 241 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "-", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1831 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 13: /* expresion: expresion TOKEN_MULTIPLICATION expresion  */
+#line 245 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "*", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1839 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 14: /* expresion: expresion TOKEN_DIVISION expresion  */
+#line 249 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "/", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1847 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 15: /* expresion: expresion TOKEN_MODULE expresion  */
+#line 253 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "%", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1855 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 16: /* expresion: expresion TOKEN_EQUAL expresion  */
+#line 259 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "==", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1863 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 17: /* expresion: expresion TOKEN_UNEQUAL expresion  */
+#line 263 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "!=", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1871 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 18: /* expresion: expresion TOKEN_GREATER expresion  */
+#line 269 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), ">", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1879 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 19: /* expresion: expresion TOKEN_LESS expresion  */
+#line 273 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "<", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1887 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 20: /* expresion: expresion TOKEN_GREATER_EQUAL expresion  */
+#line 277 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), ">=", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1895 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 21: /* expresion: expresion TOKEN_LESS_EQUAL expresion  */
+#line 281 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "<=", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1903 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 22: /* expresion: expresion TOKEN_AND expresion  */
+#line 287 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "&&", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1911 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 23: /* expresion: expresion TOKEN_OR expresion  */
+#line 291 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_binaria((yyvsp[-2].node), "||", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1919 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 24: /* expresion: TOKEN_NOT expresion  */
+#line 297 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_unaria("!", (yyvsp[0].node), (yylsp[-1]).first_line, (yylsp[-1]).first_column);
+    }
+#line 1927 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 25: /* expresion: TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT  */
+#line 303 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_expresion_parentesis((yyvsp[-1].node), (yylsp[-2]).first_line, (yylsp[-2]).first_column);
+    }
+#line 1935 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 26: /* expresion: dato  */
+#line 309 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 1943 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 27: /* expresion: TOKEN_IDENTIFIER  */
+#line 314 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_identifier_node((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 1951 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 28: /* declaraciones: tipo TOKEN_IDENTIFIER TOKEN_ASSIGN expresion TOKEN_SEMICOLON  */
+#line 322 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_declaracion_single((yyvsp[-4].node), (yyvsp[-3].str), (yyvsp[-1].node), (yylsp[-4]).first_line, (yylsp[-4]).first_column);
     }
-#line 1661 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1959 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 9: /* declaraciones: tipo lista_declaraciones TOKEN_SEMICOLON  */
-#line 224 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 29: /* declaraciones: tipo lista_declaraciones TOKEN_SEMICOLON  */
+#line 326 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_declaracion_multiple((yyvsp[-2].node), (yyvsp[-1].node), (yylsp[-2]).first_line, (yylsp[-2]).first_column);
     }
-#line 1669 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 1967 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 10: /* tipo: TOKEN_STRING  */
-#line 231 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 30: /* declaraciones: tipo TOKEN_IDENTIFIER TOKEN_SEMICOLON  */
+#line 330 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_declaracion_sin_inicializacion((yyvsp[-2].node), (yyvsp[-1].str), (yylsp[-2]).first_line, (yylsp[-2]).first_column);
+    }
+#line 1975 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 31: /* asignacion_compuesta: TOKEN_IDENTIFIER operador_asignacion expresion TOKEN_SEMICOLON  */
+#line 337 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_asignacion_compuesta((yyvsp[-3].str), (yyvsp[-2].node), (yyvsp[-1].node), (yylsp[-3]).first_line, (yylsp[-3]).first_column);
+    }
+#line 1983 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 32: /* operador_asignacion: TOKEN_PLUS_ASSIGN  */
+#line 345 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("+=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 1991 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 33: /* operador_asignacion: TOKEN_MINUS_ASSIGN  */
+#line 349 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("-=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 1999 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 34: /* operador_asignacion: TOKEN_MULT_ASSIGN  */
+#line 353 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("*=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2007 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 35: /* operador_asignacion: TOKEN_DIV_ASSIGN  */
+#line 357 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("/=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2015 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 36: /* operador_asignacion: TOKEN_MOD_ASSIGN  */
+#line 361 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("%=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2023 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 37: /* operador_asignacion: TOKEN_AND_ASSIGN  */
+#line 365 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("&=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2031 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 38: /* operador_asignacion: TOKEN_OR_ASSIGN  */
+#line 369 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("|=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2039 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 39: /* operador_asignacion: TOKEN_XOR_ASSIGN  */
+#line 373 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("^=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2047 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 40: /* operador_asignacion: TOKEN_SHIFT_LEFT_ASSIGN  */
+#line 377 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("<<=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2055 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 41: /* operador_asignacion: TOKEN_SHIFT_RIGHT_ASSIGN  */
+#line 381 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion(">>=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2063 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 42: /* operador_asignacion: TOKEN_ASSIGN  */
+#line 385 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_operador_asignacion("=", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2071 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 43: /* tipo: TOKEN_STRING  */
+#line 393 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_tipo_node("string", (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1677 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2079 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 11: /* tipo: TOKEN_INT  */
-#line 235 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 44: /* tipo: TOKEN_INT  */
+#line 397 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_tipo_node("int", (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1685 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2087 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 12: /* tipo: TOKEN_FLOAT  */
-#line 239 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 45: /* tipo: TOKEN_FLOAT  */
+#line 401 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_tipo_node("float", (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1693 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2095 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 13: /* dato: TOKEN_TYPE_STRING  */
-#line 246 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 46: /* tipo: TOKEN_CHAR  */
+#line 405 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_tipo_node("char", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2103 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 47: /* tipo: TOKEN_BOOLEAN  */
+#line 409 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_tipo_node("boolean", (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2111 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 48: /* dato: TOKEN_TYPE_STRING  */
+#line 416 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_dato_string((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1701 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2119 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 14: /* dato: TOKEN_TYPE_INT  */
-#line 250 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 49: /* dato: TOKEN_TYPE_INT  */
+#line 420 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_dato_int((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1709 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2127 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 15: /* dato: TOKEN_TYPE_FLOAT  */
-#line 254 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 50: /* dato: TOKEN_TYPE_FLOAT  */
+#line 424 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_dato_float((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1717 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2135 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 16: /* lista_declaraciones: lista_declaracion  */
-#line 261 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 51: /* dato: TOKEN_TYPE_CHAR  */
+#line 428 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_dato_char((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2143 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 52: /* dato: TOKEN_TYPE_TRUE  */
+#line 432 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_dato_boolean((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2151 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 53: /* dato: TOKEN_TYPE_FALSE  */
+#line 436 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_dato_boolean((yyvsp[0].str), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2159 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 54: /* lista_declaraciones: lista_declaracion  */
+#line 443 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_lista_declaraciones_single((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
     }
-#line 1725 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2167 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 17: /* lista_declaraciones: lista_declaraciones TOKEN_COMMA lista_declaracion  */
-#line 265 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 55: /* lista_declaraciones: lista_declaraciones TOKEN_COMMA lista_declaracion  */
+#line 447 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_lista_declaraciones_add((yyvsp[-2].node), (yyvsp[0].node));
     }
-#line 1733 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2175 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 18: /* lista_declaracion: TOKEN_IDENTIFIER TOKEN_ASSIGN dato  */
-#line 272 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 56: /* lista_declaracion: TOKEN_IDENTIFIER TOKEN_ASSIGN expresion  */
+#line 454 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
         (yyval.node) = build_lista_declaracion_node((yyvsp[-2].str), (yyvsp[0].node), (yylsp[-2]).first_line, (yylsp[-2]).first_column);
     }
-#line 1741 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2183 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
-  case 19: /* sout: TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON  */
-#line 279 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+  case 57: /* sout: TOKEN_SOUT TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_SEMICOLON  */
+#line 461 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
     {
-        (yyval.node) = build_sout_node((yyvsp[-2].str), (yylsp[-4]).first_line, (yylsp[-4]).first_column);
+        (yyval.node) = build_sout_node((yyvsp[-2].node), (yylsp[-4]).first_line, (yylsp[-4]).first_column);
     }
-#line 1749 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2191 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 58: /* sentencia_if: if_simple  */
+#line 468 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 2199 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 59: /* sentencia_if: if_con_else  */
+#line 472 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 2207 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 60: /* sentencia_if: if_con_else_if  */
+#line 476 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = (yyvsp[0].node);
+    }
+#line 2215 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 61: /* if_simple: TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
+#line 483 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_if_simple((yyvsp[-4].node), (yyvsp[-1].node), (yylsp[-6]).first_line, (yylsp[-6]).first_column);
+    }
+#line 2223 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 62: /* if_con_else: TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
+#line 490 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_if_con_else((yyvsp[-8].node), (yyvsp[-5].node), (yyvsp[-1].node), (yylsp[-10]).first_line, (yylsp[-10]).first_column);
+    }
+#line 2231 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 63: /* if_con_else_if: TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT lista_else_if TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
+#line 497 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_if_con_else_if((yyvsp[-9].node), (yyvsp[-6].node), (yyvsp[-4].node), (yyvsp[-1].node), (yylsp[-11]).first_line, (yylsp[-11]).first_column);
+    }
+#line 2239 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 64: /* lista_else_if: lista_else_if else_if  */
+#line 504 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_lista_else_if_add((yyvsp[-1].node), (yyvsp[0].node));
+    }
+#line 2247 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 65: /* lista_else_if: else_if  */
+#line 508 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_lista_else_if_single((yyvsp[0].node), (yylsp[0]).first_line, (yylsp[0]).first_column);
+    }
+#line 2255 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+    break;
+
+  case 66: /* else_if: TOKEN_ELSE TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT  */
+#line 515 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+    {
+        (yyval.node) = build_else_if((yyvsp[-4].node), (yyvsp[-1].node), (yylsp[-7]).first_line, (yylsp[-7]).first_column);
+    }
+#line 2263 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
     break;
 
 
-#line 1753 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
+#line 2267 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.c"
 
       default: break;
     }
@@ -1978,7 +2492,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 284 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 520 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
 
 void yyerror(const char* s) {

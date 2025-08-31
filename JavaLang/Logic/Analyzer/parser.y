@@ -10,6 +10,10 @@
 #include "../../Headers/builder_sout.h"
 #include "../../Headers/builder_declaraciones.h" 
 #include "../../Headers/builder_tipos_datos.h" 
+#include "../../Headers/builder_expresion.h"
+#include "../../Headers/builder_asignacion.h" 
+#include "../../Headers/builder_if.h" 
+
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -174,7 +178,7 @@ Paréntesis ((, ))
 %left TOKEN_PAREN_LEFT TOKEN_PAREN_RIGHT
 
 %type <node> program bloque_main instrucciones instruccion sout declaraciones tipo dato lista_declaraciones lista_declaracion
-
+%type <node> expresion operador_asignacion asignacion_compuesta sentencia_if if_simple if_con_else if_con_else_if lista_else_if else_if
 
 %%
 
@@ -213,10 +217,108 @@ instruccion:
     {
         $$ = $1;
     }
+    | asignacion_compuesta
+    {
+        $$ = $1;
+    }
+    | expresion
+    {
+        $$ = $1;
+    }
+    | sentencia_if  
+    {
+        $$ = $1;
+    }
     ;
 
+expresion:
+    /* OPERADORES ARITMÉTICOS */
+    expresion TOKEN_PLUS expresion
+    {
+        $$ = build_expresion_binaria($1, "+", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_MINUS expresion
+    {
+        $$ = build_expresion_binaria($1, "-", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_MULTIPLICATION expresion
+    {
+        $$ = build_expresion_binaria($1, "*", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_DIVISION expresion
+    {
+        $$ = build_expresion_binaria($1, "/", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_MODULE expresion
+    {
+        $$ = build_expresion_binaria($1, "%", $3, @2.first_line, @2.first_column);
+    }
+    
+    /* OPERADORES DE COMPARACIÓN */
+    | expresion TOKEN_EQUAL expresion
+    {
+        $$ = build_expresion_binaria($1, "==", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_UNEQUAL expresion
+    {
+        $$ = build_expresion_binaria($1, "!=", $3, @2.first_line, @2.first_column);
+    }
+    
+    /* OPERADORES RELACIONALES */
+    | expresion TOKEN_GREATER expresion
+    {
+        $$ = build_expresion_binaria($1, ">", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_LESS expresion
+    {
+        $$ = build_expresion_binaria($1, "<", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_GREATER_EQUAL expresion
+    {
+        $$ = build_expresion_binaria($1, ">=", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_LESS_EQUAL expresion
+    {
+        $$ = build_expresion_binaria($1, "<=", $3, @2.first_line, @2.first_column);
+    }
+    
+    /* OPERADORES LÓGICOS */
+    | expresion TOKEN_AND expresion
+    {
+        $$ = build_expresion_binaria($1, "&&", $3, @2.first_line, @2.first_column);
+    }
+    | expresion TOKEN_OR expresion
+    {
+        $$ = build_expresion_binaria($1, "||", $3, @2.first_line, @2.first_column);
+    }
+    
+    /* OPERADOR UNARIO */
+    | TOKEN_NOT expresion
+    {
+        $$ = build_expresion_unaria("!", $2, @1.first_line, @1.first_column);
+    }
+    
+    /* PARÉNTESIS */
+    | TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_expresion_parentesis($2, @1.first_line, @1.first_column);
+    }
+    
+    /* DATOS PRIMITIVOS */
+    | dato
+    {
+        $$ = $1;
+    }
+    /* IDENTIFICADORES */
+    | TOKEN_IDENTIFIER
+    {
+        $$ = build_identifier_node($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+
 declaraciones:
-    tipo TOKEN_IDENTIFIER TOKEN_ASSIGN dato TOKEN_SEMICOLON
+    tipo TOKEN_IDENTIFIER TOKEN_ASSIGN expresion TOKEN_SEMICOLON
     {
         $$ = build_declaracion_single($1, $2, $4, @1.first_line, @1.first_column);
     }
@@ -224,7 +326,67 @@ declaraciones:
     {
         $$ = build_declaracion_multiple($1, $2, @1.first_line, @1.first_column);
     }
+    | tipo TOKEN_IDENTIFIER TOKEN_SEMICOLON
+    {
+        $$ = build_declaracion_sin_inicializacion($1, $2, @1.first_line, @1.first_column);
+    }
     ;
+
+asignacion_compuesta:
+    TOKEN_IDENTIFIER operador_asignacion expresion TOKEN_SEMICOLON
+    {
+        $$ = build_asignacion_compuesta($1, $2, $3, @1.first_line, @1.first_column);
+    }
+    ;
+
+
+operador_asignacion:
+    TOKEN_PLUS_ASSIGN
+    {
+        $$ = build_operador_asignacion("+=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_MINUS_ASSIGN
+    {
+        $$ = build_operador_asignacion("-=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_MULT_ASSIGN
+    {
+        $$ = build_operador_asignacion("*=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_DIV_ASSIGN
+    {
+        $$ = build_operador_asignacion("/=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_MOD_ASSIGN
+    {
+        $$ = build_operador_asignacion("%=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_AND_ASSIGN
+    {
+        $$ = build_operador_asignacion("&=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_OR_ASSIGN
+    {
+        $$ = build_operador_asignacion("|=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_XOR_ASSIGN
+    {
+        $$ = build_operador_asignacion("^=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_SHIFT_LEFT_ASSIGN
+    {
+        $$ = build_operador_asignacion("<<=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_SHIFT_RIGHT_ASSIGN
+    {
+        $$ = build_operador_asignacion(">>=", @1.first_line, @1.first_column);
+    }
+    | TOKEN_ASSIGN
+    {
+        $$ = build_operador_asignacion("=", @1.first_line, @1.first_column);
+    }
+    ;
+
 
 tipo:
     TOKEN_STRING
@@ -238,6 +400,14 @@ tipo:
     | TOKEN_FLOAT  
     {
         $$ = build_tipo_node("float", @1.first_line, @1.first_column);
+    }
+    | TOKEN_CHAR
+    {
+        $$ = build_tipo_node("char", @1.first_line, @1.first_column);
+    }
+    | TOKEN_BOOLEAN
+    {
+        $$ = build_tipo_node("boolean", @1.first_line, @1.first_column);
     }
     ;
 
@@ -254,6 +424,18 @@ dato:
     {
         $$ = build_dato_float($1, @1.first_line, @1.first_column);
     }
+    | TOKEN_TYPE_CHAR
+    {
+        $$ = build_dato_char($1, @1.first_line, @1.first_column);
+    }
+    | TOKEN_TYPE_TRUE
+    {
+        $$ = build_dato_boolean($1, @1.first_line, @1.first_column);
+    }
+    | TOKEN_TYPE_FALSE
+    {
+        $$ = build_dato_boolean($1, @1.first_line, @1.first_column);
+    }
     ;
 
 lista_declaraciones:
@@ -268,16 +450,70 @@ lista_declaraciones:
     ;
 
 lista_declaracion:
-    TOKEN_IDENTIFIER TOKEN_ASSIGN dato
+    TOKEN_IDENTIFIER TOKEN_ASSIGN expresion
     {
         $$ = build_lista_declaracion_node($1, $3, @1.first_line, @1.first_column);
     }
     ;
 
 sout:
-    TOKEN_SOUT TOKEN_PAREN_LEFT TOKEN_TYPE_STRING TOKEN_PAREN_RIGHT TOKEN_SEMICOLON
+    TOKEN_SOUT TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_SEMICOLON
     {
         $$ = build_sout_node($3, @1.first_line, @1.first_column);
+    }
+    ;
+
+sentencia_if:
+    if_simple
+    {
+        $$ = $1;
+    }
+    | if_con_else
+    {
+        $$ = $1;
+    }
+    | if_con_else_if
+    {
+        $$ = $1;
+    }
+    ;
+
+if_simple:
+    TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_if_simple($3, $6, @1.first_line, @1.first_column);
+    }
+    ;
+
+if_con_else:
+    TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_if_con_else($3, $6, $10, @1.first_line, @1.first_column);
+    }
+    ;
+
+if_con_else_if:
+    TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT lista_else_if TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_if_con_else_if($3, $6, $8, $11, @1.first_line, @1.first_column);
+    }
+    ;
+
+lista_else_if:
+    lista_else_if else_if
+    {
+        $$ = build_lista_else_if_add($1, $2);
+    }
+    | else_if
+    {
+        $$ = build_lista_else_if_single($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+else_if:
+    TOKEN_ELSE TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_else_if($4, $7, @1.first_line, @1.first_column);
     }
     ;
 

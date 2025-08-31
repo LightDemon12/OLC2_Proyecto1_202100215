@@ -69,21 +69,59 @@ ASTNode* build_dato_node(const char* valor, const char* tipo_esperado, int line,
 // ========== BUILDERS ESPECÍFICOS ==========
 
 ASTNode* build_dato_string(const char* valor, int line, int column) {
-    return build_dato_node(valor, "string", line, column);
+    ASTNode* dato_node = create_node("DATO", line, column);
+    ASTNode* valor_node = build_string_literal(valor, line, column);
+    add_child(dato_node, valor_node);
+
+    printf("DEBUG TIPOS_DATOS: Nodo DATO (string) creado\n");
+
+    return dato_node;
 }
 
 ASTNode* build_dato_int(const char* valor, int line, int column) {
-    return build_dato_node(valor, "int", line, column);
+    ASTNode* dato_node = create_node("DATO", line, column);
+    ASTNode* valor_node = build_int_literal(valor, line, column);
+    add_child(dato_node, valor_node);
+
+    printf("DEBUG TIPOS_DATOS: Nodo DATO (int) creado\n");
+
+    return dato_node;
 }
 
 ASTNode* build_dato_float(const char* valor, int line, int column) {
-    return build_dato_node(valor, "float", line, column);
+    ASTNode* dato_node = create_node("DATO", line, column);
+    ASTNode* valor_node = build_float_literal(valor, line, column);
+    add_child(dato_node, valor_node);
+
+    printf("DEBUG TIPOS_DATOS: Nodo DATO (float) creado\n");
+
+    return dato_node;
 }
 
 ASTNode* build_dato_char(const char* valor, int line, int column) {
-    return build_dato_node(valor, "char", line, column);
+    ASTNode* dato_node = create_node("DATO", line, column);
+    ASTNode* valor_node = build_char_literal(valor, line, column);
+    add_child(dato_node, valor_node);
+
+    printf("DEBUG TIPOS_DATOS: Nodo DATO (char) creado\n");
+
+    return dato_node;
 }
 
 ASTNode* build_dato_boolean(const char* valor, int line, int column) {
-    return build_dato_node(valor, "boolean", line, column);
+    ASTNode* dato_node = create_node("DATO", line, column);
+    ASTNode* valor_node = build_boolean_literal(valor, line, column);
+    add_child(dato_node, valor_node);
+
+    printf("DEBUG TIPOS_DATOS: Nodo DATO (boolean) creado\n");
+
+    return dato_node;
+}
+
+ASTNode* build_identifier_node(const char* name, int line, int column) {
+    ASTNode* id_node = build_identifier(name, line, column);
+
+    printf("DEBUG TIPOS_DATOS: Nodo IDENTIFIER reutilizable creado: %s\n", name ? name : "null");
+
+    return id_node;
 }
