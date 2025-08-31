@@ -79,6 +79,10 @@ set(SOURCES
         Logic/Builders/builder_asignacion.c
         Headers/builder_if.h
         Logic/Builders/builder_if.c
+        Headers/builder_sentencias.h
+        Logic/Builders/builder_sentencias.c
+        Headers/builder_switch.h
+        Logic/Builders/builder_switch.c
 )
 
 # Crear ejecutable

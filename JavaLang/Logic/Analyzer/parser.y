@@ -13,7 +13,8 @@
 #include "../../Headers/builder_expresion.h"
 #include "../../Headers/builder_asignacion.h" 
 #include "../../Headers/builder_if.h" 
-
+#include "../../Headers/builder_sentencias.h"  
+#include "../../Headers/builder_switch.h"      
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -98,6 +99,7 @@ void yyerror(const char* s);
 %token TOKEN_BRACKET_RIGHT // ]
 %token TOKEN_QUOTE_DOUBLE // " "
 %token TOKEN_QUOTE_SINGLE // ' '
+%token TOKEN_COLON
 /*SENTENCIAS DE CONTROL DE FLUJO */
 %token TOKEN_IF           // if
 %token TOKEN_ELSE         // else
@@ -179,6 +181,7 @@ Paréntesis ((, ))
 
 %type <node> program bloque_main instrucciones instruccion sout declaraciones tipo dato lista_declaraciones lista_declaracion
 %type <node> expresion operador_asignacion asignacion_compuesta sentencia_if if_simple if_con_else if_con_else_if lista_else_if else_if
+%type <node> sentencias sentencia_switch lista_casos caso
 
 %%
 
@@ -226,6 +229,10 @@ instruccion:
         $$ = $1;
     }
     | sentencia_if  
+    {
+        $$ = $1;
+    }
+    | sentencia_switch 
     {
         $$ = $1;
     }
@@ -514,6 +521,50 @@ else_if:
     TOKEN_ELSE TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
         $$ = build_else_if($4, $7, @1.first_line, @1.first_column);
+    }
+    ;
+
+sentencias:
+    TOKEN_BREAK TOKEN_SEMICOLON
+    {
+        $$ = build_break(@1.first_line, @1.first_column);
+    }
+    | TOKEN_CONTINUE TOKEN_SEMICOLON
+    {
+        $$ = build_continue(@1.first_line, @1.first_column);
+    }
+    | TOKEN_RETURN expresion TOKEN_SEMICOLON
+    {
+        $$ = build_return_con_valor($2, @1.first_line, @1.first_column);
+    }
+    | TOKEN_RETURN TOKEN_SEMICOLON
+    {
+        $$ = build_return_vacio(@1.first_line, @1.first_column);
+    }
+    ;
+
+sentencia_switch:
+    TOKEN_SWITCH TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT lista_casos TOKEN_BRACE_RIGHT
+    {
+        $$ = build_switch($3, $6, @1.first_line, @1.first_column);
+    }
+    ;
+
+lista_casos:
+    lista_casos caso
+    {
+        $$ = build_lista_casos_add($1, $2);
+    }
+    | caso
+    {
+        $$ = build_lista_casos_single($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+caso:
+    TOKEN_CASE dato TOKEN_COLON instrucciones sentencias
+    {
+        $$ = build_caso($2, $4, $5, @1.first_line, @1.first_column);
     }
     ;
 

@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 32 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 33 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
     typedef struct ASTNode ASTNode;
 
@@ -109,36 +109,37 @@ extern int yydebug;
     TOKEN_BRACKET_RIGHT = 304,     /* TOKEN_BRACKET_RIGHT  */
     TOKEN_QUOTE_DOUBLE = 305,      /* TOKEN_QUOTE_DOUBLE  */
     TOKEN_QUOTE_SINGLE = 306,      /* TOKEN_QUOTE_SINGLE  */
-    TOKEN_IF = 307,                /* TOKEN_IF  */
-    TOKEN_ELSE = 308,              /* TOKEN_ELSE  */
-    TOKEN_SWITCH = 309,            /* TOKEN_SWITCH  */
-    TOKEN_CASE = 310,              /* TOKEN_CASE  */
-    TOKEN_WHILE = 311,             /* TOKEN_WHILE  */
-    TOKEN_DO = 312,                /* TOKEN_DO  */
-    TOKEN_FOR = 313,               /* TOKEN_FOR  */
-    TOKEN_BREAK = 314,             /* TOKEN_BREAK  */
-    TOKEN_CONTINUE = 315,          /* TOKEN_CONTINUE  */
-    TOKEN_RETURN = 316,            /* TOKEN_RETURN  */
-    TOKEN_SOUT = 317,              /* TOKEN_SOUT  */
-    TOKEN_PARSEINT = 318,          /* TOKEN_PARSEINT  */
-    TOKEN_PARSEFLOAT = 319,        /* TOKEN_PARSEFLOAT  */
-    TOKEN_PARSEDOUBLE = 320,       /* TOKEN_PARSEDOUBLE  */
-    TOKEN_VALUEOF = 321,           /* TOKEN_VALUEOF  */
-    TOKEN_STRINGJOIN = 322,        /* TOKEN_STRINGJOIN  */
-    TOKEN_INDEXOF = 323,           /* TOKEN_INDEXOF  */
-    TOKEN_LENGTH = 324,            /* TOKEN_LENGTH  */
-    TOKEN_ADD = 325,               /* TOKEN_ADD  */
-    TOKEN_ESCAPE = 326,            /* TOKEN_ESCAPE  */
-    TOKEN_INCREMENT = 327,         /* TOKEN_INCREMENT  */
-    TOKEN_DECREMENT = 328,         /* TOKEN_DECREMENT  */
-    TOKEN_EOF = 329,               /* TOKEN_EOF  */
-    TOKEN_ERROR = 330,             /* TOKEN_ERROR  */
-    TOKEN_TYPE_INT = 331,          /* TOKEN_TYPE_INT  */
-    TOKEN_TYPE_FLOAT = 332,        /* TOKEN_TYPE_FLOAT  */
-    TOKEN_TYPE_STRING = 333,       /* TOKEN_TYPE_STRING  */
-    TOKEN_TYPE_CHAR = 334,         /* TOKEN_TYPE_CHAR  */
-    TOKEN_TYPE_TRUE = 335,         /* TOKEN_TYPE_TRUE  */
-    TOKEN_TYPE_FALSE = 336         /* TOKEN_TYPE_FALSE  */
+    TOKEN_COLON = 307,             /* TOKEN_COLON  */
+    TOKEN_IF = 308,                /* TOKEN_IF  */
+    TOKEN_ELSE = 309,              /* TOKEN_ELSE  */
+    TOKEN_SWITCH = 310,            /* TOKEN_SWITCH  */
+    TOKEN_CASE = 311,              /* TOKEN_CASE  */
+    TOKEN_WHILE = 312,             /* TOKEN_WHILE  */
+    TOKEN_DO = 313,                /* TOKEN_DO  */
+    TOKEN_FOR = 314,               /* TOKEN_FOR  */
+    TOKEN_BREAK = 315,             /* TOKEN_BREAK  */
+    TOKEN_CONTINUE = 316,          /* TOKEN_CONTINUE  */
+    TOKEN_RETURN = 317,            /* TOKEN_RETURN  */
+    TOKEN_SOUT = 318,              /* TOKEN_SOUT  */
+    TOKEN_PARSEINT = 319,          /* TOKEN_PARSEINT  */
+    TOKEN_PARSEFLOAT = 320,        /* TOKEN_PARSEFLOAT  */
+    TOKEN_PARSEDOUBLE = 321,       /* TOKEN_PARSEDOUBLE  */
+    TOKEN_VALUEOF = 322,           /* TOKEN_VALUEOF  */
+    TOKEN_STRINGJOIN = 323,        /* TOKEN_STRINGJOIN  */
+    TOKEN_INDEXOF = 324,           /* TOKEN_INDEXOF  */
+    TOKEN_LENGTH = 325,            /* TOKEN_LENGTH  */
+    TOKEN_ADD = 326,               /* TOKEN_ADD  */
+    TOKEN_ESCAPE = 327,            /* TOKEN_ESCAPE  */
+    TOKEN_INCREMENT = 328,         /* TOKEN_INCREMENT  */
+    TOKEN_DECREMENT = 329,         /* TOKEN_DECREMENT  */
+    TOKEN_EOF = 330,               /* TOKEN_EOF  */
+    TOKEN_ERROR = 331,             /* TOKEN_ERROR  */
+    TOKEN_TYPE_INT = 332,          /* TOKEN_TYPE_INT  */
+    TOKEN_TYPE_FLOAT = 333,        /* TOKEN_TYPE_FLOAT  */
+    TOKEN_TYPE_STRING = 334,       /* TOKEN_TYPE_STRING  */
+    TOKEN_TYPE_CHAR = 335,         /* TOKEN_TYPE_CHAR  */
+    TOKEN_TYPE_TRUE = 336,         /* TOKEN_TYPE_TRUE  */
+    TOKEN_TYPE_FALSE = 337         /* TOKEN_TYPE_FALSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -147,12 +148,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 36 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 37 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
     ASTNode* node;
     char* str; 
 
-#line 156 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.h"
+#line 157 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

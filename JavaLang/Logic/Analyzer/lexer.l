@@ -118,6 +118,7 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "]"                         { DEBUG_TOKEN("TOKEN_BRACKET_RIGHT"); return TOKEN_BRACKET_RIGHT; }
 ";"                         { DEBUG_TOKEN("TOKEN_SEMICOLON"); return TOKEN_SEMICOLON; }
 ","                         { DEBUG_TOKEN("TOKEN_COMMA"); return TOKEN_COMMA; }
+":"                         { DEBUG_TOKEN("TOKEN_COLON"); return TOKEN_COLON; }
 "."                         { DEBUG_TOKEN("TOKEN_DOT"); return TOKEN_DOT; }
 {WHITESPACE}                { /* Ignorar */ }
 \n                          { yycolumn = 1; }
