@@ -118,10 +118,3 @@ ASTNode* build_dato_boolean(const char* valor, int line, int column) {
     return dato_node;
 }
 
-ASTNode* build_identifier_node(const char* name, int line, int column) {
-    ASTNode* id_node = build_identifier(name, line, column);
-
-    printf("DEBUG TIPOS_DATOS: Nodo IDENTIFIER reutilizable creado: %s\n", name ? name : "null");
-
-    return id_node;
-}

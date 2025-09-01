@@ -17,6 +17,7 @@
 #include "../../Headers/builder_switch.h"      
 #include "../../Headers/builder_scope.h" 
 #include "../../Headers/builder_ciclos.h" 
+#include "../../Headers/builder_datos.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -184,7 +185,7 @@ Paréntesis ((, ))
 
 %type <node> program bloque_main instrucciones instruccion sout declaraciones tipo dato lista_declaraciones lista_declaracion
 %type <node> expresion operador_asignacion asignacion_compuesta sentencia_if if_simple if_con_else if_con_else_if lista_else_if else_if
-%type <node> sentencias sentencia_switch lista_case case  ciclo_while  ciclo_do 
+%type <node> sentencias sentencia_switch lista_case case  ciclo_while  ciclo_do ciclo_for inicializacion_for actualizar_for 
 
 %%
 
@@ -227,7 +228,7 @@ instruccion:
     {
         $$ = $1;
     }
-    | expresion
+    | expresion TOKEN_SEMICOLON
     {
         $$ = $1;
     }
@@ -244,6 +245,10 @@ instruccion:
         $$ = $1;
     }
     | ciclo_do         
+    {
+        $$ = $1;
+    }
+    | ciclo_for        
     {
         $$ = $1;
     }
@@ -310,10 +315,37 @@ expresion:
         $$ = build_expresion_binaria($1, "||", $3, @2.first_line, @2.first_column);
     }
     
-    /* OPERADOR UNARIO */
+    /* OPERADOR UNARIO PREFIJO */
     | TOKEN_NOT expresion
     {
         $$ = build_expresion_unaria("!", $2, @1.first_line, @1.first_column);
+    }
+    | TOKEN_INCREMENT expresion 
+    {
+        $$ = build_expresion_unaria("++", $2, @1.first_line, @1.first_column);
+    }
+    | TOKEN_DECREMENT expresion 
+    {
+        $$ = build_expresion_unaria("--", $2, @1.first_line, @1.first_column);
+    }
+    
+    /* OPERADORES POSTFIJO */
+    | TOKEN_IDENTIFIER TOKEN_INCREMENT 
+    {
+        ASTNode* id_node = build_identifier($1, @1.first_line, @1.first_column);
+        $$ = build_expresion_postfijo(id_node, "++", @2.first_line, @2.first_column);
+    }
+    | TOKEN_IDENTIFIER TOKEN_DECREMENT 
+    {
+        ASTNode* id_node = build_identifier($1, @1.first_line, @1.first_column);
+        $$ = build_expresion_postfijo(id_node, "--", @2.first_line, @2.first_column);
+    }
+    
+    /* ACCESO A PROPIEDADES/MÉTODOS */
+    | TOKEN_IDENTIFIER TOKEN_DOT expresion
+    {
+        ASTNode* id_node = build_identifier($1, @1.first_line, @1.first_column);
+        $$ = build_expresion_acceso(id_node, $3, @2.first_line, @2.first_column);
     }
     
     /* PARÉNTESIS */
@@ -327,13 +359,13 @@ expresion:
     {
         $$ = $1;
     }
+    
     /* IDENTIFICADORES */
     | TOKEN_IDENTIFIER
     {
-        $$ = build_identifier_node($1, @1.first_line, @1.first_column);
+        $$ = build_identifier($1, @1.first_line, @1.first_column);
     }
     ;
-
 
 declaraciones:
     tipo TOKEN_IDENTIFIER TOKEN_ASSIGN expresion TOKEN_SEMICOLON
@@ -596,6 +628,45 @@ ciclo_do:
         $$ = build_do_while($3, $7, @1.first_line, @1.first_column);
     }
     ;
+
+ciclo_for:
+    TOKEN_FOR TOKEN_PAREN_LEFT inicializacion_for TOKEN_SEMICOLON expresion TOKEN_SEMICOLON actualizar_for TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_for($3, $5, $7, $10, @1.first_line, @1.first_column);  
+    }
+    ;
+
+inicializacion_for:
+    tipo TOKEN_IDENTIFIER TOKEN_ASSIGN expresion
+    {
+        $$ = build_inicializacion_for_declaracion($1, $2, $4, @1.first_line, @1.first_column);
+    }
+    | TOKEN_IDENTIFIER operador_asignacion expresion
+    {
+        $$ = build_inicializacion_for_asignacion($1, $2, $3, @1.first_line, @1.first_column);
+    }
+    | expresion
+    {
+        $$ = build_inicializacion_for_expresion($1, @1.first_line, @1.first_column);
+    }
+    | /* vacío */
+    {
+        $$ = build_inicializacion_for_vacia(0, 0);
+    }
+    ;
+    
+actualizar_for:
+    expresion
+    {
+        $$ = build_actualizacion_for($1, @1.first_line, @1.first_column);
+    }
+    | /* vacío */
+    {
+        $$ = build_actualizacion_for_vacia(0, 0);  // ← USAR 0, 0 en lugar de @1
+    }
+    ;
+
+
 %%
 
 void yyerror(const char* s) {

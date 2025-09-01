@@ -27,6 +27,28 @@ ASTNode* build_expresion_binaria(ASTNode* izquierda, const char* operador, ASTNo
 ASTNode* build_expresion_unaria(const char* operador, ASTNode* expresion, int line, int column);
 
 /**
+ * Construye una expresión unaria postfijo (expresión seguida de operador)
+ *
+ * @param expresion - Expresión base (generalmente un identificador)
+ * @param operador - Operador postfijo como string ("++", "--")
+ * @param line - Línea del token
+ * @param column - Columna del token
+ * @return ASTNode* - Nodo EXPRESION_POSTFIJO creado
+ */
+ASTNode* build_expresion_postfijo(ASTNode* expresion, const char* operador, int line, int column);
+
+/**
+ * Construye una expresión de acceso (objeto.propiedad o objeto.metodo())
+ *
+ * @param objeto_node - Expresión del objeto base
+ * @param acceso_node - Expresión de lo que se accede
+ * @param line - Línea del token
+ * @param column - Columna del token
+ * @return ASTNode* - Nodo EXPRESION_ACCESO creado
+ */
+ASTNode* build_expresion_acceso(ASTNode* objeto_node, ASTNode* acceso_node, int line, int column);
+
+/**
  * Construye una expresión con paréntesis
  *
  * @param expresion - Expresión dentro de los paréntesis

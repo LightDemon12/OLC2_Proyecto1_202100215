@@ -4,6 +4,8 @@
 
 #include "../../Headers/builder_ciclos.h"
 #include "../../Headers/builder_scope.h"
+#include "../../Headers/builder_datos.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -45,4 +47,111 @@ ASTNode* build_do_while(ASTNode* instrucciones_node, ASTNode* condicion_node, in
     printf("DEBUG CICLOS: DO_WHILE creado con BLOQUE_DO con SCOPE y CONDICION_DO_WHILE\n");
 
     return do_while_node;
+}
+
+ASTNode* build_for(ASTNode* inicializacion_node, ASTNode* condicion_node, ASTNode* actualizacion_node, ASTNode* instrucciones_node, int line, int column) {
+    ASTNode* for_node = create_node("FOR", line, column);
+
+    // Crear nodo explícito para la inicialización (puede ser NULL)
+    ASTNode* inicializacion_wrapper = create_node("INICIALIZACION_FOR", line, column);
+    if (inicializacion_node) {
+        add_child(inicializacion_wrapper, inicializacion_node);
+    }
+    add_child(for_node, inicializacion_wrapper);
+
+    // Crear nodo explícito para la condición (puede ser NULL)
+    ASTNode* condicion_wrapper = create_node("CONDICION_FOR", line, column);
+    if (condicion_node) {
+        add_child(condicion_wrapper, condicion_node);
+    }
+    add_child(for_node, condicion_wrapper);
+
+    // Crear nodo explícito para la actualización (puede ser NULL)
+    ASTNode* actualizacion_wrapper = create_node("ACTUALIZACION_FOR", line, column);
+    if (actualizacion_node) {
+        add_child(actualizacion_wrapper, actualizacion_node);
+    }
+    add_child(for_node, actualizacion_wrapper);
+
+    // Crear nodo explícito para el bloque del for CON SCOPE
+    ASTNode* bloque_for = create_node("BLOQUE_FOR", line, column);
+    ASTNode* scope_for = build_scope_bloque(instrucciones_node, "FOR", line, column);
+    add_child(bloque_for, scope_for);
+    add_child(for_node, bloque_for);
+
+    printf("DEBUG CICLOS: FOR creado con INICIALIZACION_FOR, CONDICION_FOR, ACTUALIZACION_FOR y BLOQUE_FOR con SCOPE\n");
+
+    return for_node;
+}
+
+ASTNode* build_inicializacion_for_declaracion(ASTNode* tipo_node, const char* identifier, ASTNode* expresion_node, int line, int column) {
+    ASTNode* init_node = create_node("INICIALIZACION_FOR_DECLARACION", line, column);
+
+    // Agregar tipo
+    add_child(init_node, tipo_node);
+
+    // Agregar identificador
+    ASTNode* id_node = create_node("IDENTIFIER", line, column);
+    set_value(id_node, identifier);
+    add_child(init_node, id_node);
+
+    // Agregar expresión de inicialización
+    add_child(init_node, expresion_node);
+
+    printf("DEBUG CICLOS: INICIALIZACION_FOR_DECLARACION creada para variable '%s'\n", identifier ? identifier : "null");
+
+    return init_node;
+}
+
+ASTNode* build_inicializacion_for_expresion(ASTNode* expresion_node, int line, int column) {
+    ASTNode* init_node = create_node("INICIALIZACION_FOR_EXPRESION", line, column);
+    add_child(init_node, expresion_node);
+
+    printf("DEBUG CICLOS: INICIALIZACION_FOR_EXPRESION creada\n");
+
+    return init_node;
+}
+
+ASTNode* build_inicializacion_for_vacia(int line, int column) {
+    ASTNode* init_node = create_node("INICIALIZACION_FOR_VACIA", line, column);
+
+    printf("DEBUG CICLOS: INICIALIZACION_FOR_VACIA creada\n");
+
+    return init_node;
+}
+
+ASTNode* build_actualizacion_for(ASTNode* expresion_node, int line, int column) {
+    ASTNode* update_node = create_node("ACTUALIZACION_FOR", line, column);
+    add_child(update_node, expresion_node);
+
+    printf("DEBUG CICLOS: ACTUALIZACION_FOR creada\n");
+
+    return update_node;
+}
+
+ASTNode* build_actualizacion_for_vacia(int line, int column) {
+    ASTNode* update_node = create_node("ACTUALIZACION_FOR_VACIA", line, column);
+
+    printf("DEBUG CICLOS: ACTUALIZACION_FOR_VACIA creada\n");
+
+    return update_node;
+}
+
+ASTNode* build_inicializacion_for_asignacion(const char* identifier, ASTNode* operador_node, ASTNode* expresion_node, int line, int column) {
+    ASTNode* inicializacion_node = create_node("INICIALIZACION_FOR_ASIGNACION", line, column);
+
+    // Crear nodo identificador
+    ASTNode* id_node = build_identifier(identifier, line, column);
+
+    // Agregar hijos: identificador, operador y expresión
+    add_child(inicializacion_node, id_node);
+    add_child(inicializacion_node, operador_node);
+    add_child(inicializacion_node, expresion_node);
+
+    // Obtener el operador para el debug
+    const char* op_str = operador_node && operador_node->value ? operador_node->value : "=";
+    printf("DEBUG CICLOS: INICIALIZACION_FOR_ASIGNACION creada para variable '%s' con operador '%s'\n",
+           identifier ? identifier : "null", op_str);
+
+    return inicializacion_node;
 }

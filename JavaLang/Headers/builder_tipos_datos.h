@@ -35,9 +35,5 @@ ASTNode* build_dato_char(const char* valor, int line, int column);
  */
 ASTNode* build_dato_boolean(const char* valor, int line, int column);
 
-/**
- * Construye un nodo IDENTIFIER reutilizable
- */
-ASTNode* build_identifier_node(const char* name, int line, int column);
 
 #endif // BUILDER_TIPOS_DATOS_H
