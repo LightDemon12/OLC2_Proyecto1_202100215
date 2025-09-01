@@ -16,6 +16,7 @@
 #include "../../Headers/builder_sentencias.h"  
 #include "../../Headers/builder_switch.h"      
 #include "../../Headers/builder_scope.h" 
+#include "../../Headers/builder_ciclos.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -183,7 +184,7 @@ Paréntesis ((, ))
 
 %type <node> program bloque_main instrucciones instruccion sout declaraciones tipo dato lista_declaraciones lista_declaracion
 %type <node> expresion operador_asignacion asignacion_compuesta sentencia_if if_simple if_con_else if_con_else_if lista_else_if else_if
-%type <node> sentencias sentencia_switch lista_casos caso
+%type <node> sentencias sentencia_switch lista_case case  ciclo_while  ciclo_do 
 
 %%
 
@@ -235,6 +236,14 @@ instruccion:
         $$ = $1;
     }
     | sentencia_switch 
+    {
+        $$ = $1;
+    }
+    | ciclo_while      
+    {
+        $$ = $1;
+    }
+    | ciclo_do         
     {
         $$ = $1;
     }
@@ -546,24 +555,24 @@ sentencias:
     ;
 
 sentencia_switch:
-    TOKEN_SWITCH TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT lista_casos TOKEN_BRACE_RIGHT
+    TOKEN_SWITCH TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT lista_case TOKEN_BRACE_RIGHT
     {
         $$ = build_switch($3, $6, @1.first_line, @1.first_column);
     }
     ;
 
-lista_casos:
-    lista_casos caso
+lista_case:
+    lista_case case
     {
         $$ = build_lista_casos_add($1, $2);
     }
-    | caso
+    | case
     {
         $$ = build_lista_casos_single($1, @1.first_line, @1.first_column);
     }
     ;
 
-caso:
+case:
     TOKEN_CASE dato TOKEN_COLON instrucciones sentencias
     {
         $$ = build_caso($2, $4, $5, @1.first_line, @1.first_column);
@@ -574,6 +583,19 @@ caso:
     }
     ;
 
+ciclo_while:
+    TOKEN_WHILE TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_while($3, $6, @1.first_line, @1.first_column);
+    }
+    ;
+
+ciclo_do:
+    TOKEN_DO TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT TOKEN_WHILE TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_SEMICOLON
+    {
+        $$ = build_do_while($3, $7, @1.first_line, @1.first_column);
+    }
+    ;
 %%
 
 void yyerror(const char* s) {

@@ -290,10 +290,16 @@ static void on_lexico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     mainview_clear_output(mainview);
     mainview_append_output(mainview, "=== ANÁLISIS LÉXICO ===");
 
+    // ✅LIMPIAR ERRORES ANTES DE COMENZAR NUEVO ANÁLISIS
+    extern ErrorManager* global_error_manager;
+    if (global_error_manager) {
+        error_manager_clear(global_error_manager);
+        printf("DEBUG: Errores previos limpiados\n");
+    }
+
     int result = control_rebuild_and_analyze_with_output(mainview->code_buffer, mainview);
 
     /* VERIFICAR TANTO RESULTADO COMO ERRORES ACUMULADOS */
-    extern ErrorManager* global_error_manager;
     int has_errors = 0;
 
     if (global_error_manager) {

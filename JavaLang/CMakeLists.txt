@@ -85,6 +85,8 @@ set(SOURCES
         Logic/Builders/builder_switch.c
         Headers/builder_scope.h
         Logic/Builders/builder_scope.c
+        Headers/builder_ciclos.h
+        Logic/Builders/builder_ciclos.c
 )
 
 # Crear ejecutable
