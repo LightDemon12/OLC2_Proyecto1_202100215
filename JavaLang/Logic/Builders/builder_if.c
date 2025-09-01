@@ -3,6 +3,7 @@
 //
 
 #include "../../Headers/builder_if.h"
+#include "../../Headers/builder_scope.h"  // ← YA INCLUIDO
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,12 +17,13 @@ ASTNode* build_if_simple(ASTNode* condicion_node, ASTNode* instrucciones_node, i
     add_child(condicion_wrapper, condicion_node);
     add_child(if_node, condicion_wrapper);
 
-    // Crear nodo explícito para el bloque IF
+    // Crear nodo explícito para el bloque IF con SCOPE
     ASTNode* bloque_if = create_node("BLOQUE_IF", line, column);
-    add_child(bloque_if, instrucciones_node);
+    ASTNode* scope_if = build_scope_bloque(instrucciones_node, "IF", line, column);
+    add_child(bloque_if, scope_if);
     add_child(if_node, bloque_if);
 
-    printf("DEBUG IF: IF_SIMPLE creado con CONDICION y BLOQUE_IF\n");
+    printf("DEBUG IF: IF_SIMPLE creado con CONDICION y BLOQUE_IF con SCOPE\n");
 
     return if_node;
 }
@@ -29,22 +31,24 @@ ASTNode* build_if_simple(ASTNode* condicion_node, ASTNode* instrucciones_node, i
 ASTNode* build_if_con_else(ASTNode* condicion_node, ASTNode* instrucciones_if_node, ASTNode* instrucciones_else_node, int line, int column) {
     ASTNode* if_else_node = create_node("IF_CON_ELSE", line, column);
 
-    // Crear nodo explícito para la condición
+    // Condición
     ASTNode* condicion_wrapper = create_node("CONDICION", line, column);
     add_child(condicion_wrapper, condicion_node);
     add_child(if_else_node, condicion_wrapper);
 
-    // Crear nodo explícito para el bloque IF
+    // Bloque IF con SCOPE
     ASTNode* bloque_if = create_node("BLOQUE_IF", line, column);
-    add_child(bloque_if, instrucciones_if_node);
+    ASTNode* scope_if = build_scope_bloque(instrucciones_if_node, "IF", line, column);
+    add_child(bloque_if, scope_if);
     add_child(if_else_node, bloque_if);
 
-    // Crear nodo explícito para el bloque ELSE
+    // Bloque ELSE con SCOPE
     ASTNode* bloque_else = create_node("BLOQUE_ELSE", line, column);
-    add_child(bloque_else, instrucciones_else_node);
+    ASTNode* scope_else = build_scope_bloque(instrucciones_else_node, "ELSE", line, column);
+    add_child(bloque_else, scope_else);
     add_child(if_else_node, bloque_else);
 
-    printf("DEBUG IF: IF_CON_ELSE creado con CONDICION, BLOQUE_IF y BLOQUE_ELSE\n");
+    printf("DEBUG IF: IF_CON_ELSE creado con SCOPEs separados\n");
 
     return if_else_node;
 }
@@ -57,20 +61,22 @@ ASTNode* build_if_con_else_if(ASTNode* condicion_node, ASTNode* instrucciones_if
     add_child(condicion_wrapper, condicion_node);
     add_child(if_else_if_node, condicion_wrapper);
 
-    // Crear nodo explícito para el bloque IF inicial
+    // Crear nodo explícito para el bloque IF inicial CON SCOPE
     ASTNode* bloque_if = create_node("BLOQUE_IF", line, column);
-    add_child(bloque_if, instrucciones_if_node);
+    ASTNode* scope_if = build_scope_bloque(instrucciones_if_node, "IF", line, column);  // ← AGREGADO
+    add_child(bloque_if, scope_if);  // ← CORREGIDO
     add_child(if_else_if_node, bloque_if);
 
     // Agregar lista de else if (ya contiene nodos explícitos)
     add_child(if_else_if_node, lista_else_if_node);
 
-    // Crear nodo explícito para el bloque ELSE final
+    // Crear nodo explícito para el bloque ELSE final CON SCOPE
     ASTNode* bloque_else = create_node("BLOQUE_ELSE", line, column);
-    add_child(bloque_else, instrucciones_else_node);
+    ASTNode* scope_else = build_scope_bloque(instrucciones_else_node, "ELSE", line, column);  // ← AGREGADO
+    add_child(bloque_else, scope_else);  // ← CORREGIDO
     add_child(if_else_if_node, bloque_else);
 
-    printf("DEBUG IF: IF_CON_ELSE_IF creado con CONDICION, BLOQUE_IF, %d ELSE_IF y BLOQUE_ELSE\n",
+    printf("DEBUG IF: IF_CON_ELSE_IF creado con CONDICION, BLOQUE_IF con SCOPE, %d ELSE_IF y BLOQUE_ELSE con SCOPE\n",
            lista_else_if_node ? lista_else_if_node->child_count : 0);
 
     return if_else_if_node;
@@ -84,12 +90,13 @@ ASTNode* build_else_if(ASTNode* condicion_node, ASTNode* instrucciones_node, int
     add_child(condicion_else_if, condicion_node);
     add_child(else_if_node, condicion_else_if);
 
-    // Crear nodo explícito para el bloque del else if
+    // Crear nodo explícito para el bloque del else if CON SCOPE
     ASTNode* bloque_else_if = create_node("BLOQUE_ELSE_IF", line, column);
-    add_child(bloque_else_if, instrucciones_node);
+    ASTNode* scope_else_if = build_scope_bloque(instrucciones_node, "ELSE_IF", line, column);  // ← AGREGADO
+    add_child(bloque_else_if, scope_else_if);  // ← CORREGIDO
     add_child(else_if_node, bloque_else_if);
 
-    printf("DEBUG IF: ELSE_IF creado con CONDICION_ELSE_IF y BLOQUE_ELSE_IF\n");
+    printf("DEBUG IF: ELSE_IF creado con CONDICION_ELSE_IF y BLOQUE_ELSE_IF con SCOPE\n");
 
     return else_if_node;
 }

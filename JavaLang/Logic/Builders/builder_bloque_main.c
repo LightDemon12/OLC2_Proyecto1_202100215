@@ -3,11 +3,17 @@
 //
 
 #include "../../Headers/builder_bloque_main.h"
+#include "../../Headers/builder_scope.h"
 #include <stdio.h>
 
-ASTNode* build_bloque_main_node(ASTNode* instrucciones, int line, int column) {
+ASTNode* build_bloque_main_node(ASTNode* instrucciones_node, int line, int column) {
     ASTNode* bloque_main_node = create_node("bloque_main", line, column);
-    add_child(bloque_main_node, instrucciones);
-    printf("DEBUG: Nodo bloque_main creado\n");
+
+    // Envolver instrucciones en un SCOPE
+    ASTNode* scope_main = build_scope_main(instrucciones_node, line, column);
+    add_child(bloque_main_node, scope_main);
+
+    printf("DEBUG BLOQUE_MAIN: bloque_main creado con SCOPE_MAIN\n");
+
     return bloque_main_node;
 }

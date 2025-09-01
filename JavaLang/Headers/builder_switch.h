@@ -1,7 +1,3 @@
-//
-// Created by lightdemon on 31/08/25.
-//
-
 #ifndef BUILDER_SWITCH_H
 #define BUILDER_SWITCH_H
 
@@ -10,27 +6,40 @@
 // ========== BUILDERS PARA SENTENCIA SWITCH ==========
 
 /**
- * Construye un nodo SWITCH completo
+ * Construye un nodo SWITCH completo con SCOPE
  *
  * @param expresion_node - Nodo de la expresión a evaluar
  * @param lista_casos_node - Nodo de la lista de casos
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo SWITCH creado
+ * @return ASTNode* - Nodo SWITCH creado con SCOPE
  */
 ASTNode* build_switch(ASTNode* expresion_node, ASTNode* lista_casos_node, int line, int column);
 
 /**
- * Construye un nodo CASO individual
+ * Construye un nodo CASO individual con SCOPE
  *
  * @param valor_node - Nodo del valor del caso (dato)
  * @param instrucciones_node - Nodo de las instrucciones del caso
  * @param sentencia_node - Nodo de la sentencia de control (break, continue, return)
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo CASO creado
+ * @return ASTNode* - Nodo CASO creado con SCOPE
  */
 ASTNode* build_caso(ASTNode* valor_node, ASTNode* instrucciones_node, ASTNode* sentencia_node, int line, int column);
+
+/**
+ * Construye un nodo CASO con DEFAULT
+ *
+ * @param valor_node - Nodo del valor del caso (dato)
+ * @param instrucciones_node - Nodo de las instrucciones del caso
+ * @param sentencia_node - Nodo de la sentencia de control
+ * @param instrucciones_default_node - Nodo de las instrucciones del default
+ * @param line - Línea del token
+ * @param column - Columna del token
+ * @return ASTNode* - Nodo CASO_CON_DEFAULT creado con SCOPEs
+ */
+ASTNode* build_caso_con_default(ASTNode* valor_node, ASTNode* instrucciones_node, ASTNode* sentencia_node, ASTNode* instrucciones_default_node, int line, int column);
 
 /**
  * Construye una lista de casos con un solo elemento

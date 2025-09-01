@@ -71,6 +71,7 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "continue"                  { DEBUG_TOKEN("TOKEN_CONTINUE"); return TOKEN_CONTINUE; }
 "return"                    { DEBUG_TOKEN("TOKEN_RETURN"); return TOKEN_RETURN; }
 "switch"                    { DEBUG_TOKEN("TOKEN_SWITCH"); return TOKEN_SWITCH; }
+"default"                   { DEBUG_TOKEN("TOKEN_DEFAULT"); return TOKEN_DEFAULT; }
 "break"                     { DEBUG_TOKEN("TOKEN_BREAK"); return TOKEN_BREAK; }
 "while"                     { DEBUG_TOKEN("TOKEN_WHILE"); return TOKEN_WHILE; }
 "else"                      { DEBUG_TOKEN("TOKEN_ELSE"); return TOKEN_ELSE; }

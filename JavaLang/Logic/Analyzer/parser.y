@@ -15,6 +15,7 @@
 #include "../../Headers/builder_if.h" 
 #include "../../Headers/builder_sentencias.h"  
 #include "../../Headers/builder_switch.h"      
+#include "../../Headers/builder_scope.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -105,6 +106,7 @@ void yyerror(const char* s);
 %token TOKEN_ELSE         // else
 %token TOKEN_SWITCH       // switch
 %token TOKEN_CASE         // case
+%token TOKEN_DEFAULT      // default
 %token TOKEN_WHILE        // while
 %token TOKEN_DO           // do
 %token TOKEN_FOR          // for
@@ -565,6 +567,10 @@ caso:
     TOKEN_CASE dato TOKEN_COLON instrucciones sentencias
     {
         $$ = build_caso($2, $4, $5, @1.first_line, @1.first_column);
+    }
+    | TOKEN_CASE dato TOKEN_COLON instrucciones sentencias TOKEN_DEFAULT TOKEN_COLON instrucciones
+    {
+        $$ = build_caso_con_default($2, $4, $5, $8, @1.first_line, @1.first_column);
     }
     ;
 

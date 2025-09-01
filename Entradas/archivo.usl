@@ -41,4 +41,32 @@ public static void main() {
     } else {
         System.out.println("F");
     }
+    //switch con default
+    int dia = 8;
+    switch (dia) {           // SCOPE BLOQUE_SWITCH
+        case 1:              // SCOPE BLOQUE_CASE
+            System.out.println("Lunes");
+            break;
+        case 2:              // SCOPE BLOQUE_CASE
+            System.out.println("Martes");
+            break;
+        case 7:              // SCOPE BLOQUE_CASE + SCOPE BLOQUE_DEFAULT
+            System.out.println("Domingo");
+            break;
+        default:             // SCOPE BLOQUE_DEFAULT
+            System.out.println("Día inválido");
+    }
+
+    // sin default
+        int opcion = 2;
+    switch (opcion) {        // SCOPE BLOQUE_SWITCH
+        case 1:              // SCOPE BLOQUE_CASE
+            int x = 10;
+            System.out.println(x);
+            break;
+        case 2:              // SCOPE BLOQUE_CASE (diferente)
+            int x = 20;      // ← Diferente variable 'x'
+            System.out.println(x);
+            break;
+    }
 }

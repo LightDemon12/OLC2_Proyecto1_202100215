@@ -1,7 +1,3 @@
-//
-// Created by lightdemon on 31/08/25.
-//
-
 #ifndef BUILDER_IF_H
 #define BUILDER_IF_H
 
@@ -10,49 +6,49 @@
 // ========== BUILDERS PARA SENTENCIAS IF ==========
 
 /**
- * Construye un IF simple (solo if)
+ * Construye un IF simple (solo if) con SCOPE
  *
  * @param condicion_node - Nodo de la expresión de condición
  * @param instrucciones_node - Nodo de las instrucciones del if
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo IF_SIMPLE creado
+ * @return ASTNode* - Nodo IF_SIMPLE creado con SCOPE
  */
 ASTNode* build_if_simple(ASTNode* condicion_node, ASTNode* instrucciones_node, int line, int column);
 
 /**
- * Construye un IF con ELSE
+ * Construye un IF con ELSE, ambos con SCOPEs separados
  *
  * @param condicion_node - Nodo de la expresión de condición
  * @param instrucciones_if_node - Nodo de las instrucciones del if
  * @param instrucciones_else_node - Nodo de las instrucciones del else
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo IF_CON_ELSE creado
+ * @return ASTNode* - Nodo IF_CON_ELSE creado con SCOPEs
  */
 ASTNode* build_if_con_else(ASTNode* condicion_node, ASTNode* instrucciones_if_node, ASTNode* instrucciones_else_node, int line, int column);
 
 /**
- * Construye un IF con ELSE IF y ELSE final
+ * Construye un IF con ELSE IF y ELSE final, todos con SCOPEs separados
  *
  * @param condicion_node - Nodo de la expresión de condición inicial
  * @param instrucciones_if_node - Nodo de las instrucciones del if inicial
- * @param lista_else_if_node - Nodo de la lista de else if
+ * @param lista_else_if_node - Nodo de la lista de else if (cada uno con SCOPE)
  * @param instrucciones_else_node - Nodo de las instrucciones del else final
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo IF_CON_ELSE_IF creado
+ * @return ASTNode* - Nodo IF_CON_ELSE_IF creado con SCOPEs
  */
 ASTNode* build_if_con_else_if(ASTNode* condicion_node, ASTNode* instrucciones_if_node, ASTNode* lista_else_if_node, ASTNode* instrucciones_else_node, int line, int column);
 
 /**
- * Construye un nodo ELSE_IF individual
+ * Construye un nodo ELSE_IF individual con SCOPE
  *
  * @param condicion_node - Nodo de la expresión de condición
  * @param instrucciones_node - Nodo de las instrucciones del else if
  * @param line - Línea del token
  * @param column - Columna del token
- * @return ASTNode* - Nodo ELSE_IF creado
+ * @return ASTNode* - Nodo ELSE_IF creado con SCOPE
  */
 ASTNode* build_else_if(ASTNode* condicion_node, ASTNode* instrucciones_node, int line, int column);
 
