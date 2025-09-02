@@ -374,8 +374,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 85
-#define YY_END_OF_BUFFER 86
+#define YY_NUM_RULES 86
+#define YY_END_OF_BUFFER 87
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -385,37 +385,37 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[298] =
     {   0,
-        0,    0,   86,   84,   81,   82,   70,   84,   66,   84,
-       84,   71,   72,   64,   62,   78,   63,   80,   65,    3,
-       79,   77,   69,   67,   68,   83,   83,   83,   83,   83,
-       83,   75,   76,   84,   83,   83,   83,   83,   83,   83,
-       83,   83,   83,   83,   83,   83,   83,   83,   83,   73,
-       84,   74,   81,   57,    0,    5,    0,   52,   60,   53,
-        0,   50,   46,   48,   47,   49,    0,    0,    0,    1,
-       51,    0,    3,    0,   59,   56,   58,    0,   83,   83,
-       83,   83,   83,   83,   83,   55,   83,   83,   83,   83,
-       83,   83,   83,   38,   83,   83,   83,   83,   37,   83,
+        0,    0,   87,   85,   82,   83,   71,   85,   67,   85,
+       85,   72,   73,   65,   63,   79,   64,   81,   66,    3,
+       80,   78,   70,   68,   69,   84,   84,   84,   84,   84,
+       84,   76,   77,   85,   84,   84,   84,   84,   84,   84,
+       84,   84,   84,   84,   84,   84,   84,   84,   84,   74,
+       85,   75,   82,   58,    0,    5,    0,   53,   61,   54,
+        0,   51,   47,   49,   48,   50,    0,    0,    0,    1,
+       52,    0,    3,    0,   60,   57,   59,    0,   84,   84,
+       84,   84,   84,   84,   84,   56,   84,   84,   84,   84,
+       84,   84,   84,   39,   84,   84,   84,   84,   38,   84,
 
-       83,   83,   83,   83,   83,   83,   83,   83,   83,   83,
-       83,   83,   54,   61,    0,    5,    0,    6,    0,    0,
-        0,    0,    1,    4,   44,   45,   83,   83,   83,   83,
-       83,   83,   83,   83,   83,   83,   83,   83,   83,   83,
-       83,   83,   83,   36,   22,   83,   83,   43,   83,   83,
-       83,   83,   83,   83,   83,   83,   83,   83,   42,    0,
-        2,   83,   83,   83,   83,   83,   83,   83,   83,   26,
-       35,   21,   83,   83,   83,   34,   83,   83,   24,   10,
-       27,   83,   83,   83,   83,   83,   83,   16,    9,   83,
-        0,   83,   83,   83,   83,   83,   83,   83,   32,   83,
+       84,   84,   84,   84,   84,   84,   84,   84,   84,   84,
+       84,   84,   55,   62,    0,    5,    0,    6,    0,    0,
+        0,    0,    1,    4,   45,   46,   84,   84,   84,   84,
+       84,   84,   84,   84,   84,   84,   84,   84,   84,   84,
+       84,   84,   84,   37,   23,   84,   84,   44,   84,   84,
+       84,   84,   84,   84,   84,   84,   84,   84,   43,    0,
+        2,   84,   84,   84,   84,   84,   84,   84,   84,   27,
+       36,   22,   84,   84,   84,   35,   84,   84,   25,   10,
+       28,   84,   84,   84,   84,   84,   84,   16,    9,   84,
+        0,   84,   84,   84,   84,   84,   84,   84,   33,   84,
 
-       83,   83,   17,   20,   83,   83,   25,   83,   83,   83,
-       33,    0,   83,   83,    0,   83,   83,   83,   83,   83,
-       83,   23,    7,   29,    8,   19,   30,   41,    0,    0,
-        0,   83,    0,    0,   18,   83,   31,    0,    0,    0,
-        0,    0,    0,    0,   28,    0,    0,    0,    0,    0,
+       84,   84,   17,   21,   84,   84,   26,   84,   84,   84,
+       34,    0,   84,   84,    0,   84,   20,   84,   84,   84,
+       84,   24,    7,   30,    8,   19,   31,   42,    0,    0,
+        0,   84,    0,    0,   18,   84,   32,    0,    0,    0,
+        0,    0,    0,    0,   29,    0,    0,    0,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
         0,    0,    0,   15,    0,    0,    0,    0,    0,    0,
-        0,    0,    0,    0,    0,    0,    0,    0,   40,    0,
-        0,    0,   39,    0,    0,    0,    0,    0,    0,   13,
+        0,    0,    0,    0,    0,    0,    0,    0,   41,    0,
+        0,    0,   40,    0,    0,    0,    0,    0,    0,   13,
        12,    0,    0,    0,   14,   11,    0
 
     } ;
@@ -638,13 +638,13 @@ static const flex_int16_t yy_chk[402] =
     } ;
 
 /* Table of booleans, true if rule could match eol. */
-static const flex_int32_t yy_rule_can_match_eol[86] =
+static const flex_int32_t yy_rule_can_match_eol[87] =
     {   0,
 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 1, 0, 0, 0,     };
+    0, 0, 0, 1, 0, 0, 0,     };
 
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
@@ -1078,327 +1078,332 @@ YY_RULE_SETUP
 case 20:
 YY_RULE_SETUP
 #line 67 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_FLOAT"); return TOKEN_FLOAT; }
+{ DEBUG_TOKEN("TOKEN_STRING"); return TOKEN_STRING; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
 #line 68 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_CHAR"); return TOKEN_CHAR; }
+{ DEBUG_TOKEN("TOKEN_FLOAT"); return TOKEN_FLOAT; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
 #line 69 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_INT"); return TOKEN_INT; }
+{ DEBUG_TOKEN("TOKEN_CHAR"); return TOKEN_CHAR; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
 #line 70 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DOUBLE"); return TOKEN_DOUBLE; }
+{ DEBUG_TOKEN("TOKEN_INT"); return TOKEN_INT; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 #line 71 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_LONG"); return TOKEN_LONG; }
+{ DEBUG_TOKEN("TOKEN_DOUBLE"); return TOKEN_DOUBLE; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
 #line 72 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_SHORT"); return TOKEN_SHORT; }
+{ DEBUG_TOKEN("TOKEN_LONG"); return TOKEN_LONG; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
 #line 73 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_BYTE"); return TOKEN_BYTE; }
+{ DEBUG_TOKEN("TOKEN_SHORT"); return TOKEN_SHORT; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
 #line 74 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_NULL"); return TOKEN_NULL; }
+{ DEBUG_TOKEN("TOKEN_BYTE"); return TOKEN_BYTE; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
 #line 75 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_CONTINUE"); return TOKEN_CONTINUE; }
+{ DEBUG_TOKEN("TOKEN_NULL"); return TOKEN_NULL; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
 #line 76 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_RETURN"); return TOKEN_RETURN; }
+{ DEBUG_TOKEN("TOKEN_CONTINUE"); return TOKEN_CONTINUE; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
 #line 77 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_SWITCH"); return TOKEN_SWITCH; }
+{ DEBUG_TOKEN("TOKEN_RETURN"); return TOKEN_RETURN; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
 #line 78 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DEFAULT"); return TOKEN_DEFAULT; }
+{ DEBUG_TOKEN("TOKEN_SWITCH"); return TOKEN_SWITCH; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
 #line 79 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_BREAK"); return TOKEN_BREAK; }
+{ DEBUG_TOKEN("TOKEN_DEFAULT"); return TOKEN_DEFAULT; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
 #line 80 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_WHILE"); return TOKEN_WHILE; }
+{ DEBUG_TOKEN("TOKEN_BREAK"); return TOKEN_BREAK; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
 #line 81 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_ELSE"); return TOKEN_ELSE; }
+{ DEBUG_TOKEN("TOKEN_WHILE"); return TOKEN_WHILE; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
 #line 82 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_CASE"); return TOKEN_CASE; }
+{ DEBUG_TOKEN("TOKEN_ELSE"); return TOKEN_ELSE; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
 #line 83 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_FOR"); return TOKEN_FOR; }
+{ DEBUG_TOKEN("TOKEN_CASE"); return TOKEN_CASE; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
 #line 84 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_IF"); return TOKEN_IF; }
+{ DEBUG_TOKEN("TOKEN_FOR"); return TOKEN_FOR; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
 #line 85 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DO"); return TOKEN_DO; }
+{ DEBUG_TOKEN("TOKEN_IF"); return TOKEN_IF; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
 #line 86 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_VALUEOF"); return TOKEN_VALUEOF; }
+{ DEBUG_TOKEN("TOKEN_DO"); return TOKEN_DO; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
 #line 87 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_INDEXOF"); return TOKEN_INDEXOF; }
+{ DEBUG_TOKEN("TOKEN_VALUEOF"); return TOKEN_VALUEOF; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 88 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_LENGTH"); return TOKEN_LENGTH; }
+{ DEBUG_TOKEN("TOKEN_INDEXOF"); return TOKEN_INDEXOF; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 89 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_ADD"); return TOKEN_ADD; }
+{ DEBUG_TOKEN("TOKEN_LENGTH"); return TOKEN_LENGTH; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 90 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_NEW"); return TOKEN_NEW; }
+{ DEBUG_TOKEN("TOKEN_ADD"); return TOKEN_ADD; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 91 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_SHIFT_LEFT_ASSIGN"); return TOKEN_SHIFT_LEFT_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_NEW"); return TOKEN_NEW; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 92 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_SHIFT_RIGHT_ASSIGN"); return TOKEN_SHIFT_RIGHT_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_SHIFT_LEFT_ASSIGN"); return TOKEN_SHIFT_LEFT_ASSIGN; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 93 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_INCREMENT"); return TOKEN_INCREMENT; }
+{ DEBUG_TOKEN("TOKEN_SHIFT_RIGHT_ASSIGN"); return TOKEN_SHIFT_RIGHT_ASSIGN; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
 #line 94 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DECREMENT"); return TOKEN_DECREMENT; }
+{ DEBUG_TOKEN("TOKEN_INCREMENT"); return TOKEN_INCREMENT; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
 #line 95 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_PLUS_ASSIGN"); return TOKEN_PLUS_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_DECREMENT"); return TOKEN_DECREMENT; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 96 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_MINUS_ASSIGN"); return TOKEN_MINUS_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_PLUS_ASSIGN"); return TOKEN_PLUS_ASSIGN; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 97 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_MULT_ASSIGN"); return TOKEN_MULT_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_MINUS_ASSIGN"); return TOKEN_MINUS_ASSIGN; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
 #line 98 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DIV_ASSIGN"); return TOKEN_DIV_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_MULT_ASSIGN"); return TOKEN_MULT_ASSIGN; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
 #line 99 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_MOD_ASSIGN"); return TOKEN_MOD_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_DIV_ASSIGN"); return TOKEN_DIV_ASSIGN; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
 #line 100 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_AND_ASSIGN"); return TOKEN_AND_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_MOD_ASSIGN"); return TOKEN_MOD_ASSIGN; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
 #line 101 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_OR_ASSIGN"); return TOKEN_OR_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_AND_ASSIGN"); return TOKEN_AND_ASSIGN; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
 #line 102 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_XOR_ASSIGN"); return TOKEN_XOR_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_OR_ASSIGN"); return TOKEN_OR_ASSIGN; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
 #line 103 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_EQUAL"); return TOKEN_EQUAL; }
+{ DEBUG_TOKEN("TOKEN_XOR_ASSIGN"); return TOKEN_XOR_ASSIGN; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
 #line 104 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_UNEQUAL"); return TOKEN_UNEQUAL; }
+{ DEBUG_TOKEN("TOKEN_EQUAL"); return TOKEN_EQUAL; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
 #line 105 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_GREATER_EQUAL"); return TOKEN_GREATER_EQUAL; }
+{ DEBUG_TOKEN("TOKEN_UNEQUAL"); return TOKEN_UNEQUAL; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
 #line 106 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_LESS_EQUAL"); return TOKEN_LESS_EQUAL; }
+{ DEBUG_TOKEN("TOKEN_GREATER_EQUAL"); return TOKEN_GREATER_EQUAL; }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
 #line 107 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_AND"); return TOKEN_AND; }
+{ DEBUG_TOKEN("TOKEN_LESS_EQUAL"); return TOKEN_LESS_EQUAL; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
 #line 108 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_OR"); return TOKEN_OR; }
+{ DEBUG_TOKEN("TOKEN_AND"); return TOKEN_AND; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
 #line 109 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_PLUS"); return TOKEN_PLUS; }
+{ DEBUG_TOKEN("TOKEN_OR"); return TOKEN_OR; }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
 #line 110 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_MINUS"); return TOKEN_MINUS; }
+{ DEBUG_TOKEN("TOKEN_PLUS"); return TOKEN_PLUS; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
 #line 111 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_MULTIPLICATION"); return TOKEN_MULTIPLICATION; }
+{ DEBUG_TOKEN("TOKEN_MINUS"); return TOKEN_MINUS; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
 #line 112 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DIVISION"); return TOKEN_DIVISION; }
+{ DEBUG_TOKEN("TOKEN_MULTIPLICATION"); return TOKEN_MULTIPLICATION; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
 #line 113 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_MODULE"); return TOKEN_MODULE; }
+{ DEBUG_TOKEN("TOKEN_DIVISION"); return TOKEN_DIVISION; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
 #line 114 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_ASSIGN"); return TOKEN_ASSIGN; }
+{ DEBUG_TOKEN("TOKEN_MODULE"); return TOKEN_MODULE; }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
 #line 115 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_GREATER"); return TOKEN_GREATER; }
+{ DEBUG_TOKEN("TOKEN_ASSIGN"); return TOKEN_ASSIGN; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
 #line 116 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_LESS"); return TOKEN_LESS; }
+{ DEBUG_TOKEN("TOKEN_GREATER"); return TOKEN_GREATER; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
 #line 117 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_NOT"); return TOKEN_NOT; }
+{ DEBUG_TOKEN("TOKEN_LESS"); return TOKEN_LESS; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
 #line 118 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_PAREN_LEFT"); return TOKEN_PAREN_LEFT; }
+{ DEBUG_TOKEN("TOKEN_NOT"); return TOKEN_NOT; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
 #line 119 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_PAREN_RIGHT"); return TOKEN_PAREN_RIGHT; }
+{ DEBUG_TOKEN("TOKEN_PAREN_LEFT"); return TOKEN_PAREN_LEFT; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
 #line 120 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_BRACE_LEFT"); return TOKEN_BRACE_LEFT; }
+{ DEBUG_TOKEN("TOKEN_PAREN_RIGHT"); return TOKEN_PAREN_RIGHT; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
 #line 121 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_BRACE_RIGHT"); return TOKEN_BRACE_RIGHT; }
+{ DEBUG_TOKEN("TOKEN_BRACE_LEFT"); return TOKEN_BRACE_LEFT; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
 #line 122 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_BRACKET_LEFT"); return TOKEN_BRACKET_LEFT; }
+{ DEBUG_TOKEN("TOKEN_BRACE_RIGHT"); return TOKEN_BRACE_RIGHT; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
 #line 123 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_BRACKET_RIGHT"); return TOKEN_BRACKET_RIGHT; }
+{ DEBUG_TOKEN("TOKEN_BRACKET_LEFT"); return TOKEN_BRACKET_LEFT; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
 #line 124 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_SEMICOLON"); return TOKEN_SEMICOLON; }
+{ DEBUG_TOKEN("TOKEN_BRACKET_RIGHT"); return TOKEN_BRACKET_RIGHT; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
 #line 125 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_COMMA"); return TOKEN_COMMA; }
+{ DEBUG_TOKEN("TOKEN_SEMICOLON"); return TOKEN_SEMICOLON; }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
 #line 126 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_COLON"); return TOKEN_COLON; }
+{ DEBUG_TOKEN("TOKEN_COMMA"); return TOKEN_COMMA; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
 #line 127 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ DEBUG_TOKEN("TOKEN_DOT"); return TOKEN_DOT; }
+{ DEBUG_TOKEN("TOKEN_COLON"); return TOKEN_COLON; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
 #line 128 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ /* Ignorar */ }
+{ DEBUG_TOKEN("TOKEN_DOT"); return TOKEN_DOT; }
 	YY_BREAK
 case 82:
-/* rule 82 can match eol */
 YY_RULE_SETUP
 #line 129 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ yycolumn = 1; }
+{ /* Ignorar */ }
 	YY_BREAK
 case 83:
+/* rule 83 can match eol */
 YY_RULE_SETUP
 #line 130 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
-{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
+{ yycolumn = 1; }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
 #line 131 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
+{ yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_IDENTIFIER"); return TOKEN_IDENTIFIER; }
+	YY_BREAK
+case 85:
+YY_RULE_SETUP
+#line 132 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
 {
                             /* DEBUG PARA ERROR */
                             printf("DEBUG LEXER: TOKEN_ERROR reconocido: '%s' (ASCII: %d) en linea %d\n", 
@@ -1421,7 +1426,7 @@ YY_RULE_SETUP
                             }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 151 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
+#line 152 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
 {
                             printf("DEBUG LEXER: TOKEN_EOF encontrado en linea %d\n", yylineno);
                             /* IMPRIMIR ERRORES ANTES DE TERMINAR */
@@ -1429,12 +1434,12 @@ case YY_STATE_EOF(INITIAL):
                             return 0;
                             }
 	YY_BREAK
-case 85:
+case 86:
 YY_RULE_SETUP
-#line 157 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
+#line 158 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1437 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lex.yy.c"
+#line 1442 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2449,7 +2454,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 157 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
+#line 158 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
 
 
 void lexer_init_error_manager() {

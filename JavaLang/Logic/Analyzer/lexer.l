@@ -64,6 +64,7 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "false"                     { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FALSE"); return TOKEN_TYPE_FALSE; }
 "boolean"                   { DEBUG_TOKEN("TOKEN_BOOLEAN"); return TOKEN_BOOLEAN; }
 "string"                    { DEBUG_TOKEN("TOKEN_STRING"); return TOKEN_STRING; }
+"String"                    { DEBUG_TOKEN("TOKEN_STRING"); return TOKEN_STRING; }
 "float"                     { DEBUG_TOKEN("TOKEN_FLOAT"); return TOKEN_FLOAT; }
 "char"                      { DEBUG_TOKEN("TOKEN_CHAR"); return TOKEN_CHAR; }
 "int"                       { DEBUG_TOKEN("TOKEN_INT"); return TOKEN_INT; }
