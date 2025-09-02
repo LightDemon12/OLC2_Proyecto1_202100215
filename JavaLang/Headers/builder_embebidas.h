@@ -1,7 +1,7 @@
 //
 // Created by lightdemon on 1/09/25.
 //
-<<<<<<< HEAD
+
 #ifndef BUILDER_EMBEBIDAS_H
 #define BUILDER_EMBEBIDAS_H
 
@@ -57,11 +57,22 @@ ASTNode* build_length_embebida(ASTNode* expresion_node, int line, int column);
  */
 ASTNode* build_add_embebida(ASTNode* lista_expresion_node, ASTNode* elemento_expresion_node, int line, int column);
 
+/**
+ * Construye un nodo JOIN_EMBEBIDA con variable de array
+ * Para casos como: String.join(",", array)
+ */
+ASTNode* build_join_embebida(ASTNode* separador_expresion_node, ASTNode* array_node, int line, int column);
+
+/**
+ * Construye un nodo JOIN_EMBEBIDA con múltiples argumentos
+ * Para casos como: String.join(",", "a", "b", "c")
+ */
+ASTNode* build_join_embebida_multiple(ASTNode* separador_expresion_node, ASTNode* lista_expresiones_node, int line, int column);
+
+/**
+ * Construye un nodo EQUALS_EMBEBIDA
+ * Para casos como: string1.equals(string2), objeto1.equals(objeto2)
+ */
+ASTNode* build_equals_embebida(ASTNode* objeto1_expresion_node, ASTNode* objeto2_expresion_node, int line, int column);
+
 #endif // BUILDER_EMBEBIDAS_H
-=======
-
-#ifndef JAVALANG_BUILDER_EMBEBIDAS_H
-#define JAVALANG_BUILDER_EMBEBIDAS_H
-
-#endif //JAVALANG_BUILDER_EMBEBIDAS_H
->>>>>>> origin/main

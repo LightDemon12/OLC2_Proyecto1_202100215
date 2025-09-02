@@ -204,7 +204,7 @@ Paréntesis ((, ))
 %type <node>  brackets brackets_new TOKEN_brace_block brace_elements brace_element  funcion bloque_funcion parametros
 %type <node>  parametro  cuerpo_funcion elemento_funcion argumentos lista_else_if_sin_llaves else_if_sin_llaves
 %type <node>  embebidas parseint_embebida parsedouble_embebida parsefloat_embebida valueof_embebida indexof_embebida
-%type <node> length_embebida add_embebida 
+%type <node> length_embebida add_embebida join_embebida 
 
 %% 
 
@@ -301,6 +301,15 @@ expresion:
     embebidas
     {
         $$ = $1;
+    }
+    | expresion TOKEN_EQUALS TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_equals_embebida($1, $4, @2.first_line, @2.first_column);
+    }
+    | TOKEN_IDENTIFIER TOKEN_EQUALS TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        ASTNode* id_node = build_identifier($1, @1.first_line, @1.first_column);
+        $$ = build_equals_embebida(id_node, $4, @2.first_line, @2.first_column);
     }
     /* OPERADORES ARITMÉTICOS */
     |expresion TOKEN_PLUS expresion
@@ -1070,6 +1079,10 @@ embebidas:
     {
         $$ = $1;
     }
+    | join_embebida
+    {
+        $$ = $1;
+    }
     ;
 
 // Embebida: Integer.parseInt(<expresion>)
@@ -1126,6 +1139,20 @@ add_embebida:
         $$ = build_add_embebida($1, $4, @2.first_line, @2.first_column);
     }
     ;
+
+
+join_embebida:
+    TOKEN_STRINGJOIN TOKEN_PAREN_LEFT expresion TOKEN_COMMA contenido_vector TOKEN_PAREN_RIGHT
+    {
+        $$ = build_join_embebida($3, $5, @1.first_line, @1.first_column);
+    }
+    | TOKEN_STRINGJOIN TOKEN_PAREN_LEFT expresion TOKEN_COMMA expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_join_embebida($3, $5, @1.first_line, @1.first_column);
+    }
+    ;
+
+
 %%
 
 void yyerror(const char* s) {

@@ -1,5 +1,4 @@
 //
-<<<<<<< HEAD
 // Created by lightdemon on 01/09/25.
 //
 
@@ -127,7 +126,51 @@ ASTNode* build_add_embebida(ASTNode* lista_expresion_node, ASTNode* elemento_exp
 
     return add_node;
 }
-=======
-// Created by lightdemon on 1/09/25.
-//
->>>>>>> origin/main
+
+ASTNode* build_join_embebida(ASTNode* separador_expresion_node, ASTNode* elementos_node, int line, int column) {
+    ASTNode* join_node = create_node("JOIN_EMBEBIDA", line, column);
+
+    // Crear wrapper para el separador
+    ASTNode* separador_wrapper = create_node("SEPARADOR_JOIN", line, column);
+    add_child(separador_wrapper, separador_expresion_node);
+    add_child(join_node, separador_wrapper);
+
+    // Crear wrapper para los elementos a unir
+    ASTNode* elementos_wrapper = create_node("ELEMENTOS_JOIN", line, column);
+    add_child(elementos_wrapper, elementos_node);
+    add_child(join_node, elementos_wrapper);
+
+    // Determinar tipo de elementos
+    const char* tipo_elementos = "DESCONOCIDO";
+    if (elementos_node && elementos_node->type) {
+        if (strcmp(elementos_node->type, "CONTENIDO_VECTOR") == 0) {
+            tipo_elementos = "ARRAY_LITERAL";
+        } else if (strcmp(elementos_node->type, "IDENTIFIER") == 0) {
+            tipo_elementos = "VARIABLE";
+        } else {
+            tipo_elementos = elementos_node->type;
+        }
+    }
+
+    printf("DEBUG EMBEBIDAS: JOIN_EMBEBIDA creado - tipo_elementos:%s\n", tipo_elementos);
+
+    return join_node;
+}
+
+ASTNode* build_equals_embebida(ASTNode* objeto1_expresion_node, ASTNode* objeto2_expresion_node, int line, int column) {
+    ASTNode* equals_node = create_node("EQUALS_EMBEBIDA", line, column);
+
+    // Crear wrapper para el primer objeto (el que llama al método)
+    ASTNode* objeto1_wrapper = create_node("OBJETO_EQUALS", line, column);
+    add_child(objeto1_wrapper, objeto1_expresion_node);
+    add_child(equals_node, objeto1_wrapper);
+
+    // Crear wrapper para el segundo objeto (el parámetro)
+    ASTNode* objeto2_wrapper = create_node("PARAMETRO_EQUALS", line, column);
+    add_child(objeto2_wrapper, objeto2_expresion_node);
+    add_child(equals_node, objeto2_wrapper);
+
+    printf("DEBUG EMBEBIDAS: EQUALS_EMBEBIDA creado\n");
+
+    return equals_node;
+}
