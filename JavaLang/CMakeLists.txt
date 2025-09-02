@@ -101,6 +101,8 @@ set(SOURCES
         Logic/Builders/builder_expresion_arrays.c
         Logic/Builders/builder_llamadas_funciones.c
         Headers/builder_llamadas_funciones.h
+        Logic/Builders/builder_embebidas.c
+        Headers/builder_embebidas.h
 )
 
 # Crear ejecutable

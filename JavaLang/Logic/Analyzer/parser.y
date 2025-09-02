@@ -25,6 +25,7 @@
 #include "../../Headers/builder_funciones.h"
 #include "../../Headers/builder_expresion_arrays.h"
 #include "../../Headers/builder_llamadas_funciones.h"
+#include "../../Headers/builder_embebidas.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -166,6 +167,8 @@ Multiplicación/División/Módulo (*, /, %)
 Unarios (!, ++, --)
 Paréntesis ((, ))
 */
+/* Funciones embebidas (alta precedencia) */
+%right TOKEN_PARSEINT TOKEN_PARSEFLOAT TOKEN_PARSEDOUBLE TOKEN_VALUEOF TOKEN_STRINGJOIN TOKEN_INDEXOF TOKEN_LENGTH TOKEN_ADD
 
 /* Operadores de asignación (menor precedencia) */
 %right TOKEN_ASSIGN TOKEN_PLUS_ASSIGN TOKEN_MINUS_ASSIGN TOKEN_MULT_ASSIGN TOKEN_DIV_ASSIGN TOKEN_MOD_ASSIGN TOKEN_AND_ASSIGN TOKEN_OR_ASSIGN TOKEN_XOR_ASSIGN TOKEN_SHIFT_LEFT_ASSIGN TOKEN_SHIFT_RIGHT_ASSIGN
@@ -200,8 +203,10 @@ Paréntesis ((, ))
 %type <node> arrays  contenido_vector  lista_expresiones arrays_acceso arrays_asignacion brackets_indices
 %type <node>  brackets brackets_new TOKEN_brace_block brace_elements brace_element  funcion bloque_funcion parametros
 %type <node>  parametro  cuerpo_funcion elemento_funcion argumentos lista_else_if_sin_llaves else_if_sin_llaves
+%type <node>  embebidas parseint_embebida parsedouble_embebida parsefloat_embebida valueof_embebida indexof_embebida
+%type <node> length_embebida add_embebida 
 
-%%
+%% 
 
 program:
     bloque_main
@@ -286,11 +291,19 @@ instruccion:
     {
         $$ = $1;
     }
+    | embebidas
+    {
+        $$ = $1;
+    }
     ;
 
 expresion:
+    embebidas
+    {
+        $$ = $1;
+    }
     /* OPERADORES ARITMÉTICOS */
-    expresion TOKEN_PLUS expresion
+    |expresion TOKEN_PLUS expresion
     {
         $$ = build_expresion_binaria($1, "+", $3, @2.first_line, @2.first_column);
     }
@@ -1025,6 +1038,92 @@ argumentos:
     | /* vacío */
     {
         $$ = build_argumentos_vacio(0, 0);
+    }
+    ;
+
+embebidas:
+    parseint_embebida
+    {
+        $$ = $1;
+    }
+    | parsefloat_embebida
+    {
+        $$ = $1;
+    }
+    | parsedouble_embebida
+    {
+        $$ = $1;
+    }
+    | valueof_embebida
+    {
+        $$ = $1;
+    }
+    | indexof_embebida
+    {
+        $$ = $1;
+    }
+    |length_embebida
+    {
+        $$ = $1;
+    }
+    |add_embebida
+    {
+        $$ = $1;
+    }
+    ;
+
+// Embebida: Integer.parseInt(<expresion>)
+parseint_embebida:
+    TOKEN_PARSEINT TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_parseint_embebida($3, @1.first_line, @1.first_column);
+    }
+    // Variante con base/radix: Integer.parseInt(<expresion>, <expresion>)
+    | TOKEN_PARSEINT TOKEN_PAREN_LEFT expresion TOKEN_COMMA expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_parseint_embebida_radix($3, $5, @1.first_line, @1.first_column);
+    }
+    ;
+
+parsedouble_embebida:
+    TOKEN_PARSEDOUBLE TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_parsedouble_embebida($3, @1.first_line, @1.first_column);
+    }
+    ;
+
+parsefloat_embebida:
+    TOKEN_PARSEFLOAT TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_parsefloat_embebida($3, @1.first_line, @1.first_column);
+    }
+    ;
+
+valueof_embebida:
+    TOKEN_VALUEOF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_valueof_embebida($3, @1.first_line, @1.first_column);
+    }
+    ;
+
+indexof_embebida:
+    TOKEN_INDEXOF TOKEN_PAREN_LEFT expresion TOKEN_COMMA expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_indexof_embebida($3, $5, @1.first_line, @1.first_column);
+    }
+    ;
+
+length_embebida:
+    expresion TOKEN_LENGTH
+    {
+        $$ = build_length_embebida($1, @2.first_line, @2.first_column);
+    }
+    ;
+
+add_embebida:
+    expresion TOKEN_ADD TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
+    {
+        $$ = build_add_embebida($1, $4, @2.first_line, @2.first_column);
     }
     ;
 %%
