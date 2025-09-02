@@ -1392,6 +1392,7 @@ YY_RULE_SETUP
 { DEBUG_TOKEN("TOKEN_DOT"); return TOKEN_DOT; }
 	YY_BREAK
 case 83:
+/* rule 83 can match eol */
 YY_RULE_SETUP
 #line 130 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/lexer.l"
 { /* Ignorar */ }
