@@ -1,6 +1,7 @@
 //
 // Created by lightdemon on 1/09/25.
 //
+<<<<<<< HEAD
 #ifndef BUILDER_EMBEBIDAS_H
 #define BUILDER_EMBEBIDAS_H
 
@@ -57,3 +58,10 @@ ASTNode* build_length_embebida(ASTNode* expresion_node, int line, int column);
 ASTNode* build_add_embebida(ASTNode* lista_expresion_node, ASTNode* elemento_expresion_node, int line, int column);
 
 #endif // BUILDER_EMBEBIDAS_H
+=======
+
+#ifndef JAVALANG_BUILDER_EMBEBIDAS_H
+#define JAVALANG_BUILDER_EMBEBIDAS_H
+
+#endif //JAVALANG_BUILDER_EMBEBIDAS_H
+>>>>>>> origin/main

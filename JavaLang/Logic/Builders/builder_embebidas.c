@@ -1,4 +1,5 @@
 //
+<<<<<<< HEAD
 // Created by lightdemon on 01/09/25.
 //
 
@@ -126,3 +127,7 @@ ASTNode* build_add_embebida(ASTNode* lista_expresion_node, ASTNode* elemento_exp
 
     return add_node;
 }
+=======
+// Created by lightdemon on 1/09/25.
+//
+>>>>>>> origin/main
