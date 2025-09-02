@@ -103,6 +103,18 @@ set(SOURCES
         Headers/builder_llamadas_funciones.h
         Logic/Builders/builder_embebidas.c
         Headers/builder_embebidas.h
+        Headers/Tabla_Simbolos.h
+        Logic/Interprete/Tabla_Simbolos.c
+        Headers/Interprete.h
+        Logic/Interprete/Interprete.c
+        Headers/node_processor.h
+        Logic/Interprete/node_processor.c
+        Headers/Procesador_Declaraciones.h
+        Logic/Interprete/Procesadores/processor_declaraciones.c
+        Headers/Procesador_Expresion.h
+        Logic/Interprete/Procesadores/Procesador_Expresion.c
+        Logic/Interprete/Procesadores/Procesador_Suma.c
+        Headers/Procesador_Suma.h
 )
 
 # Crear ejecutable

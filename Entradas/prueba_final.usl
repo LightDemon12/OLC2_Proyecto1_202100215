@@ -1,0 +1,200 @@
+public static void main() {
+    // ========== DECLARACIONES BÁSICAS ==========
+    
+    // Declaraciones con inicialización
+    int numero = 42;
+    float precio = 99.99;
+    double valor = 123.456;
+    string mensaje = "Hola Mundo";
+    char letra = 'A';
+    boolean activo = true;
+    
+    // Declaraciones sin inicialización
+    int contador;
+    string nombre;
+    boolean estado;
+    
+    // Declaraciones múltiples
+    int a = 1, b = 2, c = 3;
+    string texto1 = "uno", texto2 = "dos";
+    
+    // ========== ARRAYS Y VECTORES ==========
+    
+    // Vectores 1D con new
+    int numeros[]  = new int[5];
+    string nombres[]  = new string[3];
+    
+    // Vectores 1D inicializados
+    int valores[]  = {10, 20, 30, 40};
+    string palabras[]  = {"hola", "mundo", "java"};
+    
+    // Arrays multidimensionales con new
+    int matriz2d[][]  = new int[3][4];
+    int cubo3d[][][]  = new int[2][3][4];
+    string tablaTexto[][]  = new string[2][5];
+    
+    // Arrays multidimensionales inicializados
+    int matriz[][]  = {{1, 2}, {3, 4}, {5, 6}};
+    string tabla[][]  = {{"a", "b"}, {"c", "d"}};
+    
+    // ========== CONSTANTES ==========
+     int MAXIMO = 100;
+     string TITULO = "Mi Programa";
+     boolean DEBUG_MODE = true;
+    
+    // ========== ASIGNACIONES COMPUESTAS ==========
+    numero += 10;
+    precio *= 1.5;
+    contador++;
+    letra--;
+    
+    // Asignaciones a arrays
+    numeros[0] = 100;
+    matriz2d[1][2] = 50;
+    cubo3d[0][1][2] = 75;
+    
+    // ========== ESTRUCTURAS DE CONTROL ==========
+    
+    // IF simples y compuestos
+    if (numero > 0) {
+        contador = 1;
+    }
+    
+    if (precio > 50.0) {
+        mensaje = "Caro";
+    } else {
+        mensaje = "Barato";
+    }
+    
+    if (activo == true) {
+        estado = true;
+    } else if (numero < 10) {
+        estado = false;
+    } else {
+        estado = true;
+    }
+    
+    // SWITCH
+    switch (numero) {
+        case 1:
+            mensaje = "Uno";
+            break;
+        case 2:
+            mensaje = "Dos";
+            break;
+        default:
+            mensaje = "Otro";
+    }
+    
+    // CICLOS
+    while (contador < 10) {
+        contador++;
+    }
+    
+    do {
+        numero--;
+    } while (numero > 0);
+    
+    for (int i = 0; i < 5; i++) {
+        valores[i] = i * 2;
+    }
+    
+    for (int elemento : valores) {
+        System.out.println(elemento);
+    }
+    
+    // ========== FUNCIONES ==========
+    
+    // Función simple
+    int sumar(int a, int b) {
+        return a + b;
+    }
+    
+    // Función con arrays
+    void procesarArray(int datos [] ) {
+        for (int i = 0; i < datos.length; i++) {
+            datos[i] *= 2;
+        }
+    }
+    
+    // Función con arrays multidimensionales
+    string obtenerElemento(string tabla [][] , int fila, int columna) {
+        return tabla[fila][columna];
+    }
+    
+    // Función con múltiples parámetros
+    double calcular(double base, double altura, boolean incluirImpuesto) {
+        double area = base * altura;
+        if (incluirImpuesto) {
+            area *= 1.16;
+        }
+        return area;
+    }
+    
+    // Función recursiva
+    int factorial(int n) {
+        if (n <= 1) {
+            return 1;
+        }
+        return n * factorial(n - 1);
+    }
+    
+    // ========== LLAMADAS A FUNCIONES ==========
+    int resultado = sumar(10, 20);
+    procesarArray(numeros);
+    string elemento = obtenerElemento(tabla, 0, 1);
+    double area = calcular(5.5, 3.2, true);
+    int fact = factorial(5);
+    
+    // ========== FUNCIONES EMBEBIDAS ==========
+    
+    // Conversiones
+    int entero = Integer.parseInt("123");
+    float flotante = Float.parseFloat("45.67");
+    double doble = Double.parseDouble("89.012");
+    string cadena = String.valueOf(entero);
+    
+    // Operaciones con arrays
+    int longitud = numeros.length;
+    int indice = Arrays.indexOf(valores, 20);
+    
+    // Operaciones con strings
+    string unidos = String.join(",", palabras);
+    
+    // ========== EXPRESIONES COMPLEJAS ==========
+    
+    // Aritméticas
+    int complejo = (numero + contador) * precio - valores[0];
+    boolean logico = (activo && numero > 0) || (precio < 100.0);
+    
+    // Con llamadas a funciones
+    int mixto = sumar(factorial(3), numeros.length) + Integer.parseInt("50");
+    
+    // Con acceso a arrays multidimensionales
+    boolean comparacion = matriz[0][1] > cubo3d[1][0][2];
+    
+    // ========== SENTENCIAS DE CONTROL ==========
+    
+    // En funciones
+    if (numero == 0) {
+        return;
+    }
+    
+    // En ciclos
+    for (int j = 0; j < 10; j++) {
+        if (j == 5) {
+            break;
+        }
+        if (j % 2 == 0) {
+            continue;
+        }
+        valores[j] = j;
+    }
+    
+    // ========== SALIDAS ==========
+    System.out.println("Número: " + numero);
+    System.out.println("Mensaje: " + mensaje);
+    System.out.println("Resultado: " + resultado);
+    System.out.println("Array elemento 0: " + numeros[0]);
+    System.out.println("Matriz elemento [1][1]: " + matriz[1][1]);
+}

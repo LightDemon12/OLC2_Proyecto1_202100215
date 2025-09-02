@@ -15,9 +15,13 @@
 #include "../Headers/error_manager.h"
 #include "../Headers/ast.h"
 #include "../Headers/ast_visualizer.h"
+#include "../Logic/Analyzer/parser.tab.h"
+#include "../Headers/Interprete.h"
+
 
 extern ErrorManager* global_error_manager;
 extern ASTNode* ast_root;
+extern int interpretar_ast_simple(ASTNode* ast_root);
 
 // Paleta de 8 colores para palabras (más suaves para Win98)
 static const char *word_colors[8] = {
@@ -290,7 +294,7 @@ static void on_lexico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     mainview_clear_output(mainview);
     mainview_append_output(mainview, "=== ANÁLISIS LÉXICO ===");
 
-    // ✅LIMPIAR ERRORES ANTES DE COMENZAR NUEVO ANÁLISIS
+    //  LIMPIAR ERRORES ANTES DE COMENZAR NUEVO ANÁLISIS
     extern ErrorManager* global_error_manager;
     if (global_error_manager) {
         error_manager_clear(global_error_manager);
@@ -336,13 +340,36 @@ static void on_sintactico_clicked(GtkMenuItem *menuitem, gpointer user_data) {
 static void on_compilar_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     MainView *mainview = (MainView *)user_data;
     mainview_clear_output(mainview);
+
     mainview_append_output(mainview, "=== COMPILACIÓN COMPLETA ===");
-    mainview_append_output(mainview, "Fase 1: Análisis léxico... OK");
-    mainview_append_output(mainview, "Fase 2: Análisis sintáctico... OK");
-    mainview_append_output(mainview, "Fase 3: Análisis semántico... OK");
-    mainview_append_output(mainview, "Fase 4: Generación de código... OK");
-    mainview_append_output(mainview, "Compilación exitosa!");
-    printf("DEBUG: Compilación completa\n");
+
+    // Verificar que el AST existe
+    if (!ast_root) {
+        mainview_append_output(mainview, " ERROR: No hay AST disponible");
+        mainview_append_output(mainview, " Ejecuta primero 'Compilar > Léxico' o 'Compilar > Sintáctico'");
+        return;
+    }
+
+    mainview_append_output(mainview, " AST detectado - iniciando procesamiento...");
+    mainview_append_output(mainview, " Procesando expresiones y declaraciones...");
+
+    //   CAMBIAR ESTA LÍNEA - usar la función CON GUI
+    int resultado_interprete = interpretar_ast_con_gui(ast_root, mainview);
+
+    if (resultado_interprete != 0) {
+        mainview_append_output(mainview, " ERROR: Falló el análisis semántico");
+        mainview_append_output(mainview, " Revisa la consola para más detalles");
+        return;
+    }
+
+    mainview_append_output(mainview, "\n === COMPILACIÓN EXITOSA === ");
+    mainview_append_output(mainview, " AST procesado correctamente");
+    mainview_append_output(mainview, " Tabla de símbolos creada");
+    mainview_append_output(mainview, " Análisis semántico completado");
+    mainview_append_output(mainview, "\n Tip: Revisa la consola para ver la tabla de símbolos detallada");
+    mainview_append_output(mainview, " Usa 'Reportes > Tabla de Símbolos' para ver el reporte completo");
+
+    printf("DEBUG: Compilación completa - AST procesado exitosamente\n");
 }
 
 // Callbacks del menú Reportes
@@ -425,10 +452,30 @@ static void on_tabla_simbolos_clicked(GtkMenuItem *menuitem, gpointer user_data)
     MainView *mainview = (MainView *)user_data;
     mainview_clear_output(mainview);
     mainview_append_output(mainview, "=== TABLA DE SÍMBOLOS ===");
-    mainview_append_output(mainview, "Variables encontradas: 3");
-    mainview_append_output(mainview, "Funciones encontradas: 1");
-    mainview_append_output(mainview, "Tabla guardada en: /tmp/tabla_simbolos.html");
-    printf("DEBUG: Tabla de símbolos\n");
+
+    // Verificar que hay AST procesado
+    if (!ast_root) {
+        mainview_append_output(mainview, "❌ No hay AST disponible");
+        mainview_append_output(mainview, "💡 Ejecuta primero 'Compilar > Compilar'");
+        return;
+    }
+
+    mainview_append_output(mainview, "📊 Generando reporte de tabla de símbolos...");
+    mainview_append_output(mainview, "💡 Ver detalles completos en la consola");
+
+    // Ejecutar intérprete solo para mostrar tabla
+    printf("\n=== TABLA DE SÍMBOLOS DESDE GUI ===\n");
+    int resultado = interpretar_ast_simple(ast_root);
+    printf("=== FIN TABLA DE SÍMBOLOS ===\n\n");
+
+    if (resultado == 0) {
+        mainview_append_output(mainview, "  Tabla de símbolos generada exitosamente");
+        mainview_append_output(mainview, "📝 Revisa la consola para ver todos los símbolos");
+    } else {
+        mainview_append_output(mainview, "❌ Error generando tabla de símbolos");
+    }
+
+    printf("DEBUG: Reporte de tabla de símbolos ejecutado\n");
 }
 
 // Función para crear la barra de menús estilo Win98

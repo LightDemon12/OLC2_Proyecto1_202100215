@@ -23,7 +23,7 @@ typedef struct ErrorNode {
     int column;                       // Columna del error
     char* message;                    // Mensaje descriptivo (Descripción)
     char* token_text;                 // Texto del token (si aplica)
-    char* scope;                      // ✅ NUEVO: Ámbito del error
+    char* scope;                      //   NUEVO: Ámbito del error
     struct ErrorNode* next;           // Puntero al siguiente nodo
 } ErrorNode;
 
@@ -43,7 +43,7 @@ typedef struct {
 ErrorManager* error_manager_create();
 void error_manager_destroy(ErrorManager* manager);
 
-// ✅ ACTUALIZAR FUNCIONES PARA INCLUIR ÁMBITO
+//   ACTUALIZAR FUNCIONES PARA INCLUIR ÁMBITO
 void error_manager_add_lexico(ErrorManager* manager, int line, int column,
                              const char* message, const char* token_text);
 void error_manager_add_sintactico(ErrorManager* manager, int line, int column,
@@ -70,7 +70,7 @@ void error_manager_clear(ErrorManager* manager);
 // Obtener nombre del tipo de error
 const char* error_type_name(ErrorType type);
 
-// ✅ NUEVA: Obtener ámbito formateado
+//   NUEVA: Obtener ámbito formateado
 const char* error_manager_get_scope_display(ErrorType type, const char* scope);
 
 #endif // ERROR_MANAGER_H

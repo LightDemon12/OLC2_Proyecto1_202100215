@@ -12,7 +12,7 @@
 struct MainView;
 typedef struct MainView MainView;
 
-// ✅ SOLO DECLARAR EXTERN (no definir)
+//   SOLO DECLARAR EXTERN (no definir)
 extern ErrorManager* global_error_manager;
 extern int parse_java_code(const char* filename);
 

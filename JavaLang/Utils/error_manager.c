@@ -28,7 +28,7 @@ static ErrorNode* create_error_node(ErrorType type, int line, int column,
     node->message = message ? strdup(message) : NULL;
     node->token_text = token_text ? strdup(token_text) : NULL;
 
-    // ✅ MANEJAR ÁMBITO SEGÚN TIPO DE ERROR
+    //   MANEJAR ÁMBITO SEGÚN TIPO DE ERROR
     if (type == ERROR_SEMANTICO && scope) {
         node->scope = strdup(scope);
     } else {
@@ -40,7 +40,7 @@ static ErrorNode* create_error_node(ErrorType type, int line, int column,
     return node;
 }
 
-// ✅ ACTUALIZAR FUNCIÓN DE LIBERACIÓN:
+//   ACTUALIZAR FUNCIÓN DE LIBERACIÓN:
 static void free_error_node(ErrorNode* node) {
     if (node) {
         free(node->message);
@@ -77,7 +77,7 @@ void error_manager_destroy(ErrorManager* manager) {
 
 void error_manager_add_lexico(ErrorManager* manager, int line, int column,
                              const char* message, const char* token_text) {
-    /* ✅ VALIDACIONES SEGURAS */
+    /*   VALIDACIONES SEGURAS */
     if (!manager) {
         fprintf(stderr, "ERROR: error_manager es NULL\n");
         return;
@@ -88,7 +88,7 @@ void error_manager_add_lexico(ErrorManager* manager, int line, int column,
         return;
     }
 
-    /* ✅ CREAR NODO CON VERIFICACIONES */
+    /*   CREAR NODO CON VERIFICACIONES */
     ErrorNode* node = malloc(sizeof(ErrorNode));
     if (!node) {
         fprintf(stderr, "ERROR: No se pudo allocar memoria para ErrorNode\n");
@@ -103,7 +103,7 @@ void error_manager_add_lexico(ErrorManager* manager, int line, int column,
     node->scope = strdup("Sin ambito");
     node->next = NULL;
 
-    /* ✅ VERIFICAR DUPLICACIÓN DE STRINGS */
+    /*   VERIFICAR DUPLICACIÓN DE STRINGS */
     if (!node->message || !node->scope) {
         fprintf(stderr, "ERROR: No se pudo duplicar strings\n");
         free(node->message);
@@ -113,7 +113,7 @@ void error_manager_add_lexico(ErrorManager* manager, int line, int column,
         return;
     }
 
-    /* ✅ INSERTAR EN LISTA */
+    /*   INSERTAR EN LISTA */
     if (!manager->head) {
         manager->head = manager->tail = node;
     } else {
@@ -203,7 +203,7 @@ int error_manager_get_semantico_count(const ErrorManager* manager) {
 
 void error_manager_print_all(const ErrorManager* manager) {
     if (!manager || !manager->head) {
-        printf("✅ No hay errores registrados\n");
+        printf("  No hay errores registrados\n");
         return;
     }
 
