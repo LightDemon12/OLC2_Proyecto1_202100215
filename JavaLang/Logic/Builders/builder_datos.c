@@ -116,3 +116,12 @@ ASTNode* build_identifier(const char* name, int line, int column) {
 
     return id_node;
 }
+
+ASTNode* build_null_literal(int line, int column) {
+    ASTNode* null_node = create_node("NULL_LITERAL", line, column);
+    set_value(null_node, "null");
+
+    printf("DEBUG DATOS: NULL_LITERAL creado\n");
+
+    return null_node;
+}

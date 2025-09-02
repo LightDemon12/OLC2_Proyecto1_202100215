@@ -87,6 +87,14 @@ set(SOURCES
         Logic/Builders/builder_scope.c
         Headers/builder_ciclos.h
         Logic/Builders/builder_ciclos.c
+        Headers/builder_vectores.h
+        Logic/Builders/builder_vectores.c
+        Headers/builder_matrices.h
+        Logic/Builders/builder_matrices.c
+        Headers/builder_arrays_acceso.h
+        Logic/Builders/builder_arrays_acceso.c
+        Logic/Builders/builder_arrays_multidimensional.c
+        Headers/builder_arrays_multidimensional.h
 )
 
 # Crear ejecutable

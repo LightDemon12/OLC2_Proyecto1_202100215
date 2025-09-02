@@ -155,3 +155,32 @@ ASTNode* build_inicializacion_for_asignacion(const char* identifier, ASTNode* op
 
     return inicializacion_node;
 }
+
+ASTNode* build_for_each(ASTNode* tipo_node, const char* variable, const char* coleccion, ASTNode* instrucciones_node, int line, int column) {
+    ASTNode* for_each_node = create_node("FOR_EACH", line, column);
+
+    // Crear nodo de declaración de la variable iteradora
+    ASTNode* declaracion_wrapper = create_node("DECLARACION_FOR_EACH", line, column);
+    add_child(declaracion_wrapper, tipo_node);
+
+    ASTNode* variable_node = build_identifier(variable, line, column);
+    add_child(declaracion_wrapper, variable_node);
+    add_child(for_each_node, declaracion_wrapper);
+
+    // Crear nodo de la colección a iterar
+    ASTNode* coleccion_wrapper = create_node("COLECCION_FOR_EACH", line, column);
+    ASTNode* coleccion_node = build_identifier(coleccion, line, column);
+    add_child(coleccion_wrapper, coleccion_node);
+    add_child(for_each_node, coleccion_wrapper);
+
+    // Crear nodo explícito para el bloque del for-each CON SCOPE
+    ASTNode* bloque_for_each = create_node("BLOQUE_FOR_EACH", line, column);
+    ASTNode* scope_for_each = build_scope_bloque(instrucciones_node, "FOR_EACH", line, column);
+    add_child(bloque_for_each, scope_for_each);
+    add_child(for_each_node, bloque_for_each);
+
+    printf("DEBUG CICLOS: FOR_EACH creado - variable:%s, coleccion:%s con BLOQUE_FOR_EACH y SCOPE\n",
+           variable ? variable : "null", coleccion ? coleccion : "null");
+
+    return for_each_node;
+}

@@ -35,5 +35,9 @@ ASTNode* build_dato_char(const char* valor, int line, int column);
  */
 ASTNode* build_dato_boolean(const char* valor, int line, int column);
 
+/**
+ * Construye un nodo DATO específico para null
+ */
+ASTNode* build_dato_null(int line, int column);
 
 #endif // BUILDER_TIPOS_DATOS_H

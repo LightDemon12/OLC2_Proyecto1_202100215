@@ -118,3 +118,12 @@ ASTNode* build_dato_boolean(const char* valor, int line, int column) {
     return dato_node;
 }
 
+ASTNode* build_dato_null(int line, int column) {
+    ASTNode* dato_node = create_node("DATO", line, column);
+    ASTNode* null_node = build_null_literal(line, column);
+    add_child(dato_node, null_node);
+
+    printf("DEBUG TIPOS_DATOS: Nodo DATO (null) creado\n");
+
+    return dato_node;
+}

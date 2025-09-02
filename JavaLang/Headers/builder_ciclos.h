@@ -106,4 +106,20 @@ ASTNode* build_actualizacion_for_vacia(int line, int column);
  * @return ASTNode* - Nodo INICIALIZACION_FOR_ASIGNACION creado
  */
 ASTNode* build_inicializacion_for_asignacion(const char* identifier, ASTNode* operador_node, ASTNode* expresion_node, int line, int column);
+
+/**
+ * Construye un nodo FOR-EACH con SCOPE
+ * Para casos como: for (int elemento : array) { ... }
+ *
+ * @param tipo_node - Nodo del tipo de la variable iteradora
+ * @param variable - Nombre de la variable iteradora
+ * @param coleccion - Nombre de la colección/array a iterar
+ * @param instrucciones_node - Nodo de las instrucciones del ciclo
+ * @param line - Línea del token
+ * @param column - Columna del token
+ * @return ASTNode* - Nodo FOR_EACH creado con SCOPE
+ */
+ASTNode* build_for_each(ASTNode* tipo_node, const char* variable, const char* coleccion, ASTNode* instrucciones_node, int line, int column);
+
+
 #endif // BUILDER_CICLOS_H

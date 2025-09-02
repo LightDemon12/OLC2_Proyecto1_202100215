@@ -18,6 +18,10 @@
 #include "../../Headers/builder_scope.h" 
 #include "../../Headers/builder_ciclos.h" 
 #include "../../Headers/builder_datos.h" 
+#include "../../Headers/builder_vectores.h" 
+#include "../../Headers/builder_matrices.h" 
+#include "../../Headers/builder_arrays_acceso.h" 
+#include "../../Headers/builder_arrays_multidimensional.h"
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -102,7 +106,7 @@ void yyerror(const char* s);
 %token TOKEN_BRACKET_RIGHT // ]
 %token TOKEN_QUOTE_DOUBLE // " "
 %token TOKEN_QUOTE_SINGLE // ' '
-%token TOKEN_COLON
+%token TOKEN_COLON        // :  
 /*SENTENCIAS DE CONTROL DE FLUJO */
 %token TOKEN_IF           // if
 %token TOKEN_ELSE         // else
@@ -186,6 +190,8 @@ Paréntesis ((, ))
 %type <node> program bloque_main instrucciones instruccion sout declaraciones tipo dato lista_declaraciones lista_declaracion
 %type <node> expresion operador_asignacion asignacion_compuesta sentencia_if if_simple if_con_else if_con_else_if lista_else_if else_if
 %type <node> sentencias sentencia_switch lista_case case  ciclo_while  ciclo_do ciclo_for inicializacion_for actualizar_for 
+%type <node> arrays  contenido_vector  lista_expresiones arrays_acceso arrays_asignacion brackets_indices
+%type <node>  brackets brackets_new TOKEN_brace_block brace_elements brace_element 
 
 %%
 
@@ -249,6 +255,18 @@ instruccion:
         $$ = $1;
     }
     | ciclo_for        
+    {
+        $$ = $1;
+    }
+    | arrays
+    {
+        $$ = $1;
+    }
+    | arrays_acceso
+    {
+        $$ = $1;
+    }
+    | arrays_asignacion
     {
         $$ = $1;
     }
@@ -486,6 +504,10 @@ dato:
     {
         $$ = build_dato_boolean($1, @1.first_line, @1.first_column);
     }
+    | TOKEN_NULL
+    {
+        $$ = build_dato_null(@1.first_line, @1.first_column);
+    }
     ;
 
 lista_declaraciones:
@@ -634,6 +656,10 @@ ciclo_for:
     {
         $$ = build_for($3, $5, $7, $10, @1.first_line, @1.first_column);  
     }
+    | TOKEN_FOR TOKEN_PAREN_LEFT tipo TOKEN_IDENTIFIER TOKEN_COLON TOKEN_IDENTIFIER TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_for_each($3, $4, $6, $9, @1.first_line, @1.first_column);
+    }
     ;
 
 inicializacion_for:
@@ -666,6 +692,147 @@ actualizar_for:
     }
     ;
 
+arrays:
+    // VECTOR CON NEW (1D)
+    tipo TOKEN_BRACKET_LEFT TOKEN_BRACKET_RIGHT TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_NEW tipo TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT TOKEN_SEMICOLON
+    {
+        $$ = build_vector_new($1, $4, $7, $9, @1.first_line, @1.first_column);
+    }
+    // VECTOR INICIALIZADO (1D)
+    | tipo TOKEN_BRACKET_LEFT TOKEN_BRACKET_RIGHT TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_BRACE_LEFT contenido_vector TOKEN_BRACE_RIGHT TOKEN_SEMICOLON
+    {
+        $$ = build_vector_inicializado($1, $4, $7, @1.first_line, @1.first_column);
+    }
+    // ARRAY MULTIDIMENSIONAL CON NEW (2D, 3D, 4D, nD)
+    | tipo brackets TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_NEW tipo brackets_new TOKEN_SEMICOLON
+    {
+        $$ = build_array_multidimensional_new($1, $2, $3, $6, $7, @1.first_line, @1.first_column);
+    }
+    // ARRAY MULTIDIMENSIONAL INICIALIZADO (2D, 3D, 4D, nD)
+    | tipo brackets TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_brace_block TOKEN_SEMICOLON
+    {
+        $$ = build_array_multidimensional_inicializado($1, $2, $3, $5, @1.first_line, @1.first_column);
+    }
+    | tipo TOKEN_IDENTIFIER brackets TOKEN_ASSIGN TOKEN_brace_block TOKEN_SEMICOLON
+    {
+        $$ = build_array_multidimensional_inicializado($1, $3, $2, $5, @1.first_line, @1.first_column);
+    }
+    ;
+
+contenido_vector:
+    contenido_vector TOKEN_COMMA expresion
+    {
+        $$ = build_contenido_vector_add($1, $3);
+    }
+    | expresion
+    {
+        $$ = build_contenido_vector_single($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+lista_expresiones:
+    lista_expresiones TOKEN_COMMA expresion
+    {
+        $$ = build_lista_expresiones_add($1, $3);
+    }
+    | expresion
+    {
+        $$ = build_lista_expresiones_single($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+arrays_acceso:
+    TOKEN_IDENTIFIER TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT TOKEN_SEMICOLON
+    {
+        $$ = build_array_acceso_1d($1, $3, @1.first_line, @1.first_column);
+    }
+    | TOKEN_IDENTIFIER brackets_indices TOKEN_SEMICOLON
+    {
+        $$ = build_array_acceso_multidimensional($1, $2, @1.first_line, @1.first_column);
+    }
+    ;
+
+brackets_indices:
+    brackets_indices TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT
+    {
+        $$ = build_brackets_indices_add($1, $3);
+    }
+    | TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT
+    {
+        $$ = build_brackets_indices_single($2, @1.first_line, @1.first_column);
+    }
+    ;
+
+arrays_asignacion:
+    tipo TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_IDENTIFIER TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT TOKEN_SEMICOLON
+    {
+        $$ = build_array_asignacion_1d($1, $2, $4, $6, @1.first_line, @1.first_column);
+    }
+    | tipo TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_IDENTIFIER brackets_indices TOKEN_SEMICOLON
+    {
+        $$ = build_array_asignacion_multidimensional($1, $2, $4, $5, @1.first_line, @1.first_column);
+    }
+    | TOKEN_IDENTIFIER brackets_indices TOKEN_ASSIGN expresion TOKEN_SEMICOLON
+    {
+        $$ = build_array_asignacion_elemento($1, $2, $4, @1.first_line, @1.first_column);
+    }
+    ;
+
+
+// Secuencia de corchetes para la declaración del tipo (ej: [][][])
+brackets:
+    brackets TOKEN_BRACKET_LEFT TOKEN_BRACKET_RIGHT
+    {
+        $$ = build_brackets_add($1, @2.first_line, @2.first_column);
+    }
+    | TOKEN_BRACKET_LEFT TOKEN_BRACKET_RIGHT
+    {
+        $$ = build_brackets_single(@1.first_line, @1.first_column);
+    }
+    ;
+
+// Secuencia de corchetes con expresiones para la creación con 'new' (ej: [2][3][4])
+brackets_new:
+    brackets_new TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT
+    {
+        $$ = build_brackets_new_add($1, $3);
+    }
+    | TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT
+    {
+        $$ = build_brackets_new_single($2, @1.first_line, @1.first_column);
+    }
+    ;
+
+// Bloque de inicialización con llaves anidadas
+TOKEN_brace_block:
+    TOKEN_BRACE_LEFT brace_elements TOKEN_BRACE_RIGHT
+    {
+        $$ = build_brace_block($2, @1.first_line, @1.first_column);
+    }
+    ;
+
+// Elementos internos recursivos para llaves anidadas
+brace_elements:
+    brace_elements TOKEN_COMMA brace_element
+    {
+        $$ = build_brace_elements_add($1, $3);
+    }
+    | brace_element
+    {
+        $$ = build_brace_elements_single($1, @1.first_line, @1.first_column);
+    }
+    ;
+
+brace_element:
+    TOKEN_brace_block // una dimensión más interna
+    {
+        $$ = $1;
+    }
+    | lista_expresiones // dimensión más interna (los valores)
+    {
+        $$ = $1;
+    }
+    ;
 
 %%
 

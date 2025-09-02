@@ -69,4 +69,13 @@ ASTNode* build_boolean_literal(const char* value, int line, int column);
  */
 ASTNode* build_identifier(const char* name, int line, int column);
 
+/**
+ * Construye un nodo NULL_LITERAL
+ *
+ * @param line - Línea del token
+ * @param column - Columna del token
+ * @return ASTNode* - Nodo NULL_LITERAL creado
+ */
+ASTNode* build_null_literal(int line, int column);
+
 #endif // BUILDER_DATOS_H
