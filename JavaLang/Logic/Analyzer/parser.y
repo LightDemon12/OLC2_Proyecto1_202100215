@@ -54,6 +54,10 @@ void yyerror(const char* s);
 %token TOKEN_STRING       // string
 %token TOKEN_CHAR         // char
 %token TOKEN_BOOLEAN      // boolean
+%token TOKEN_DOUBLE       // double
+%token TOKEN_LONG         // long
+%token TOKEN_SHORT       // short
+%token TOKEN_BYTE        // byte
 %token TOKEN_EQUALS       // equals
 %token TOKEN_NEW          // new
 %token TOKEN_PUBLIC       // public
@@ -477,6 +481,22 @@ tipo:
     {
         $$ = build_tipo_node("boolean", @1.first_line, @1.first_column);
     }
+    | TOKEN_DOUBLE
+    {
+        $$ = build_tipo_node("double", @1.first_line, @1.first_column);
+    }
+    | TOKEN_LONG
+    {
+        $$ = build_tipo_node("long", @1.first_line, @1.first_column);
+    }
+    | TOKEN_SHORT
+    {
+        $$ = build_tipo_node("short", @1.first_line, @1.first_column);
+    }
+    | TOKEN_BYTE
+    {
+        $$ = build_tipo_node("byte", @1.first_line, @1.first_column);
+    }
     ;
 
 dato:
@@ -704,18 +724,16 @@ arrays:
         $$ = build_vector_inicializado($1, $4, $7, @1.first_line, @1.first_column);
     }
     // ARRAY MULTIDIMENSIONAL CON NEW (2D, 3D, 4D, nD)
-    | tipo brackets TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_NEW tipo brackets_new TOKEN_SEMICOLON
+    | tipo TOKEN_IDENTIFIER brackets TOKEN_ASSIGN TOKEN_NEW tipo brackets_new TOKEN_SEMICOLON
     {
-        $$ = build_array_multidimensional_new($1, $2, $3, $6, $7, @1.first_line, @1.first_column);
+        $$ = build_array_multidimensional_new($1, $3, $2, $6, $7, @1.first_line, @1.first_column);
+        //                                          ^^^ $3 = brackets, $2 = TOKEN_IDENTIFIER
     }
     // ARRAY MULTIDIMENSIONAL INICIALIZADO (2D, 3D, 4D, nD)
-    | tipo brackets TOKEN_IDENTIFIER TOKEN_ASSIGN TOKEN_brace_block TOKEN_SEMICOLON
-    {
-        $$ = build_array_multidimensional_inicializado($1, $2, $3, $5, @1.first_line, @1.first_column);
-    }
     | tipo TOKEN_IDENTIFIER brackets TOKEN_ASSIGN TOKEN_brace_block TOKEN_SEMICOLON
     {
         $$ = build_array_multidimensional_inicializado($1, $3, $2, $5, @1.first_line, @1.first_column);
+        //                                                   ^^^ $3 = brackets, $2 = TOKEN_IDENTIFIER
     }
     ;
 
