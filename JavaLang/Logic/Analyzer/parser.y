@@ -22,6 +22,9 @@
 #include "../../Headers/builder_matrices.h" 
 #include "../../Headers/builder_arrays_acceso.h" 
 #include "../../Headers/builder_arrays_multidimensional.h"
+#include "../../Headers/builder_funciones.h"
+#include "../../Headers/builder_expresion_arrays.h"
+#include "../../Headers/builder_llamadas_funciones.h"
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -195,7 +198,8 @@ Paréntesis ((, ))
 %type <node> expresion operador_asignacion asignacion_compuesta sentencia_if if_simple if_con_else if_con_else_if lista_else_if else_if
 %type <node> sentencias sentencia_switch lista_case case  ciclo_while  ciclo_do ciclo_for inicializacion_for actualizar_for 
 %type <node> arrays  contenido_vector  lista_expresiones arrays_acceso arrays_asignacion brackets_indices
-%type <node>  brackets brackets_new TOKEN_brace_block brace_elements brace_element 
+%type <node>  brackets brackets_new TOKEN_brace_block brace_elements brace_element  funcion bloque_funcion parametros
+%type <node>  parametro  cuerpo_funcion elemento_funcion argumentos lista_else_if_sin_llaves else_if_sin_llaves
 
 %%
 
@@ -271,6 +275,14 @@ instruccion:
         $$ = $1;
     }
     | arrays_asignacion
+    {
+        $$ = $1;
+    }
+    | funcion         
+    {
+        $$ = $1;
+    }
+    | sentencias
     {
         $$ = $1;
     }
@@ -363,6 +375,18 @@ expresion:
         $$ = build_expresion_postfijo(id_node, "--", @2.first_line, @2.first_column);
     }
     
+    /* LLAMADAS A FUNCIONES - NUEVO */
+    | TOKEN_IDENTIFIER TOKEN_PAREN_LEFT argumentos TOKEN_PAREN_RIGHT
+    {
+        $$ = build_llamada_funcion($1, $3, @1.first_line, @1.first_column);
+    }
+    
+    /* ACCESO A ARRAYS MULTIDIMENSIONAL */
+    | TOKEN_IDENTIFIER brackets_indices
+    {
+        $$ = build_array_acceso_multidimensional($1, $2, @1.first_line, @1.first_column);
+    }
+    
     /* ACCESO A PROPIEDADES/MÉTODOS */
     | TOKEN_IDENTIFIER TOKEN_DOT expresion
     {
@@ -408,6 +432,16 @@ asignacion_compuesta:
     TOKEN_IDENTIFIER operador_asignacion expresion TOKEN_SEMICOLON
     {
         $$ = build_asignacion_compuesta($1, $2, $3, @1.first_line, @1.first_column);
+    }
+    // ASIGNACIÓN COMPUESTA A ARRAY 1D - NUEVO
+    | TOKEN_IDENTIFIER TOKEN_BRACKET_LEFT expresion TOKEN_BRACKET_RIGHT operador_asignacion expresion TOKEN_SEMICOLON
+    {
+        $$ = build_asignacion_compuesta_array_1d($1, $3, $5, $6, @1.first_line, @1.first_column);
+    }
+    // ASIGNACIÓN COMPUESTA A ARRAY MULTIDIMENSIONAL - NUEVO
+    | TOKEN_IDENTIFIER brackets_indices operador_asignacion expresion TOKEN_SEMICOLON
+    {
+        $$ = build_asignacion_compuesta_array_multidimensional($1, $2, $3, $4, @1.first_line, @1.first_column);
     }
     ;
 
@@ -497,6 +531,10 @@ tipo:
     {
         $$ = build_tipo_node("byte", @1.first_line, @1.first_column);
     }
+    | TOKEN_VOID
+    {
+        $$ = build_tipo_node("void", @1.first_line, @1.first_column);
+    }
     ;
 
 dato:
@@ -571,23 +609,56 @@ sentencia_if:
     ;
 
 if_simple:
+    // IF con llaves (múltiples instrucciones)
     TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
         $$ = build_if_simple($3, $6, @1.first_line, @1.first_column);
     }
+    // IF sin llaves (instrucción única) - NUEVO
+    | TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT instruccion
+    {
+        $$ = build_if_simple_sin_llaves($3, $5, @1.first_line, @1.first_column);
+    }
     ;
 
 if_con_else:
+    // IF-ELSE con llaves (múltiples instrucciones)
     TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
         $$ = build_if_con_else($3, $6, $10, @1.first_line, @1.first_column);
     }
+    // IF con llaves, ELSE sin llaves - NUEVO
+    | TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT TOKEN_ELSE instruccion
+    {
+        $$ = build_if_con_else_mixto_1($3, $6, $9, @1.first_line, @1.first_column);
+    }
+    // IF sin llaves, ELSE con llaves - NUEVO
+    | TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT instruccion TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
+    {
+        $$ = build_if_con_else_mixto_2($3, $5, $8, @1.first_line, @1.first_column);
+    }
+    // IF-ELSE sin llaves (instrucciones únicas) - NUEVO
+    | TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT instruccion TOKEN_ELSE instruccion
+    {
+        $$ = build_if_con_else_sin_llaves($3, $5, $7, @1.first_line, @1.first_column);
+    }
     ;
 
 if_con_else_if:
+    // IF-ELSE IF-ELSE con llaves (múltiples instrucciones)
     TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT lista_else_if TOKEN_ELSE TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
         $$ = build_if_con_else_if($3, $6, $8, $11, @1.first_line, @1.first_column);
+    }
+    // IF-ELSE IF-ELSE sin llaves (instrucciones únicas) - NUEVO
+    | TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT instruccion lista_else_if_sin_llaves TOKEN_ELSE instruccion
+    {
+        $$ = build_if_con_else_if_sin_llaves($3, $5, $6, $8, @1.first_line, @1.first_column);
+    }
+    // IF-ELSE IF sin llaves (sin else final) - NUEVO
+    | TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT instruccion lista_else_if_sin_llaves
+    {
+        $$ = build_if_con_else_if_sin_else_final($3, $5, $6, @1.first_line, @1.first_column);
     }
     ;
 
@@ -602,10 +673,31 @@ lista_else_if:
     }
     ;
 
+// Nueva lista para else if sin llaves
+lista_else_if_sin_llaves:
+    lista_else_if_sin_llaves else_if_sin_llaves
+    {
+        $$ = build_lista_else_if_sin_llaves_add($1, $2);
+    }
+    | else_if_sin_llaves
+    {
+        $$ = build_lista_else_if_sin_llaves_single($1, @1.first_line, @1.first_column);
+    }
+    ;
+
 else_if:
+    // ELSE IF con llaves (múltiples instrucciones)
     TOKEN_ELSE TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT TOKEN_BRACE_LEFT instrucciones TOKEN_BRACE_RIGHT
     {
         $$ = build_else_if($4, $7, @1.first_line, @1.first_column);
+    }
+    ;
+
+// Nueva regla para else if sin llaves
+else_if_sin_llaves:
+    TOKEN_ELSE TOKEN_IF TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT instruccion
+    {
+        $$ = build_else_if_sin_llaves($4, $6, @1.first_line, @1.first_column);
     }
     ;
 
@@ -852,6 +944,89 @@ brace_element:
     }
     ;
 
+funcion:
+    tipo TOKEN_IDENTIFIER TOKEN_PAREN_LEFT parametros TOKEN_PAREN_RIGHT bloque_funcion
+    {
+        $$ = build_funcion($1, $2, $4, $6, @1.first_line, @1.first_column);
+    }
+    ;
+
+// Permite cero, uno o más parámetros separados por comas
+parametros:
+    parametro
+    {
+        $$ = build_parametros_single($1, @1.first_line, @1.first_column);
+    }
+    | parametros TOKEN_COMMA parametro
+    {
+        $$ = build_parametros_add($1, $3);
+    }
+    | /* vacío */
+    {
+        $$ = build_parametros_vacio(0, 0);  // ← Usar 0, 0 como en otras reglas vacías
+    }
+    ;
+
+// Permite tipo normal o tipo array de cualquier dimensión
+parametro:
+    tipo TOKEN_IDENTIFIER
+    {
+        $$ = build_parametro_simple($1, $2, @1.first_line, @1.first_column);
+    }
+    | tipo TOKEN_IDENTIFIER brackets
+    {
+        $$ = build_parametro_array($1, $2, $3, @1.first_line, @1.first_column);
+    }
+    ;
+
+bloque_funcion:
+    TOKEN_BRACE_LEFT cuerpo_funcion TOKEN_BRACE_RIGHT
+    {
+        $$ = build_bloque_funcion($2, @1.first_line, @1.first_column);
+    }
+    ;
+
+cuerpo_funcion:
+    cuerpo_funcion elemento_funcion
+    {
+        $$ = build_cuerpo_funcion_add($1, $2);
+    }
+    | elemento_funcion
+    {
+        $$ = build_cuerpo_funcion_single($1, @1.first_line, @1.first_column);
+    }
+    | /* vacío */
+    {
+        $$ = build_cuerpo_funcion_vacio(0, 0);
+    }
+    ;
+
+elemento_funcion:
+    instruccion
+    {
+        $$ = $1;
+    }
+    | sentencias
+    {
+        $$ = $1;
+    }
+    ;
+
+// Argumentos de llamadas a funciones
+argumentos:
+    argumentos TOKEN_COMMA expresion
+    {
+        $$ = build_argumentos_add($1, $3);
+    }
+    | expresion
+    {
+        $$ = build_argumentos_single($1, @1.first_line, @1.first_column);
+    }
+    | /* vacío */
+    {
+        $$ = build_argumentos_vacio(0, 0);
+    }
+    ;
 %%
 
 void yyerror(const char* s) {

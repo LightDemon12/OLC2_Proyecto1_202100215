@@ -95,6 +95,12 @@ set(SOURCES
         Logic/Builders/builder_arrays_acceso.c
         Logic/Builders/builder_arrays_multidimensional.c
         Headers/builder_arrays_multidimensional.h
+        Headers/builder_funciones.h
+        Logic/Builders/builder_funciones.c
+        Headers/builder_expresion_arrays.h
+        Logic/Builders/builder_expresion_arrays.c
+        Logic/Builders/builder_llamadas_funciones.c
+        Headers/builder_llamadas_funciones.h
 )
 
 # Crear ejecutable

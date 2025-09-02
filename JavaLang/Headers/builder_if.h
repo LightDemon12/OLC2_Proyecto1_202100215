@@ -3,72 +3,87 @@
 
 #include "ast.h"
 
-// ========== BUILDERS PARA SENTENCIAS IF ==========
+// ========== BUILDERS PARA IF CON LLAVES ==========
 
 /**
- * Construye un IF simple (solo if) con SCOPE
- *
- * @param condicion_node - Nodo de la expresión de condición
- * @param instrucciones_node - Nodo de las instrucciones del if
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo IF_SIMPLE creado con SCOPE
+ * Construye un nodo IF_SIMPLE con llaves
  */
 ASTNode* build_if_simple(ASTNode* condicion_node, ASTNode* instrucciones_node, int line, int column);
 
 /**
- * Construye un IF con ELSE, ambos con SCOPEs separados
- *
- * @param condicion_node - Nodo de la expresión de condición
- * @param instrucciones_if_node - Nodo de las instrucciones del if
- * @param instrucciones_else_node - Nodo de las instrucciones del else
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo IF_CON_ELSE creado con SCOPEs
+ * Construye un nodo IF_CON_ELSE con llaves en ambos bloques
  */
 ASTNode* build_if_con_else(ASTNode* condicion_node, ASTNode* instrucciones_if_node, ASTNode* instrucciones_else_node, int line, int column);
 
 /**
- * Construye un IF con ELSE IF y ELSE final, todos con SCOPEs separados
- *
- * @param condicion_node - Nodo de la expresión de condición inicial
- * @param instrucciones_if_node - Nodo de las instrucciones del if inicial
- * @param lista_else_if_node - Nodo de la lista de else if (cada uno con SCOPE)
- * @param instrucciones_else_node - Nodo de las instrucciones del else final
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo IF_CON_ELSE_IF creado con SCOPEs
+ * Construye un nodo IF_CON_ELSE_IF con llaves
  */
 ASTNode* build_if_con_else_if(ASTNode* condicion_node, ASTNode* instrucciones_if_node, ASTNode* lista_else_if_node, ASTNode* instrucciones_else_node, int line, int column);
 
+// ========== BUILDERS PARA IF SIN LLAVES ==========
+
 /**
- * Construye un nodo ELSE_IF individual con SCOPE
- *
- * @param condicion_node - Nodo de la expresión de condición
- * @param instrucciones_node - Nodo de las instrucciones del else if
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo ELSE_IF creado con SCOPE
+ * Construye un nodo IF_SIMPLE sin llaves (instrucción única)
+ */
+ASTNode* build_if_simple_sin_llaves(ASTNode* condicion_node, ASTNode* instruccion_node, int line, int column);
+
+/**
+ * Construye un nodo IF_CON_ELSE sin llaves (instrucciones únicas)
+ */
+ASTNode* build_if_con_else_sin_llaves(ASTNode* condicion_node, ASTNode* instruccion_if_node, ASTNode* instruccion_else_node, int line, int column);
+
+/**
+ * Construye un nodo IF_CON_ELSE mixto 1 (IF con llaves, ELSE sin llaves)
+ */
+ASTNode* build_if_con_else_mixto_1(ASTNode* condicion_node, ASTNode* instrucciones_if_node, ASTNode* instruccion_else_node, int line, int column);
+
+/**
+ * Construye un nodo IF_CON_ELSE mixto 2 (IF sin llaves, ELSE con llaves)
+ */
+ASTNode* build_if_con_else_mixto_2(ASTNode* condicion_node, ASTNode* instruccion_if_node, ASTNode* instrucciones_else_node, int line, int column);
+
+/**
+ * Construye un nodo IF_CON_ELSE_IF sin llaves
+ */
+ASTNode* build_if_con_else_if_sin_llaves(ASTNode* condicion_node, ASTNode* instruccion_if_node, ASTNode* lista_else_if_node, ASTNode* instruccion_else_node, int line, int column);
+
+/**
+ * Construye un nodo IF_CON_ELSE_IF sin else final
+ */
+ASTNode* build_if_con_else_if_sin_else_final(ASTNode* condicion_node, ASTNode* instruccion_if_node, ASTNode* lista_else_if_node, int line, int column);
+
+// ========== BUILDERS PARA ELSE IF ==========
+
+/**
+ * Construye un nodo ELSE_IF con llaves
  */
 ASTNode* build_else_if(ASTNode* condicion_node, ASTNode* instrucciones_node, int line, int column);
 
 /**
- * Construye una lista de ELSE IF con un solo elemento
- *
- * @param else_if_node - Nodo ELSE_IF inicial
- * @param line - Línea del token
- * @param column - Columna del token
- * @return ASTNode* - Nodo LISTA_ELSE_IF creado
+ * Construye un nodo ELSE_IF sin llaves
+ */
+ASTNode* build_else_if_sin_llaves(ASTNode* condicion_node, ASTNode* instruccion_node, int line, int column);
+
+// ========== BUILDERS PARA LISTAS ELSE IF ==========
+
+/**
+ * Construye una lista de ELSE_IF con un solo elemento
  */
 ASTNode* build_lista_else_if_single(ASTNode* else_if_node, int line, int column);
 
 /**
- * Agrega un ELSE IF a una lista existente
- *
- * @param lista_existente - Lista ELSE_IF existente
- * @param nuevo_else_if - Nuevo nodo ELSE_IF a agregar
- * @return ASTNode* - Lista ELSE_IF actualizada
+ * Agrega un ELSE_IF a una lista existente
  */
-ASTNode* build_lista_else_if_add(ASTNode* lista_existente, ASTNode* nuevo_else_if);
+ASTNode* build_lista_else_if_add(ASTNode* lista_node, ASTNode* else_if_node);
+
+/**
+ * Construye una lista de ELSE_IF sin llaves con un solo elemento
+ */
+ASTNode* build_lista_else_if_sin_llaves_single(ASTNode* else_if_node, int line, int column);
+
+/**
+ * Agrega un ELSE_IF sin llaves a una lista existente
+ */
+ASTNode* build_lista_else_if_sin_llaves_add(ASTNode* lista_node, ASTNode* else_if_node);
 
 #endif // BUILDER_IF_H
