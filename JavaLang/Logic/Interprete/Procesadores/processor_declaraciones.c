@@ -251,9 +251,12 @@ int process_declaracion_sin_inicializacion(NodeProcessorContext* context, TipoDa
     // Valor por defecto según el tipo (valores por defecto de Java)
     switch (tipo) {
         case TIPO_INT:
-        case TIPO_FLOAT:
-        case TIPO_DOUBLE:
+        case TIPO_LONG:         // ← AÑADIR
             strncpy(simbolo.valor, "0", MAX_VALUE_LENGTH - 1);
+            break;
+        case TIPO_FLOAT:
+        case TIPO_DOUBLE:       // ← Si no existe, añadir
+            strncpy(simbolo.valor, "0.0", MAX_VALUE_LENGTH - 1);
             break;
         case TIPO_BOOLEAN:
             strncpy(simbolo.valor, "false", MAX_VALUE_LENGTH - 1);
@@ -334,19 +337,27 @@ int tipos_compatibles_asignacion(TipoDato tipo_variable, TipoDato tipo_valor) {
     }
 
     // Promociones automáticas permitidas en Java:
-    // char -> int -> float -> double
+    // char -> int -> long -> float -> double
 
-    // char puede asignarse a int, float, double
+    // char puede asignarse a int, long, float, double
     if (tipo_valor == TIPO_CHAR &&
-        (tipo_variable == TIPO_INT || tipo_variable == TIPO_FLOAT || tipo_variable == TIPO_DOUBLE)) {
+        (tipo_variable == TIPO_INT || tipo_variable == TIPO_LONG ||
+         tipo_variable == TIPO_FLOAT || tipo_variable == TIPO_DOUBLE)) {
         return 1;
-    }
+         }
 
-    // int puede asignarse a float, double
+    // int puede asignarse a long, float, double
     if (tipo_valor == TIPO_INT &&
+        (tipo_variable == TIPO_LONG || tipo_variable == TIPO_FLOAT ||
+         tipo_variable == TIPO_DOUBLE)) {
+        return 1;
+         }
+
+    // long puede asignarse a float, double
+    if (tipo_valor == TIPO_LONG &&
         (tipo_variable == TIPO_FLOAT || tipo_variable == TIPO_DOUBLE)) {
         return 1;
-    }
+        }
 
     // float puede asignarse a double
     if (tipo_valor == TIPO_FLOAT && tipo_variable == TIPO_DOUBLE) {

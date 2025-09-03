@@ -78,4 +78,13 @@ ASTNode* build_identifier(const char* name, int line, int column);
  */
 ASTNode* build_null_literal(int line, int column);
 
+
+ASTNode* build_long_literal(const char* value, int line, int column);
+ASTNode* build_double_literal(const char* value, int line, int column);
+
+// ========== BUILDERS DE NODOS DATO SOLO PARA NUEVOS TIPOS ==========
+
+ASTNode* build_dato_long(const char* value, int line, int column);
+ASTNode* build_dato_double(const char* value, int line, int column);
+
 #endif // BUILDER_DATOS_H

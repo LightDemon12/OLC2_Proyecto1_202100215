@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 44 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 45 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
     typedef struct ASTNode ASTNode;
 
@@ -144,7 +144,9 @@ extern int yydebug;
     TOKEN_TYPE_STRING = 339,       /* TOKEN_TYPE_STRING  */
     TOKEN_TYPE_CHAR = 340,         /* TOKEN_TYPE_CHAR  */
     TOKEN_TYPE_TRUE = 341,         /* TOKEN_TYPE_TRUE  */
-    TOKEN_TYPE_FALSE = 342         /* TOKEN_TYPE_FALSE  */
+    TOKEN_TYPE_FALSE = 342,        /* TOKEN_TYPE_FALSE  */
+    TOKEN_TYPE_LONG = 343,         /* TOKEN_TYPE_LONG  */
+    TOKEN_TYPE_DOUBLE = 344        /* TOKEN_TYPE_DOUBLE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -153,12 +155,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 48 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
+#line 49 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.y"
 
     ASTNode* node;
     char* str; 
 
-#line 162 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.h"
+#line 164 "/home/lightdemon/Escritorio/OLC2_Proyecto1_202100215/JavaLang/Logic/Analyzer/parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

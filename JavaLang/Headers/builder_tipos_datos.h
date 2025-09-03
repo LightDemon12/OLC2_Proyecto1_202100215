@@ -39,5 +39,14 @@ ASTNode* build_dato_boolean(const char* valor, int line, int column);
  * Construye un nodo DATO específico para null
  */
 ASTNode* build_dato_null(int line, int column);
+// ========== LITERALES BÁSICOS ==========
+ASTNode* build_string_literal(const char* value, int line, int column);
+ASTNode* build_int_literal(const char* value, int line, int column);
+ASTNode* build_float_literal(const char* value, int line, int column);
+ASTNode* build_char_literal(const char* value, int line, int column);
+ASTNode* build_boolean_literal(const char* value, int line, int column);
+ASTNode* build_identifier(const char* name, int line, int column);
+ASTNode* build_null_literal(int line, int column);
+
 
 #endif // BUILDER_TIPOS_DATOS_H

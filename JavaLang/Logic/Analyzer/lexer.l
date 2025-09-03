@@ -35,8 +35,13 @@ void lexer_cleanup();
 DIGIT       [0-9]
 LETTER      [a-zA-ZáéíóúÁÉÍÓÚñÑ]
 IDENTIFIER  {LETTER}({LETTER}|{DIGIT}|_)*
-INTEGER     {DIGIT}+
-FLOAT       {DIGIT}+\.{DIGIT}+
+INTEGER_LONG    {DIGIT}+[lL]
+FLOAT_SUFFIX    {DIGIT}+\.{DIGIT}+[fF]
+FLOAT_INT_SUFFIX {DIGIT}+[fF]
+DOUBLE_SUFFIX   {DIGIT}+\.{DIGIT}+[dD]
+DOUBLE_INT_SUFFIX {DIGIT}+[dD]
+FLOAT_BASIC     {DIGIT}+\.{DIGIT}+
+INTEGER         {DIGIT}+
 WHITESPACE  [ \t]+
 CHARACTER   \'[^\\]\'
 STRING      \"([^\"\n\r]|(\\.))*\"
@@ -47,8 +52,18 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 
 {COMMENT_LINE}              { /* Ignorar comentarios de línea */ }
 {COMMENT_BLOCK}             { /* Ignorar comentarios de bloque */ }
+{INTEGER_LONG}              { 
+    yylval.str = strdup(yytext); 
+    DEBUG_TOKEN("TOKEN_TYPE_LONG"); 
+    return TOKEN_TYPE_LONG; 
+}
+
+{FLOAT_SUFFIX}              { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
+{FLOAT_INT_SUFFIX}          { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
+{DOUBLE_SUFFIX}             { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_DOUBLE"); return TOKEN_TYPE_DOUBLE; }
+{DOUBLE_INT_SUFFIX}         { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_DOUBLE"); return TOKEN_TYPE_DOUBLE; }
+{FLOAT_BASIC}               { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_DOUBLE"); return TOKEN_TYPE_DOUBLE; }
 {INTEGER}                   { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_INT"); return TOKEN_TYPE_INT; }
-{FLOAT}                     { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_FLOAT"); return TOKEN_TYPE_FLOAT; }
 {STRING}                    { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_STRING"); return TOKEN_TYPE_STRING; }
 {CHARACTER}                 { yylval.str = strdup(yytext); DEBUG_TOKEN("TOKEN_TYPE_CHAR"); return TOKEN_TYPE_CHAR; }
 "public"                    { DEBUG_TOKEN("TOKEN_PUBLIC"); return TOKEN_PUBLIC; }

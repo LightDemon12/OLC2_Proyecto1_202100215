@@ -127,3 +127,54 @@ ASTNode* build_dato_null(int line, int column) {
 
     return dato_node;
 }
+// ========== LITERALES BÁSICOS (AGREGAR LAS FALTANTES) ==========
+
+ASTNode* build_string_literal(const char* value, int line, int column) {
+    ASTNode* string_node = create_node("STRING_LITERAL", line, column);
+    // Limpiar comillas si es necesario...
+    set_value(string_node, value ? value : "");
+    printf("DEBUG TIPOS_DATOS: STRING_LITERAL creado con valor: %s\n", value ? value : "");
+    return string_node;
+}
+
+ASTNode* build_int_literal(const char* value, int line, int column) {
+    ASTNode* int_node = create_node("INT_LITERAL", line, column);
+    set_value(int_node, value ? value : "0");
+    printf("DEBUG TIPOS_DATOS: INT_LITERAL creado con valor: %s\n", value ? value : "0");
+    return int_node;
+}
+
+ASTNode* build_float_literal(const char* value, int line, int column) {
+    ASTNode* float_node = create_node("FLOAT_LITERAL", line, column);
+    set_value(float_node, value ? value : "0.0f");
+    printf("DEBUG TIPOS_DATOS: FLOAT_LITERAL creado con valor: %s\n", value ? value : "0.0f");
+    return float_node;
+}
+
+ASTNode* build_char_literal(const char* value, int line, int column) {
+    ASTNode* char_node = create_node("CHAR_LITERAL", line, column);
+    set_value(char_node, value ? value : "'\\0'");
+    printf("DEBUG TIPOS_DATOS: CHAR_LITERAL creado con valor: %s\n", value ? value : "'\\0'");
+    return char_node;
+}
+
+ASTNode* build_boolean_literal(const char* value, int line, int column) {
+    ASTNode* bool_node = create_node("BOOLEAN_LITERAL", line, column);
+    set_value(bool_node, value ? value : "false");
+    printf("DEBUG TIPOS_DATOS: BOOLEAN_LITERAL creado con valor: %s\n", value ? value : "false");
+    return bool_node;
+}
+
+ASTNode* build_identifier(const char* name, int line, int column) {
+    ASTNode* id_node = create_node("IDENTIFIER", line, column);
+    set_value(id_node, name ? name : "unnamed");
+    printf("DEBUG TIPOS_DATOS: IDENTIFIER creado con nombre: %s\n", name ? name : "unnamed");
+    return id_node;
+}
+
+ASTNode* build_null_literal(int line, int column) {
+    ASTNode* null_node = create_node("NULL_LITERAL", line, column);
+    set_value(null_node, "null");
+    printf("DEBUG TIPOS_DATOS: NULL_LITERAL creado\n");
+    return null_node;
+}

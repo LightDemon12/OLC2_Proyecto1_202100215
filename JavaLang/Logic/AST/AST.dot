@@ -14,11 +14,17 @@ digraph AST {
   node_1 -> node_2;
   node_3 [label="INSTRUCCIONES"];
   node_2 -> node_3;
-  node_4 [label="EXPRESION_UNARIA\n-"];
+  node_4 [label="DECLARACION_CON_INICIALIZACION"];
   node_3 -> node_4;
-  node_5 [label="DATO"];
+  node_5 [label="TIPO\nfloat"];
   node_4 -> node_5;
-  node_6 [label="INT_LITERAL\n4"];
-  node_5 -> node_6;
+  node_6 [label="IDENTIFIER\nb"];
+  node_4 -> node_6;
+  node_7 [label="CAST\nfloat"];
+  node_4 -> node_7;
+  node_8 [label="TIPO\nfloat"];
+  node_7 -> node_8;
+  node_9 [label="IDENTIFIER\na"];
+  node_7 -> node_9;
 
 }

@@ -24,8 +24,12 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
 
         if (strcmp(literal_node->type, "INT_LITERAL") == 0) {
             return TIPO_INT;
+        } else if (strcmp(literal_node->type, "LONG_LITERAL") == 0) {
+            return TIPO_LONG;  // NUEVO TIPO
         } else if (strcmp(literal_node->type, "FLOAT_LITERAL") == 0) {
             return TIPO_FLOAT;
+        } else if (strcmp(literal_node->type, "DOUBLE_LITERAL") == 0) {
+            return TIPO_DOUBLE;
         } else if (strcmp(literal_node->type, "STRING_LITERAL") == 0) {
             return TIPO_STRING;
         } else if (strcmp(literal_node->type, "CHAR_LITERAL") == 0) {
@@ -35,6 +39,11 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
         } else if (strcmp(literal_node->type, "NULL_LITERAL") == 0) {
             return TIPO_NULL;
         }
+    }
+
+    // === MANEJAR LITERALES DIRECTOS ===
+    if (strcmp(node->type, "LONG_LITERAL") == 0) {
+        return TIPO_LONG;  // NUEVO CASO
     }
 
     // Si es directamente un literal NULL (sin nodo DATO intermedio)
@@ -221,37 +230,46 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
 // ===== FUNCIONES AUXILIARES =====
 
 double convertir_a_numero(const char* valor, TipoDato tipo) {
-    switch(tipo) {
-        case TIPO_INT:
-            return (double)atoi(valor);
-        case TIPO_FLOAT:
-        case TIPO_DOUBLE:
-            return atof(valor);
-        case TIPO_CHAR:
-            // En Java, char se convierte a su valor ASCII
-            if (valor[0] == '\'') {
-                return (double)valor[1]; // 'A' -> 65
+    if (!valor) return 0.0;
+
+    // Crear copia para manipular
+    char* valor_limpio = strdup(valor);
+    int len = strlen(valor_limpio);
+
+    // === REMOVER SUFIJOS ===
+    if (len > 1) {
+        char ultimo = valor_limpio[len-1];
+        if (ultimo == 'f' || ultimo == 'F' ||
+            ultimo == 'd' || ultimo == 'D' ||
+            ultimo == 'l' || ultimo == 'L') {
+            valor_limpio[len-1] = '\0';  // Remover sufijo
             }
-            return (double)valor[0];
-        case TIPO_BOOLEAN:
-            return strcmp(valor, "true") == 0 ? 1.0 : 0.0;
-        default:
-            return 0.0;
     }
+
+    double resultado = atof(valor_limpio);
+    free(valor_limpio);
+
+    return resultado;
 }
 
 char* convertir_numero_a_string(double valor, TipoDato tipo) {
     char* resultado = malloc(64);
 
-    switch(tipo) {
+    switch (tipo) {
         case TIPO_INT:
             snprintf(resultado, 64, "%d", (int)valor);
             break;
+        case TIPO_LONG:  // NUEVO CASO
+            snprintf(resultado, 64, "%ldL", (long)valor);
+            break;
         case TIPO_FLOAT:
-            snprintf(resultado, 64, "%.2f", (float)valor);
+            snprintf(resultado, 64, "%.2ff", (float)valor);
             break;
         case TIPO_DOUBLE:
             snprintf(resultado, 64, "%.6g", valor);
+            break;
+        case TIPO_CHAR:
+            snprintf(resultado, 64, "%c", (char)((int)valor));
             break;
         default:
             snprintf(resultado, 64, "%.6g", valor);
@@ -262,8 +280,9 @@ char* convertir_numero_a_string(double valor, TipoDato tipo) {
 }
 
 int es_tipo_numerico(TipoDato tipo) {
-    return (tipo == TIPO_INT || tipo == TIPO_FLOAT ||
-            tipo == TIPO_DOUBLE || tipo == TIPO_CHAR);
+    return (tipo == TIPO_INT || tipo == TIPO_LONG ||      // ← AÑADIR TIPO_LONG
+            tipo == TIPO_FLOAT || tipo == TIPO_DOUBLE ||
+            tipo == TIPO_CHAR);
 }
 
 int es_nodo_expresion(const char* node_type) {
@@ -290,6 +309,9 @@ TipoDato promocionar_tipos(TipoDato tipo1, TipoDato tipo2) {
     }
     if (tipo1 == TIPO_FLOAT || tipo2 == TIPO_FLOAT) {
         return TIPO_FLOAT;
+    }
+    if (tipo1 == TIPO_LONG || tipo2 == TIPO_LONG) {      // ← AÑADIR ESTA LÍNEA
+        return TIPO_LONG;
     }
     if (tipo1 == TIPO_INT || tipo2 == TIPO_INT) {
         return TIPO_INT;

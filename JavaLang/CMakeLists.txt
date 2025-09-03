@@ -123,6 +123,8 @@ set(SOURCES
         Logic/Interprete/Procesadores/Procesador_Multiplicacion.c
         Headers/Procesador_Division.h
         Logic/Interprete/Procesadores/Procesador_Division.c
+        Logic/Builders/builder_casting.c
+        Headers/builder_casting.h
 )
 
 # Crear ejecutable

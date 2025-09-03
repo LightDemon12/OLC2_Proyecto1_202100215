@@ -383,6 +383,7 @@ TipoDato string_to_tipo_dato(const char* tipo_str) {
     if (strcmp(tipo_str, "int") == 0) return TIPO_INT;
     if (strcmp(tipo_str, "float") == 0) return TIPO_FLOAT;
     if (strcmp(tipo_str, "double") == 0) return TIPO_DOUBLE;
+    if (strcmp(tipo_str, "long") == 0) return TIPO_LONG;
     if (strcmp(tipo_str, "string") == 0) return TIPO_STRING;
     if (strcmp(tipo_str, "char") == 0) return TIPO_CHAR;
     if (strcmp(tipo_str, "boolean") == 0) return TIPO_BOOLEAN;

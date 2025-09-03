@@ -26,6 +26,7 @@
 #include "../../Headers/builder_expresion_arrays.h"
 #include "../../Headers/builder_llamadas_funciones.h"
 #include "../../Headers/builder_embebidas.h" 
+#include "../../Headers/builder_casting.h" 
 
 /* DECLARAR COMO EXTERNAS - NO DEFINIR AQUÍ */
 extern ASTNode* ast_root;
@@ -152,7 +153,9 @@ void yyerror(const char* s);
 %token <str> TOKEN_TYPE_STRING  // cadena
 %token <str> TOKEN_TYPE_CHAR    // char
 %token <str> TOKEN_TYPE_TRUE    // verdadero
-%token <str> TOKEN_TYPE_FALSE   // false
+%token <str> TOKEN_TYPE_FALSE   // false      // 123
+%token <str> TOKEN_TYPE_LONG        // 123L o 123l     // 3.14f o 123f
+%token <str> TOKEN_TYPE_DOUBLE      // 3.14d o 3.14 (sin sufijo)
 
 /* PRECEDENCIA Y ASOCIATIVIDAD - De menor a mayor precedencia */
 
@@ -419,7 +422,10 @@ expresion:
         ASTNode* id_node = build_identifier($1, @1.first_line, @1.first_column);
         $$ = build_expresion_acceso(id_node, $3, @2.first_line, @2.first_column);
     }
-    
+    | TOKEN_PAREN_LEFT tipo TOKEN_PAREN_RIGHT expresion %prec TOKEN_NOT
+    {
+        $$ = build_cast_node($2, $4, @1.first_line, @1.first_column);
+    }
     /* PARÉNTESIS */
     | TOKEN_PAREN_LEFT expresion TOKEN_PAREN_RIGHT
     {
@@ -431,7 +437,6 @@ expresion:
     {
         $$ = $1;
     }
-    
     /* IDENTIFICADORES */
     | TOKEN_IDENTIFIER
     {
@@ -572,9 +577,17 @@ dato:
     {
         $$ = build_dato_int($1, @1.first_line, @1.first_column);
     }
+    | TOKEN_TYPE_LONG        
+    {
+        $$ = build_dato_long($1, @1.first_line, @1.first_column);
+    }
     | TOKEN_TYPE_FLOAT  
     {
         $$ = build_dato_float($1, @1.first_line, @1.first_column);
+    }
+    | TOKEN_TYPE_DOUBLE      
+    {
+        $$ = build_dato_double($1, @1.first_line, @1.first_column);
     }
     | TOKEN_TYPE_CHAR
     {
