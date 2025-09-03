@@ -10,7 +10,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "node_utils.h"c
+#include "node_utils.h"
 
 // Función para verificar si dos tipos son compatibles para módulo
 int tipos_compatibles_modulo(TipoDato tipo1, TipoDato tipo2) {

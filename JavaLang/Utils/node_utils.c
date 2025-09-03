@@ -250,35 +250,38 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
             incrementar_uso_simbolo(context->tabla_simbolos, node->value);
             return strdup(simbolo->valor);
         } else {
-            printf("   → ❌ Variable '%s' NO encontrada en tabla de símbolos\n", node->value);
+            printf("   → ❌ Variable '%s' NO encontrada o no accesible\n", node->value);
 
-            // ===== MEJORAR MENSAJE DE ERROR CON CONTEXTO =====
+            // ===== REPORTAR ERROR SEMÁNTICO MEJORADO =====
             if (global_error_manager) {
                 char error_msg[512];
-                snprintf(error_msg, sizeof(error_msg),
-                        "Variable '%s' no ha sido declarada en el scope actual o accesible",
-                        node->value);
-
                 const char* scope_actual = "global";
+
                 if (context->scope_actual && context->scope_actual->nombre) {
                     scope_actual = context->scope_actual->nombre;
                 } else if (context->tabla_simbolos && context->tabla_simbolos->ambito_actual) {
                     scope_actual = context->tabla_simbolos->ambito_actual;
                 }
 
-                // ===== AGREGAR INFORMACIÓN DE DEBUG =====
-                char error_detallado[512];
-                snprintf(error_detallado, sizeof(error_detallado),
-                        "%s (buscada en scope: %s, línea: %d)",
-                        error_msg, scope_actual, node->line);
+                // ===== VERIFICAR SI EXISTE EN OTRO SCOPE =====
+                int existe_en_otro_scope = verificar_si_existe_en_otro_scope(context->tabla_simbolos, node->value);
+
+                if (existe_en_otro_scope) {
+                    snprintf(error_msg, sizeof(error_msg),
+                            "Variable '%s' no está en el ámbito actual '%s'. La variable existe pero fue declarada en un ámbito inaccesible.",
+                            node->value, scope_actual);
+                } else {
+                    snprintf(error_msg, sizeof(error_msg),
+                            "Variable '%s' no ha sido declarada en ningún ámbito accesible desde '%s'",
+                            node->value, scope_actual);
+                }
 
                 error_manager_add_semantico(global_error_manager,
                                           node->line, node->column,
-                                          error_detallado, node->value,
+                                          error_msg, node->value,
                                           scope_actual);
 
-                // TAMBIÉN LOG A CONSOLA PARA DEBUG
-                printf("   → ERROR SEMÁNTICO: %s\n", error_detallado);
+                printf("   → ERROR SEMÁNTICO: %s\n", error_msg);
             }
             return NULL;
         }

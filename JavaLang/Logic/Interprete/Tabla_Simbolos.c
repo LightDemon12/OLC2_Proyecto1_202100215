@@ -98,40 +98,101 @@ int insertar_simbolo(TablaSimbolos* tabla, Simbolo simbolo) {
     return 1;
 }
 
-Simbolo* buscar_simbolo(TablaSimbolos* tabla, const char* id) {
-    if (!tabla || !id) return NULL;
+
+
+int es_simbolo_accesible_desde_ambito_actual(TablaSimbolos* tabla, Simbolo* simbolo) {
+    if (!tabla || !simbolo) return 0;
+
+    // El scope global siempre es accesible
+    if (strcmp(simbolo->ambito, "global") == 0) {
+        return 1;
+    }
+
+    // Variables en el mismo ámbito son accesibles
+    if (strcmp(tabla->ambito_actual, simbolo->ambito) == 0) {
+        return 1;
+    }
+
+    // ===== VALIDACIÓN JERÁRQUICA DE SCOPES =====
+    // Para scopes con patrones como: main_1, if_1_0x..., etc.
+
+    // Si estamos en global, NO podemos acceder a scopes locales
+    if (strcmp(tabla->ambito_actual, "global") == 0) {
+        printf("DEBUG SCOPE: Variable '%s' en scope '%s' NO accesible desde scope global\n",
+               simbolo->id, simbolo->ambito);  // ← CAMBIO: nombre → id
+        return 0;
+    }
+
+    // Variables del scope padre (main) son accesibles desde scopes hijos (if, while, etc.)
+    if (strstr(tabla->ambito_actual, "if_") != NULL && strstr(simbolo->ambito, "main") != NULL) {
+        return 1; // Variables de main accesibles desde IF
+    }
+    if (strstr(tabla->ambito_actual, "while_") != NULL && strstr(simbolo->ambito, "main") != NULL) {
+        return 1; // Variables de main accesibles desde WHILE
+    }
+    if (strstr(tabla->ambito_actual, "for_") != NULL && strstr(simbolo->ambito, "main") != NULL) {
+        return 1; // Variables de main accesibles desde FOR
+    }
+
+    // ===== VALIDACIÓN CRÍTICA: Variables de scopes locales NO son accesibles desde otros scopes =====
+    if (strstr(simbolo->ambito, "if_") != NULL ||
+        strstr(simbolo->ambito, "while_") != NULL ||
+        strstr(simbolo->ambito, "for_") != NULL) {
+
+        printf("DEBUG SCOPE: Variable '%s' en scope local '%s' NO accesible desde scope '%s'\n",
+               simbolo->id, simbolo->ambito, tabla->ambito_actual);  // ← CAMBIO: nombre → id
+        return 0;
+        }
+
+    // Por defecto, no accesible
+    return 0;
+}
+
+int verificar_si_existe_en_otro_scope(TablaSimbolos* tabla, const char* id) {
+    if (!tabla || !id) return 0;
 
     unsigned int indice = hash_simbolo(id);
     NodoSimbolo* actual = tabla->tabla[indice];
 
     while (actual) {
         if (strcmp(actual->simbolo.id, id) == 0) {
-            actual->simbolo.num_usos++;
-            actual->simbolo.timestamp_ultimo_uso = time(NULL);
-            return &actual->simbolo;
+            // La variable existe en algún scope
+            return 1;
         }
         actual = actual->siguiente;
     }
 
-    return NULL;
+    return 0; // No existe en ningún scope
 }
 
-Simbolo* buscar_simbolo_en_ambito(TablaSimbolos* tabla, const char* id, const char* ambito) {
-    if (!tabla || !id || !ambito) return NULL;
+Simbolo* buscar_simbolo(TablaSimbolos* tabla, const char* id) {
+    if (!tabla || !id) return NULL;
+
+    printf("DEBUG TABLA_SIMBOLOS: Buscando '%s' en ámbito '%s' (nivel %d)\n",
+           id, tabla->ambito_actual, tabla->nivel_anidamiento);
 
     unsigned int indice = hash_simbolo(id);
     NodoSimbolo* actual = tabla->tabla[indice];
 
     while (actual) {
-        if (strcmp(actual->simbolo.id, id) == 0 &&
-            strcmp(actual->simbolo.ambito, ambito) == 0) {
-            actual->simbolo.num_usos++;
-            actual->simbolo.timestamp_ultimo_uso = time(NULL);
-            return &actual->simbolo;
+        if (strcmp(actual->simbolo.id, id) == 0) {
+            // ===== VALIDACIÓN DE SCOPE AGREGADA =====
+            if (es_simbolo_accesible_desde_ambito_actual(tabla, &actual->simbolo)) {
+                printf("DEBUG TABLA_SIMBOLOS: ✅ Símbolo '%s' encontrado y accesible desde '%s'\n",
+                       id, tabla->ambito_actual);
+                actual->simbolo.num_usos++;
+                actual->simbolo.timestamp_ultimo_uso = time(NULL);
+                return &actual->simbolo;
+            } else {
+                printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' existe pero NO es accesible desde '%s'\n",
+                       id, tabla->ambito_actual);
+                // Continuar buscando otras declaraciones del mismo nombre
+            }
         }
         actual = actual->siguiente;
     }
 
+    printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' NO encontrado o no accesible\n", id);
     return NULL;
 }
 
@@ -258,7 +319,39 @@ int existe_simbolo(TablaSimbolos* tabla, const char* id) {
 }
 
 int existe_simbolo_en_ambito_actual(TablaSimbolos* tabla, const char* id) {
+    if (!tabla || !id) return 0;
+
+    printf("DEBUG TABLA_SIMBOLOS: Verificando si '%s' existe en ámbito actual '%s'\n",
+           id, tabla->ambito_actual);
+
     return buscar_simbolo_en_ambito(tabla, id, tabla->ambito_actual) != NULL;
+}
+
+Simbolo* buscar_simbolo_en_ambito(TablaSimbolos* tabla, const char* id, const char* ambito) {
+    if (!tabla || !id || !ambito) return NULL;
+
+    printf("DEBUG TABLA_SIMBOLOS: Buscando '%s' específicamente en ámbito '%s'\n", id, ambito);
+
+    unsigned int indice = hash_simbolo(id);
+    NodoSimbolo* actual = tabla->tabla[indice];
+
+    while (actual) {
+        if (strcmp(actual->simbolo.id, id) == 0 &&
+            strcmp(actual->simbolo.ambito, ambito) == 0) {
+
+            printf("DEBUG TABLA_SIMBOLOS: ✅ Símbolo '%s' encontrado en ámbito específico '%s'\n",
+                   id, ambito);
+
+            actual->simbolo.num_usos++;
+            actual->simbolo.timestamp_ultimo_uso = time(NULL);
+            return &actual->simbolo;
+            }
+        actual = actual->siguiente;
+    }
+
+    printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' NO encontrado en ámbito específico '%s'\n",
+           id, ambito);
+    return NULL;
 }
 
 void imprimir_tabla_simbolos(TablaSimbolos* tabla) {

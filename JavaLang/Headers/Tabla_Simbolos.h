@@ -113,5 +113,7 @@ int calcular_tamaño_tipo(TipoDato tipo, int dimensiones, int* tamaños_dimensio
 Simbolo crear_simbolo_default(const char* id, TipoSimbolo tipo_simbolo, TipoDato tipo_dato);
 int validar_simbolo(Simbolo* simbolo);
 
-
+int es_simbolo_accesible_desde_ambito_actual(TablaSimbolos* tabla, Simbolo* simbolo);
+Simbolo* buscar_simbolo_en_ambito(TablaSimbolos* tabla, const char* id, const char* ambito);
+int verificar_si_existe_en_otro_scope(TablaSimbolos* tabla, const char* id);
 #endif // TABLA_SIMBOLOS_H
