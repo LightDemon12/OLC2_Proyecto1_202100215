@@ -125,6 +125,8 @@ set(SOURCES
         Logic/Interprete/Procesadores/Procesador_Division.c
         Logic/Builders/builder_casting.c
         Headers/builder_casting.h
+        Headers/Procesador_casting.h
+        Logic/Interprete/Procesadores/Procesador_casting.c
 )
 
 # Crear ejecutable

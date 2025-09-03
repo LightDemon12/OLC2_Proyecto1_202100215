@@ -8,6 +8,9 @@
 #include <string.h>
 #include <time.h>
 
+#include "node_utils.h"
+#include "Procesador_casting.h"
+
 // ========== ELIMINAR LAS FUNCIONES DUPLICADAS Y USAR LAS DEL PROCESADOR SUMA ==========
 
 int process_declaracion_node(NodeProcessorContext* context, ASTNode* node) {
@@ -79,41 +82,32 @@ int process_declaracion_con_inicializacion(NodeProcessorContext* context, TipoDa
             context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
     procesador_debug_output(context, debug_msg);
 
-    // ===== VERIFICAR REDECLARACIÓN ANTES DE CONTINUAR =====
+    // ===== VERIFICAR REDECLARACIÓN =====
     if (context->tabla_simbolos) {
         Simbolo* simbolo_existente = buscar_simbolo(context->tabla_simbolos, id_str);
         if (simbolo_existente) {
-            // ===== ERROR SEMÁNTICO: REDECLARACIÓN =====
             char error_msg[512];
             snprintf(error_msg, sizeof(error_msg),
                     "Variable '%s' ya está declarada en el scope '%s' (línea %d)",
-                    id_str,
-                    simbolo_existente->ambito,
-                    simbolo_existente->linea);
+                    id_str, simbolo_existente->ambito, simbolo_existente->linea);
 
-            // OBTENER EL SCOPE ACTUAL
             const char* scope_actual = "global";
             if (context->scope_actual && context->scope_actual->nombre) {
                 scope_actual = context->scope_actual->nombre;
-            } else if (context->tabla_simbolos && context->tabla_simbolos->ambito_actual) {
-                scope_actual = context->tabla_simbolos->ambito_actual;
             }
 
-            // Registrar error semántico global
             if (global_error_manager) {
                 error_manager_add_semantico(global_error_manager,
                                           parent->line, parent->column,
-                                          error_msg, id_str,
-                                          scope_actual);
+                                          error_msg, id_str, scope_actual);
             }
 
             procesador_error_output(context, error_msg);
-            return 1; // Error semántico - no continuar
+            return 1;
         }
     }
 
     // ===== ANÁLISIS SEMÁNTICO DE TIPOS =====
-    // USAR LAS FUNCIONES DEL PROCESADOR DE SUMA QUE YA MANEJAN EXPRESIONES
     TipoDato tipo_valor = obtener_tipo_desde_nodo(valor_nodo, context);
     char* valor_extraido = obtener_valor_desde_nodo(valor_nodo, context);
 
@@ -125,42 +119,70 @@ int process_declaracion_con_inicializacion(NodeProcessorContext* context, TipoDa
             valor_display, tipo_dato_to_string(tipo_valor));
     procesador_debug_output(context, debug_msg);
 
-    // Verificar compatibilidad de tipos
-    if (tipo_valor != TIPO_DESCONOCIDO && !tipos_compatibles_asignacion(tipo, tipo_valor)) {
+    // ===== VERIFICAR COMPATIBILIDAD CON PROMOCIÓN AUTOMÁTICA =====
+    int es_compatible = 0;
+    char* valor_final = valor_extraido;
+
+    if (tipo == tipo_valor) {
+        // Tipos exactamente iguales
+        es_compatible = 1;
+        snprintf(debug_msg, sizeof(debug_msg), "✅ TIPOS IDÉNTICOS - Asignación directa");
+        procesador_debug_output(context, debug_msg);
+    }
+    else if (es_promocion_automatica(tipo_valor, tipo)) {
+        // ===== PROMOCIÓN AUTOMÁTICA =====
+        es_compatible = 1;
+
+        snprintf(debug_msg, sizeof(debug_msg),
+                "🔄 PROMOCIÓN AUTOMÁTICA: %s → %s",
+                tipo_dato_to_string(tipo_valor), tipo_dato_to_string(tipo));
+        procesador_debug_output(context, debug_msg);
+
+        // Convertir el valor al nuevo formato
+        if (valor_extraido) {
+            char* valor_promovido = convertir_valor_cast(valor_extraido, tipo_valor, tipo);
+            if (valor_promovido) {
+                free(valor_extraido);
+                valor_final = valor_promovido;
+
+                snprintf(debug_msg, sizeof(debug_msg),
+                        "📈 VALOR PROMOVIDO: '%s' → '%s'",
+                        valor_display, valor_final);
+                procesador_debug_output(context, debug_msg);
+            }
+        }
+    }
+    else if (tipos_compatibles_asignacion(tipo, tipo_valor)) {
+        // Otras compatibilidades (como String concatenation)
+        es_compatible = 1;
+        snprintf(debug_msg, sizeof(debug_msg), "✅ TIPOS COMPATIBLES - Asignación válida");
+        procesador_debug_output(context, debug_msg);
+    }
+
+    if (!es_compatible) {
         // ===== ERROR SEMÁNTICO: TIPOS INCOMPATIBLES =====
         char error_msg[512];
         snprintf(error_msg, sizeof(error_msg),
                 "Asignación incompatible: no se puede asignar %s a variable %s de tipo %s",
-                tipo_dato_to_string(tipo_valor),
-                id_str,
-                tipo_dato_to_string(tipo));
+                tipo_dato_to_string(tipo_valor), id_str, tipo_dato_to_string(tipo));
 
-        // OBTENER EL SCOPE ACTUAL
         const char* scope_actual = "global";
         if (context->scope_actual && context->scope_actual->nombre) {
             scope_actual = context->scope_actual->nombre;
-        } else if (context->tabla_simbolos && context->tabla_simbolos->ambito_actual) {
-            scope_actual = context->tabla_simbolos->ambito_actual;
         }
 
-        // Registrar error semántico global
         if (global_error_manager) {
             error_manager_add_semantico(global_error_manager,
                                       parent->line, parent->column,
-                                      error_msg, "=",
-                                      scope_actual);
+                                      error_msg, "=", scope_actual);
         }
 
         procesador_error_output(context, error_msg);
-
-        if (valor_extraido) free(valor_extraido);
-        return 1; // Error semántico - no continuar
+        if (valor_final) free(valor_final);
+        return 1;
     }
 
-    snprintf(debug_msg, sizeof(debug_msg), "✅ TIPOS COMPATIBLES - Declaración válida");
-    procesador_debug_output(context, debug_msg);
-
-    // Crear símbolo
+    // ===== CREAR Y GUARDAR SÍMBOLO =====
     Simbolo simbolo = crear_simbolo_default(id_str, SIMBOLO_VARIABLE, tipo);
     simbolo.linea = parent->line;
     simbolo.columna = parent->column;
@@ -168,18 +190,17 @@ int process_declaracion_con_inicializacion(NodeProcessorContext* context, TipoDa
     simbolo.inicializado = 1;
     simbolo.timestamp_creacion = time(NULL);
 
-    // ===== GUARDAR EL VALOR EVALUADO CORRECTAMENTE =====
-    if (valor_extraido) {
-        strncpy(simbolo.valor, valor_extraido, MAX_VALUE_LENGTH - 1);
+    // Guardar el valor (promovido si fue necesario)
+    if (valor_final) {
+        strncpy(simbolo.valor, valor_final, MAX_VALUE_LENGTH - 1);
         simbolo.valor[MAX_VALUE_LENGTH - 1] = '\0';
-        free(valor_extraido);
+        free(valor_final);
     } else {
         strncpy(simbolo.valor, "expresion_compleja", MAX_VALUE_LENGTH - 1);
     }
 
-    // Insertar símbolo en la tabla
+    // Insertar símbolo
     if (!insertar_simbolo_en_scope_combinado(context, simbolo)) {
-        // Si llegamos aquí es un error interno (no debería pasar por la verificación anterior)
         procesador_error_output(context, "Error interno: No se pudo insertar simbolo");
         return 1;
     }
@@ -250,12 +271,14 @@ int process_declaracion_sin_inicializacion(NodeProcessorContext* context, TipoDa
 
     // Valor por defecto según el tipo (valores por defecto de Java)
     switch (tipo) {
+        case TIPO_BYTE:
+        case TIPO_SHORT:
         case TIPO_INT:
-        case TIPO_LONG:         // ← AÑADIR
+        case TIPO_LONG:
             strncpy(simbolo.valor, "0", MAX_VALUE_LENGTH - 1);
             break;
         case TIPO_FLOAT:
-        case TIPO_DOUBLE:       // ← Si no existe, añadir
+        case TIPO_DOUBLE:
             strncpy(simbolo.valor, "0.0", MAX_VALUE_LENGTH - 1);
             break;
         case TIPO_BOOLEAN:
@@ -336,28 +359,51 @@ int tipos_compatibles_asignacion(TipoDato tipo_variable, TipoDato tipo_valor) {
         return 1;
     }
 
+    // ===== NARROWING IMPLÍCITO DE LITERALES INT A TIPOS MENORES =====
+    // En Java, se permite asignar literales int a byte/short si están en rango
+    if (tipo_valor == TIPO_INT &&
+        (tipo_variable == TIPO_BYTE || tipo_variable == TIPO_SHORT)) {
+        return 1; // Permitir, pero verificar rango en el procesamiento
+    }
+
     // Promociones automáticas permitidas en Java:
+    // byte -> short -> int -> long -> float -> double
     // char -> int -> long -> float -> double
+
+    // byte puede asignarse a short, int, long, float, double
+    if (tipo_valor == TIPO_BYTE &&
+        (tipo_variable == TIPO_SHORT || tipo_variable == TIPO_INT ||
+         tipo_variable == TIPO_LONG || tipo_variable == TIPO_FLOAT ||
+         tipo_variable == TIPO_DOUBLE)) {
+        return 1;
+    }
+
+    // short puede asignarse a int, long, float, double
+    if (tipo_valor == TIPO_SHORT &&
+        (tipo_variable == TIPO_INT || tipo_variable == TIPO_LONG ||
+         tipo_variable == TIPO_FLOAT || tipo_variable == TIPO_DOUBLE)) {
+        return 1;
+    }
 
     // char puede asignarse a int, long, float, double
     if (tipo_valor == TIPO_CHAR &&
         (tipo_variable == TIPO_INT || tipo_variable == TIPO_LONG ||
          tipo_variable == TIPO_FLOAT || tipo_variable == TIPO_DOUBLE)) {
         return 1;
-         }
+    }
 
     // int puede asignarse a long, float, double
     if (tipo_valor == TIPO_INT &&
         (tipo_variable == TIPO_LONG || tipo_variable == TIPO_FLOAT ||
          tipo_variable == TIPO_DOUBLE)) {
         return 1;
-         }
+    }
 
     // long puede asignarse a float, double
     if (tipo_valor == TIPO_LONG &&
         (tipo_variable == TIPO_FLOAT || tipo_variable == TIPO_DOUBLE)) {
         return 1;
-        }
+    }
 
     // float puede asignarse a double
     if (tipo_valor == TIPO_FLOAT && tipo_variable == TIPO_DOUBLE) {
@@ -394,3 +440,4 @@ char* extract_dato_value(ASTNode* node) {
 
     return NULL;
 }
+

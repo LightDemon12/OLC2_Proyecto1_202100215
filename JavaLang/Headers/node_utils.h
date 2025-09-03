@@ -62,5 +62,11 @@ int tipos_compatibles_aritmetica(TipoDato tipo1, TipoDato tipo2);
 // Para evitar dependencias circulares con procesadores
 struct NodeProcessorContext;
 extern char* process_expresion_node(NodeProcessorContext* context, ASTNode* node);
-
+/**
+ * Verifica si es una promoción automática válida según Java
+ * @param tipo_origen - Tipo original
+ * @param tipo_destino - Tipo de destino
+ * @return 1 si es promoción automática válida, 0 si no
+ */
+int es_promocion_automatica(TipoDato tipo_origen, TipoDato tipo_destino);
 #endif // NODE_UTILS_H

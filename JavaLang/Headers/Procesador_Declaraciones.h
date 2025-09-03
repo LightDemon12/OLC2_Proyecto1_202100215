@@ -23,4 +23,6 @@ char* extract_dato_value(ASTNode* node);
 extern TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context);
 extern char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context);
 
+
+
 #endif // PROCESADOR_DECLARACIONES_H

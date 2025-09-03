@@ -2,6 +2,7 @@
 #include "../../Headers/Procesador_Declaraciones.h"
 #include "../../Headers/Procesador_Expresion.h"
 #include "../../Headers/mainview.h"
+#include "../../Headers/Procesador_casting.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -152,6 +153,7 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "DECLARACION_CON_INICIALIZACION") == 0) return NODE_TYPE_DECLARACION_CON_INICIALIZACION;
     if (strcmp(node_type, "DECLARACION_MULTIPLE") == 0) return NODE_TYPE_DECLARACION_MULTIPLE;
     if (strcmp(node_type, "DECLARACION_SIN_INICIALIZACION") == 0) return NODE_TYPE_DECLARACION_SIN_INICIALIZACION;
+    if (strcmp(node_type, "CAST") == 0) return NODE_TYPE_CAST;
 
     //   SCOPES SEGÚN TU PARSER (nombres exactos del parser.y)
     if (strcmp(node_type, "BLOQUE_MAIN") == 0) return NODE_TYPE_BLOQUE_MAIN;
@@ -321,7 +323,14 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                 free(resultado);
             }
             return 0;
-
+        case NODE_TYPE_CAST:
+            printf("🎭 PROCESANDO CASTING: '%s'\n", node->type);
+            char* resultado_cast = process_cast_node(context, node);
+            if (resultado_cast && context->modo_debug) {
+                printf("   → Resultado casting: '%s'\n", resultado_cast);
+                free(resultado_cast);
+            }
+            return 0;
         // NODOS ESTRUCTURALES - Procesar hijos sin crear scope
         case NODE_TYPE_UNKNOWN:
         default:

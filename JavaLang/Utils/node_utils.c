@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Procesador_casting.h"
+
 // ===== DECLARACIONES FORWARD PARA EVITAR DEPENDENCIAS CIRCULARES =====
 extern char* process_expresion_node(NodeProcessorContext* context, ASTNode* node);
 
@@ -91,7 +93,13 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
             return TIPO_DESCONOCIDO;
         }
     }
-
+    if (strcmp(node->type, "CAST") == 0 && node->child_count >= 1) {
+        // El tipo del cast es el tipo de destino (primer hijo)
+        ASTNode* tipo_destino = node->children[0];
+        if (tipo_destino && tipo_destino->value) {
+            return string_to_tipo_dato(tipo_destino->value);
+        }
+    }
     // Si es una expresión binaria, evaluar recursivamente
     if (strcmp(node->type, "EXPRESION_BINARIA") == 0 && node->child_count >= 2) {
         TipoDato tipo_izq = obtener_tipo_desde_nodo(node->children[0], context);
@@ -124,12 +132,23 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
 char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
     if (!node) return NULL;
 
+    printf("🔍 DEBUG obtener_valor_desde_nodo: procesando '%s' con valor '%s'\n",
+           node->type, node->value ? node->value : "NULL");
+
     // Si es un DATO, extraer el valor del literal
     if (strcmp(node->type, "DATO") == 0 && node->children && node->child_count > 0) {
         ASTNode* literal_node = node->children[0];
         if (literal_node->value) {
+            printf("   → DATO encontrado: %s = %s\n", literal_node->type, literal_node->value);
             return strdup(literal_node->value);
         }
+    }
+
+    // ===== MANEJO ESPECIAL PARA CASTING =====
+    if (strcmp(node->type, "CAST") == 0) {
+        printf("   → CAST detectado, delegando al procesador\n");
+        // Para casting, usar el procesador especializado
+        return process_cast_node(context, node);
     }
 
     // ===== MANEJO ESPECIAL PARA NULL =====
@@ -137,60 +156,18 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
         return strdup("null");
     }
 
-    // ===== MANEJO PARA EXPRESIONES UNARIAS =====
-    if (strcmp(node->type, "EXPRESION_UNARIA") == 0) {
-        if (node->value && node->child_count > 0) {
-            // Obtener el valor del operando
-            char* operando_valor = obtener_valor_desde_nodo(node->children[0], context);
-            if (!operando_valor) return NULL;
-
-            // Procesar según el operador
-            if (strcmp(node->value, "-") == 0) {
-                // Negación aritmética: -4 = "-4"
-                char* resultado = malloc(strlen(operando_valor) + 2); // +1 para '-', +1 para '\0'
-                snprintf(resultado, strlen(operando_valor) + 2, "-%s", operando_valor);
-                free(operando_valor);
-                return resultado;
-            }
-            else if (strcmp(node->value, "+") == 0) {
-                // Positivo explícito: +4 = "4" (sin cambios)
-                return operando_valor; // Retornar tal como está
-            }
-            else if (strcmp(node->value, "!") == 0) {
-                // Negación lógica: !true = "false", !false = "true"
-                if (strcmp(operando_valor, "true") == 0) {
-                    free(operando_valor);
-                    return strdup("false");
-                } else if (strcmp(operando_valor, "false") == 0) {
-                    free(operando_valor);
-                    return strdup("true");
-                }
-                // Para valores numéricos: !0 = true, !no_cero = false
-                double num = atof(operando_valor);
-                free(operando_valor);
-                return strdup(num == 0.0 ? "true" : "false");
-            }
-            // Para ++, -- necesitaríamos modificar la tabla de símbolos, por ahora omitir
-            free(operando_valor);
-        }
-        return NULL;
-    }
-
     // Si es un identificador, buscar en tabla de símbolos
     if (strcmp(node->type, "IDENTIFIER") == 0 && node->value && context && context->tabla_simbolos) {
+        printf("   → IDENTIFIER '%s' - buscando en tabla de símbolos\n", node->value);
+
         Simbolo* simbolo = buscar_simbolo(context->tabla_simbolos, node->value);
         if (simbolo) {
-            if (context->modo_debug) {
-                printf("DEBUG NODE_UTILS: Valor de '%s' obtenido de tabla: '%s'\n",
-                       node->value, simbolo->valor);
-            }
+            printf("   → ✅ Variable '%s' encontrada con valor: '%s'\n", node->value, simbolo->valor);
             // Incrementar uso del símbolo
             incrementar_uso_simbolo(context->tabla_simbolos, node->value);
             return strdup(simbolo->valor);
         } else {
-            if (context->modo_debug) {
-                printf("ERROR NODE_UTILS: Variable '%s' no declarada\n", node->value);
-            }
+            printf("   → ❌ Variable '%s' NO encontrada en tabla de símbolos\n", node->value);
 
             // Registrar error semántico por variable no declarada
             if (global_error_manager) {
@@ -215,15 +192,18 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
 
     // ===== MANEJO PARA EXPRESIONES BINARIAS =====
     if (strcmp(node->type, "EXPRESION_BINARIA") == 0) {
+        printf("   → EXPRESION_BINARIA detectada, delegando al procesador\n");
         // Para expresiones binarias, usar el procesador de expresiones
         return process_expresion_node(context, node);
     }
 
     // Si tiene valor directo (SOLO para nodos que NO son expresiones)
     if (node->value && strcmp(node->type, "EXPRESION_BINARIA") != 0) {
+        printf("   → Valor directo encontrado: %s\n", node->value);
         return strdup(node->value);
     }
 
+    printf("   → ❌ No se pudo obtener valor del nodo\n");
     return NULL;
 }
 
@@ -256,17 +236,27 @@ char* convertir_numero_a_string(double valor, TipoDato tipo) {
     char* resultado = malloc(64);
 
     switch (tipo) {
+        case TIPO_BYTE:
+            snprintf(resultado, 64, "%d", (signed char)valor);
+            break;
+        case TIPO_SHORT:
+            snprintf(resultado, 64, "%d", (short)valor);
+            break;
         case TIPO_INT:
             snprintf(resultado, 64, "%d", (int)valor);
             break;
-        case TIPO_LONG:  // NUEVO CASO
-            snprintf(resultado, 64, "%ldL", (long)valor);
+        case TIPO_LONG:
+            snprintf(resultado, 64, "%ld", (long)valor);
             break;
         case TIPO_FLOAT:
-            snprintf(resultado, 64, "%.2ff", (float)valor);
+            snprintf(resultado, 64, "%.1f", (float)valor);
             break;
         case TIPO_DOUBLE:
-            snprintf(resultado, 64, "%.6g", valor);
+            if (valor == (long)valor) {
+                snprintf(resultado, 64, "%.1f", valor);
+            } else {
+                snprintf(resultado, 64, "%.6g", valor);
+            }
             break;
         case TIPO_CHAR:
             snprintf(resultado, 64, "%c", (char)((int)valor));
@@ -280,8 +270,12 @@ char* convertir_numero_a_string(double valor, TipoDato tipo) {
 }
 
 int es_tipo_numerico(TipoDato tipo) {
-    return (tipo == TIPO_INT || tipo == TIPO_LONG ||      // ← AÑADIR TIPO_LONG
-            tipo == TIPO_FLOAT || tipo == TIPO_DOUBLE ||
+    return (tipo == TIPO_INT ||
+            tipo == TIPO_LONG ||
+            tipo == TIPO_SHORT ||
+            tipo == TIPO_BYTE ||
+            tipo == TIPO_FLOAT ||
+            tipo == TIPO_DOUBLE ||
             tipo == TIPO_CHAR);
 }
 
@@ -331,4 +325,55 @@ int tipos_compatibles_aritmetica(TipoDato tipo1, TipoDato tipo2) {
 
     // ===== SOLO TIPOS NUMÉRICOS SON COMPATIBLES =====
     return (es_tipo_numerico(tipo1) && es_tipo_numerico(tipo2));
+}
+
+
+int es_promocion_automatica(TipoDato tipo_origen, TipoDato tipo_destino) {
+    // Promociones automáticas válidas en Java:
+    // byte -> short -> int -> long -> float -> double
+    // char -> int -> long -> float -> double
+
+    if (tipo_origen == tipo_destino) return 0; // No hay promoción
+
+    // byte -> short, int, long, float, double
+    if (tipo_origen == TIPO_BYTE &&
+        (tipo_destino == TIPO_SHORT || tipo_destino == TIPO_INT ||
+         tipo_destino == TIPO_LONG || tipo_destino == TIPO_FLOAT ||
+         tipo_destino == TIPO_DOUBLE)) {
+        return 1;
+         }
+
+    // short -> int, long, float, double
+    if (tipo_origen == TIPO_SHORT &&
+        (tipo_destino == TIPO_INT || tipo_destino == TIPO_LONG ||
+         tipo_destino == TIPO_FLOAT || tipo_destino == TIPO_DOUBLE)) {
+        return 1;
+         }
+
+    // char -> int, long, float, double
+    if (tipo_origen == TIPO_CHAR &&
+        (tipo_destino == TIPO_INT || tipo_destino == TIPO_LONG ||
+         tipo_destino == TIPO_FLOAT || tipo_destino == TIPO_DOUBLE)) {
+        return 1;
+         }
+
+    // int -> long, float, double
+    if (tipo_origen == TIPO_INT &&
+        (tipo_destino == TIPO_LONG || tipo_destino == TIPO_FLOAT ||
+         tipo_destino == TIPO_DOUBLE)) {
+        return 1;
+         }
+
+    // long -> float, double
+    if (tipo_origen == TIPO_LONG &&
+        (tipo_destino == TIPO_FLOAT || tipo_destino == TIPO_DOUBLE)) {
+        return 1;
+        }
+
+    // float -> double
+    if (tipo_origen == TIPO_FLOAT && tipo_destino == TIPO_DOUBLE) {
+        return 1;
+    }
+
+    return 0;
 }

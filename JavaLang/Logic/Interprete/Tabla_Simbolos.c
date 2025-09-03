@@ -388,7 +388,8 @@ TipoDato string_to_tipo_dato(const char* tipo_str) {
     if (strcmp(tipo_str, "char") == 0) return TIPO_CHAR;
     if (strcmp(tipo_str, "boolean") == 0) return TIPO_BOOLEAN;
     if (strcmp(tipo_str, "void") == 0) return TIPO_VOID;
-
+    if (strcmp(tipo_str, "short") == 0) return TIPO_SHORT;
+    if (strcmp(tipo_str, "byte") == 0) return TIPO_BYTE;
     return TIPO_DESCONOCIDO;
 }
 
