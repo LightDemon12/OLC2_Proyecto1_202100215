@@ -116,4 +116,6 @@ int validar_simbolo(Simbolo* simbolo);
 int es_simbolo_accesible_desde_ambito_actual(TablaSimbolos* tabla, Simbolo* simbolo);
 Simbolo* buscar_simbolo_en_ambito(TablaSimbolos* tabla, const char* id, const char* ambito);
 int verificar_si_existe_en_otro_scope(TablaSimbolos* tabla, const char* id);
+int es_scope_hijo_de_jerarquico(const char* scope_hijo, const char* scope_padre);
+
 #endif // TABLA_SIMBOLOS_H

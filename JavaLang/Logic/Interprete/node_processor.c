@@ -5,8 +5,16 @@
 #include "../../Headers/Procesador_casting.h"
 #include "../Headers/Procesador_Constantes.h"
 #include "../../Headers/Procesador_If.h"
+#include "../../Headers/Procesador_Asignaciones_Compuestas.h"
+#include "../../Headers/Procesador_Break.h"
+#include "../../Headers/scope_utils.h"
+#include "../../Headers/Procesador_Continue.h"
+#include "../../Headers/Procesador_Switch.h"
+#include "../../Headers/Procesador_Return.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "Procesador_Sout.h"
 
 //   IMPLEMENTACIÓN COMPLETA DEL SISTEMA COMBINADO DE SCOPES
 
@@ -35,8 +43,20 @@ ScopeNode* crear_scope_node(ScopeType tipo, const char* nombre, int linea) {
 void entrar_scope_combinado(NodeProcessorContext* context, ScopeType tipo, const char* nombre, int linea) {
     if (!context || !nombre) return;
 
-    //   CREAR NODO DE SCOPE (PARTE B)
-    ScopeNode* nuevo_scope = crear_scope_node(tipo, nombre, linea);
+    // ===== GENERAR NOMBRE JERÁRQUICO =====
+    char nombre_jerarquico[128];
+
+    if (context->scope_actual) {
+        // Crear nombre que incluya el scope padre
+        snprintf(nombre_jerarquico, sizeof(nombre_jerarquico),
+                "%s.%s", context->scope_actual->nombre, nombre);
+    } else {
+        // Scope de primer nivel
+        strncpy(nombre_jerarquico, nombre, sizeof(nombre_jerarquico) - 1);
+        nombre_jerarquico[sizeof(nombre_jerarquico) - 1] = '\0';
+    }
+
+    ScopeNode* nuevo_scope = crear_scope_node(tipo, nombre_jerarquico, linea);
     if (!nuevo_scope) return;
 
     if (context->scope_actual) {
@@ -47,16 +67,36 @@ void entrar_scope_combinado(NodeProcessorContext* context, ScopeType tipo, const
     context->scope_actual = nuevo_scope;
     context->scope_counter++;
 
-    //   USAR SISTEMA EXISTENTE DE TABLA_SIMBOLOS (PARTE A)
-    entrar_ambito(context->tabla_simbolos, nombre);
+    // Usar el nombre jerárquico en la tabla de símbolos
+    entrar_ambito(context->tabla_simbolos, nombre_jerarquico);
 
     if (context->modo_debug) {
         char debug_msg[256];
         snprintf(debug_msg, sizeof(debug_msg),
                 "-> ENTRANDO SCOPE: %s (tipo: %d, nivel: %d) en linea %d",
-                nombre, tipo, nuevo_scope->nivel, linea);
+                nombre_jerarquico, tipo, nuevo_scope->nivel, linea);
         procesador_debug_output(context, debug_msg);
     }
+}
+
+void reset_scope_counters(NodeProcessorContext* context) {
+    if (!context) return;
+
+    context->scope_counter = 0;
+    context->scope_actual = NULL;
+
+    // Reset tabla de símbolos
+    if (context->tabla_simbolos) {
+        context->tabla_simbolos->siguiente_temporal = 0;
+        context->tabla_simbolos->siguiente_etiqueta = 0;
+        context->tabla_simbolos->nivel_anidamiento = 0;
+        strcpy(context->tabla_simbolos->ambito_actual, "global");
+    }
+
+    // ===== USAR EL RESET CENTRALIZADO =====
+    reset_all_scope_counters(context);
+
+    printf("DEBUG: Contadores de scope reseteados\n");
 }
 
 // Salir del scope actual (COMBINADO A+B)
@@ -156,20 +196,27 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "DECLARACION_MULTIPLE") == 0) return NODE_TYPE_DECLARACION_MULTIPLE;
     if (strcmp(node_type, "DECLARACION_SIN_INICIALIZACION") == 0) return NODE_TYPE_DECLARACION_SIN_INICIALIZACION;
     if (strcmp(node_type, "CONSTANTE_CON_INICIALIZACION") == 0) return NODE_TYPE_CONSTANTE_CON_INICIALIZACION;
+    if (strcmp(node_type, "ASIGNACION_COMPUESTA") == 0) return NODE_TYPE_ASIGNACION_COMPUESTA;
     if (strcmp(node_type, "CONSTANTE_MULTIPLE") == 0) return NODE_TYPE_CONSTANTE_MULTIPLE;
     if (strcmp(node_type, "CAST") == 0) return NODE_TYPE_CAST;
-
+    // ===== INSTRUCCIONES DE SALIDA =====
+    if (strcmp(node_type, "SOUT") == 0) return NODE_TYPE_SOUT;
     //   SCOPES SEGÚN TU PARSER (nombres exactos del parser.y)
     if (strcmp(node_type, "BLOQUE_MAIN") == 0) return NODE_TYPE_BLOQUE_MAIN;
     if (strcmp(node_type, "IF_SIMPLE") == 0) return NODE_TYPE_IF_SIMPLE;
     if (strcmp(node_type, "IF_CON_ELSE") == 0) return NODE_TYPE_IF_CON_ELSE;
     if (strcmp(node_type, "IF_CON_ELSE_IF") == 0) return NODE_TYPE_IF_CON_ELSE_IF;
+    if (strcmp(node_type, "IF_CON_ELSE_MIXTO_1") == 0) return NODE_TYPE_IF_CON_ELSE_MIXTO_1;
+    if (strcmp(node_type, "IF_CON_ELSE_MIXTO_2") == 0) return NODE_TYPE_IF_CON_ELSE_MIXTO_2;
     if (strcmp(node_type, "WHILE") == 0) return NODE_TYPE_WHILE;
     if (strcmp(node_type, "DO_WHILE") == 0) return NODE_TYPE_DO_WHILE;
     if (strcmp(node_type, "FOR") == 0) return NODE_TYPE_FOR;
     if (strcmp(node_type, "SWITCH") == 0) return NODE_TYPE_SWITCH;
     if (strcmp(node_type, "FUNCION") == 0) return NODE_TYPE_FUNCION;
-
+    if (strcmp(node_type, "BREAK") == 0) return NODE_TYPE_BREAK;
+    if (strcmp(node_type, "CONTINUE") == 0) return NODE_TYPE_CONTINUE;
+    if (strcmp(node_type, "RETURN_CON_VALOR") == 0) return NODE_TYPE_RETURN_CON_VALOR;
+    if (strcmp(node_type, "RETURN_VACIO") == 0) return NODE_TYPE_RETURN_VACIO;
     // EXPRESIONES
     if (strcmp(node_type, "EXPRESION_BINARIA") == 0) return NODE_TYPE_EXPRESION_BINARIA;
     if (strcmp(node_type, "EXPRESION_UNARIA") == 0) return NODE_TYPE_EXPRESION_UNARIA;
@@ -222,6 +269,8 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
         case NODE_TYPE_IF_SIMPLE:
         case NODE_TYPE_IF_CON_ELSE:
         case NODE_TYPE_IF_CON_ELSE_IF:
+        case NODE_TYPE_IF_CON_ELSE_MIXTO_1:
+        case NODE_TYPE_IF_CON_ELSE_MIXTO_2:
             printf("🔀 PROCESANDO IF: '%s'\n", node->type);
             // ===== USAR EL PROCESADOR DE IF ESPECIALIZADO =====
             return process_if_node(context, node);
@@ -241,7 +290,16 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                 printf("🔄 SALIENDO WHILE '%s'\n", scope_name);
                 return 0;
             }
-
+        case NODE_TYPE_BREAK:
+            printf("🛑 PROCESANDO BREAK: '%s'\n", node->type);
+            return procesar_break(context, node);
+        case NODE_TYPE_CONTINUE:
+            printf("🔄 PROCESANDO CONTINUE: '%s'\n", node->type);
+            return procesar_continue(context, node);
+        case NODE_TYPE_RETURN_CON_VALOR:
+        case NODE_TYPE_RETURN_VACIO:
+            printf("↩️ PROCESANDO RETURN: '%s'\n", node->type);
+            return procesar_return(context, node);
         case NODE_TYPE_FOR:
             {
                 char scope_name[64];
@@ -259,20 +317,8 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
             }
 
         case NODE_TYPE_SWITCH:
-            {
-                char scope_name[64];
-                snprintf(scope_name, sizeof(scope_name), "switch_%d", node->line);
-                printf("🔀 DETECTADO SWITCH - entrando scope '%s'\n", scope_name);
-                entrar_scope_combinado(context, SCOPE_SWITCH, scope_name, node->line);
-
-                for (int i = 0; i < node->child_count; i++) {
-                    process_ast_node(context, node->children[i]);
-                }
-
-                salir_scope_combinado(context, node->line);
-                printf("🔀 SALIENDO SWITCH '%s'\n", scope_name);
-                return 0;
-            }
+            printf("🔀 PROCESANDO SWITCH: '%s'\n", node->type);
+            return procesar_switch(context, node);
 
         case NODE_TYPE_FUNCION:
             {
@@ -305,6 +351,10 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                    context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
             return process_constante_node(context, node);
         // EXPRESIONES - Delegar al procesador (NO tienen hijos que procesar aquí)
+        case NODE_TYPE_ASIGNACION_COMPUESTA:
+            printf("📝 PROCESANDO ASIGNACIÓN COMPUESTA: '%s'\n", node->type);
+            return procesar_asignacion_compuesta(context, node);
+
         case NODE_TYPE_EXPRESION_BINARIA:
         case NODE_TYPE_EXPRESION_UNARIA:
         case NODE_TYPE_EXPRESION_POSTFIJO:
@@ -326,6 +376,15 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
             if (resultado_cast && context->modo_debug) {
                 printf("   → Resultado casting: '%s'\n", resultado_cast);
                 free(resultado_cast);
+            }
+            return 0;
+
+        case NODE_TYPE_SOUT:
+            printf("🖨️  PROCESANDO SOUT: '%s'\n", node->type);
+            char* resultado_sout = process_sout_node(context, node);
+            if (resultado_sout && context->modo_debug) {
+                printf("   → Resultado SOUT: '%s'\n", resultado_sout);
+                free(resultado_sout);
             }
             return 0;
         // NODOS ESTRUCTURALES - Procesar hijos sin crear scope

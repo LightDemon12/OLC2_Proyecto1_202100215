@@ -137,6 +137,20 @@ set(SOURCES
         Logic/Interprete/Procesadores/Procesador_Logico.c
         Headers/Procesador_If.h
         Logic/Interprete/Procesadores/Procesador_If.c
+        Headers/Procesador_Sout.h
+        Logic/Interprete/Procesadores/Procesador_Sout.c
+        Headers/scope_utils.h
+        Utils/scope_utils.c
+        Headers/Procesador_Asignaciones_Compuestas.h
+        Logic/Interprete/Procesadores/Procesador_Asignaciones_Compuestas.c
+        Logic/Interprete/Procesadores/Procesador_Break.c
+        Headers/Procesador_Break.h
+        Logic/Interprete/Procesadores/Procesador_Continue.c
+        Headers/Procesador_Continue.h
+        Logic/Interprete/Procesadores/Procesador_Return.c
+        Headers/Procesador_Return.h
+        Logic/Interprete/Procesadores/Procesador_Switch.c
+        Headers/Procesador_Switch.h
 )
 
 # Crear ejecutable

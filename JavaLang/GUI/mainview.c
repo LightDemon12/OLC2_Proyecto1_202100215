@@ -360,6 +360,7 @@ static void on_compilar_clicked(GtkMenuItem *menuitem, gpointer user_data) {
     mainview_append_output(mainview, " AST detectado - iniciando procesamiento...");
     mainview_append_output(mainview, " Procesando expresiones y declaraciones...");
 
+
     // EJECUTAR EL ANÁLISIS SEMÁNTICO
     int resultado_interprete = interpretar_ast_con_gui(ast_root, mainview);
 

@@ -141,6 +141,8 @@ typedef enum {
     NODE_TYPE_CUERPO_FUNCION,
     NODE_TYPE_LISTA_CASE,
     NODE_TYPE_LISTA_ELSE_IF,
+    NODE_TYPE_IF_CON_ELSE_MIXTO_1,
+    NODE_TYPE_IF_CON_ELSE_MIXTO_2,
     NODE_TYPE_OPERADOR_ASIGNACION,
     NODE_TYPE_CAST,
     NODE_TYPE_CONSTANTE_CON_INICIALIZACION,
@@ -179,5 +181,6 @@ NodeProcessorType get_node_processor_type(const char* node_type);
  */
 void procesador_debug_output(NodeProcessorContext* context, const char* message);
 void procesador_error_output(NodeProcessorContext* context, const char* message);
-
+void reset_compilation_state(NodeProcessorContext* context);
+void reset_scope_counters(NodeProcessorContext* context);
 #endif // NODE_PROCESSOR_H

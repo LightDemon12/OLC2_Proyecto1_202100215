@@ -98,7 +98,31 @@ int insertar_simbolo(TablaSimbolos* tabla, Simbolo simbolo) {
     return 1;
 }
 
+int es_scope_hijo_de_jerarquico(const char* scope_hijo, const char* scope_padre) {
+    if (!scope_hijo || !scope_padre) return 0;
 
+    // ===== VERIFICACIÓN JERÁRQUICA CON NOTACIÓN PUNTO =====
+
+    // Si scope_hijo CONTIENE scope_padre como prefijo seguido de punto,
+    // entonces scope_hijo es descendiente de scope_padre
+
+    // Ejemplo:
+    // scope_padre: "main"
+    // scope_hijo: "main.if_mixto_1_0x123" ✅ ES HIJO
+    // scope_hijo: "main.if_mixto_1_0x123.if_1_0x456" ✅ ES HIJO (nieto)
+
+    int len_padre = strlen(scope_padre);
+
+    // Verificar si el scope padre es prefijo del scope hijo
+    if (strncmp(scope_hijo, scope_padre, len_padre) == 0) {
+        // Verificar que después del prefijo haya un punto (jerarquía) o sea exacto
+        if (scope_hijo[len_padre] == '.' || scope_hijo[len_padre] == '\0') {
+            return 1;
+        }
+    }
+
+    return 0;
+}
 
 int es_simbolo_accesible_desde_ambito_actual(TablaSimbolos* tabla, Simbolo* simbolo) {
     if (!tabla || !simbolo) return 0;
@@ -113,38 +137,24 @@ int es_simbolo_accesible_desde_ambito_actual(TablaSimbolos* tabla, Simbolo* simb
         return 1;
     }
 
-    // ===== VALIDACIÓN JERÁRQUICA DE SCOPES =====
-    // Para scopes con patrones como: main_1, if_1_0x..., etc.
-
     // Si estamos en global, NO podemos acceder a scopes locales
     if (strcmp(tabla->ambito_actual, "global") == 0) {
         printf("DEBUG SCOPE: Variable '%s' en scope '%s' NO accesible desde scope global\n",
-               simbolo->id, simbolo->ambito);  // ← CAMBIO: nombre → id
+               simbolo->id, simbolo->ambito);
         return 0;
     }
 
-    // Variables del scope padre (main) son accesibles desde scopes hijos (if, while, etc.)
-    if (strstr(tabla->ambito_actual, "if_") != NULL && strstr(simbolo->ambito, "main") != NULL) {
-        return 1; // Variables de main accesibles desde IF
-    }
-    if (strstr(tabla->ambito_actual, "while_") != NULL && strstr(simbolo->ambito, "main") != NULL) {
-        return 1; // Variables de main accesibles desde WHILE
-    }
-    if (strstr(tabla->ambito_actual, "for_") != NULL && strstr(simbolo->ambito, "main") != NULL) {
-        return 1; // Variables de main accesibles desde FOR
+    // ===== LÓGICA JERÁRQUICA PARA JAVA =====
+    // Un scope hijo puede acceder a variables de sus scopes padre
+    if (es_scope_hijo_de_jerarquico(tabla->ambito_actual, simbolo->ambito)) {
+        printf("DEBUG SCOPE: ✅ Variable '%s' accesible - scope '%s' es padre de '%s'\n",
+               simbolo->id, simbolo->ambito, tabla->ambito_actual);
+        return 1;
     }
 
-    // ===== VALIDACIÓN CRÍTICA: Variables de scopes locales NO son accesibles desde otros scopes =====
-    if (strstr(simbolo->ambito, "if_") != NULL ||
-        strstr(simbolo->ambito, "while_") != NULL ||
-        strstr(simbolo->ambito, "for_") != NULL) {
-
-        printf("DEBUG SCOPE: Variable '%s' en scope local '%s' NO accesible desde scope '%s'\n",
-               simbolo->id, simbolo->ambito, tabla->ambito_actual);  // ← CAMBIO: nombre → id
-        return 0;
-        }
-
-    // Por defecto, no accesible
+    // Variables de scopes no relacionados NO son accesibles
+    printf("DEBUG SCOPE: ❌ Variable '%s' en scope '%s' NO accesible desde scope '%s'\n",
+           simbolo->id, simbolo->ambito, tabla->ambito_actual);
     return 0;
 }
 

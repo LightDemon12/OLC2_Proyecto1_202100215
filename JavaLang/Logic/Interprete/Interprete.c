@@ -211,7 +211,11 @@ int interpretar_ast_con_gui(ASTNode* ast_root, MainView* mainview) {
         .scope_counter = 0       //   CONTADOR PARA NOMBRES ÚNICOS
     };
 
+    // ===== AGREGAR RESET AQUÍ - DESPUÉS DE CREAR CONTEXTO =====
+    reset_scope_counters(&context);
+
     if (mainview) {
+        mainview_append_output(mainview, "🔄 Estado de compilación reseteado");
         mainview_append_output(mainview, "Iniciando procesamiento del AST...");
     }
 

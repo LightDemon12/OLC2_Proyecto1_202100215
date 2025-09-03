@@ -5,6 +5,7 @@
 #include "../../../Headers/node_processor.h"
 #include "../../Headers/mainview.h"
 #include "../../../Headers/globals.h"
+#include "../../Headers/scope_utils.h"  // ← YA ESTÁ INCLUIDO
 #include "../../../Headers/node_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,19 +209,24 @@ int process_if_simple(NodeProcessorContext* context, ASTNode* node) {
         return 1;
     }
 
-    // ===== CREAR SCOPE ÚNICO =====
-    static int if_counter = 0;
-    char scope_name[64];
-    snprintf(scope_name, sizeof(scope_name), "if_%d_%p", ++if_counter, (void*)node);
+    // ===== USAR SCOPE_UTILS PARA GENERAR NOMBRE =====
+    char* scope_name = generate_scope_name(context, SCOPE_TYPE_IF, node);
+    if (!scope_name) {
+        procesador_error_output(context, "Error generando nombre de scope IF");
+        return 1;
+    }
 
     // Ejecutar bloque solo si condición es true
     if (resultado_condicion == CONDICION_TRUE) {
         snprintf(debug_msg, sizeof(debug_msg), "✅ CONDICIÓN TRUE - ejecutando bloque IF: %s", scope_name);
         procesador_debug_output(context, debug_msg);
-        return process_bloque_if(context, bloque_node, scope_name, 1);
+        int resultado = process_bloque_if(context, bloque_node, scope_name, 1);
+        free(scope_name);
+        return resultado;
     } else {
         snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN FALSE - omitiendo bloque IF: %s", scope_name);
         procesador_debug_output(context, debug_msg);
+        free(scope_name);
         return 0;
     }
 }
@@ -252,58 +258,59 @@ int process_if_simple_sin_llaves(NodeProcessorContext* context, ASTNode* node) {
 
 // IF_CON_ELSE: if (condicion) { ... } else { ... }
 int process_if_con_else(NodeProcessorContext* context, ASTNode* node) {
-    if (node->child_count < 2) {
+    if (node->child_count < 3) {
         procesador_error_output(context, "IF_CON_ELSE con estructura incorrecta");
         return 1;
     }
 
     ASTNode* condicion_node = node->children[0];
     ASTNode* bloque_if = node->children[1];
-    ASTNode* bloque_else = (node->child_count >= 3) ? node->children[2] : NULL;
+    ASTNode* bloque_else = node->children[2];
 
     char debug_msg[256];
     snprintf(debug_msg, sizeof(debug_msg), "🔀 ANÁLISIS SEMÁNTICO: IF_CON_ELSE en línea %d", node->line);
     procesador_debug_output(context, debug_msg);
 
-    // Evaluar condición
+    // ===== EVALUAR CONDICIÓN =====
     ResultadoCondicion resultado_condicion = evaluar_condicion_if(context, condicion_node);
     if (resultado_condicion == CONDICION_ERROR) {
         return 1;
     }
 
-    // ===== CREAR SCOPES ÚNICOS =====
-    static int if_counter = 0;
-    static int else_counter = 0;
-
+    // ===== SI CONDICIÓN ES TRUE, EJECUTAR IF =====
     if (resultado_condicion == CONDICION_TRUE) {
-        // Ejecutar bloque IF
-        char scope_name[64];
-        snprintf(scope_name, sizeof(scope_name), "if_%d_%p", ++if_counter, (void*)node);
+        char* scope_name = generate_scope_name(context, SCOPE_TYPE_IF, node);
+        if (!scope_name) {
+            procesador_error_output(context, "Error generando nombre de scope IF");
+            return 1;
+        }
+
         snprintf(debug_msg, sizeof(debug_msg), "✅ CONDICIÓN TRUE - ejecutando IF: %s", scope_name);
         procesador_debug_output(context, debug_msg);
-        return process_bloque_if(context, bloque_if, scope_name, 1);
-    } else if (bloque_else) {
-        // Ejecutar bloque ELSE
-        char scope_name[64];
-        snprintf(scope_name, sizeof(scope_name), "else_%d_%p", ++else_counter, (void*)node);
-        snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN FALSE - ejecutando ELSE: %s", scope_name);
+
+        int resultado = process_bloque_if(context, bloque_if, scope_name, 1);
+        free(scope_name);
+        return resultado;
+    } else {
+        // ===== CONDICIÓN FALSE, EJECUTAR ELSE =====
+        snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN IF FALSE - ejecutando ELSE");
         procesador_debug_output(context, debug_msg);
 
-        // El bloque else puede ser otro IF (else if) o un SCOPE normal
-        if (strstr(bloque_else->type, "IF_") != NULL) {
-            // Es un else if - procesar como IF anidado
-            procesador_debug_output(context, "🔀 ELSE IF detectado");
-            return process_if_node(context, bloque_else);
-        } else {
-            // Es un else normal con scope
-            return process_bloque_if(context, bloque_else, scope_name, 1);
+        // ===== EJECUTAR BLOQUE ELSE =====
+        char* scope_name = generate_scope_name(context, SCOPE_TYPE_ELSE, node);
+        if (!scope_name) {
+            procesador_error_output(context, "Error generando nombre de scope ELSE");
+            return 1;
         }
-    } else {
-        procesador_debug_output(context, "🔀 IF-ELSE: Condición falsa, sin bloque else");
-        return 0;
+
+        snprintf(debug_msg, sizeof(debug_msg), "✅ Ejecutando bloque ELSE: %s", scope_name);
+        procesador_debug_output(context, debug_msg);
+
+        int resultado = process_bloque_if(context, bloque_else, scope_name, 1);
+        free(scope_name);
+        return resultado;
     }
 }
-
 
 // IF_CON_ELSE_MIXTO_1: if + else if + else (estructura compleja)
 int process_if_con_else_mixto(NodeProcessorContext* context, ASTNode* node) {
@@ -320,32 +327,34 @@ int process_if_con_else_mixto(NodeProcessorContext* context, ASTNode* node) {
     snprintf(debug_msg, sizeof(debug_msg), "🔀 ANÁLISIS SEMÁNTICO: IF_CON_ELSE_MIXTO en línea %d", node->line);
     procesador_debug_output(context, debug_msg);
 
-    // Evaluar condición principal
+    // ===== EVALUAR CONDICIÓN PRINCIPAL =====
     ResultadoCondicion resultado_condicion = evaluar_condicion_if(context, condicion_node);
     if (resultado_condicion == CONDICION_ERROR) {
         return 1;
     }
 
-    static int if_mixto_counter = 0;
-
+    // ===== SI CONDICIÓN ES TRUE, EJECUTAR IF Y TERMINAR =====
     if (resultado_condicion == CONDICION_TRUE) {
-        // Ejecutar bloque IF principal
-        char scope_name[64];
-        snprintf(scope_name, sizeof(scope_name), "if_mixto_%d_%p", ++if_mixto_counter, (void*)node);
+        char* scope_name = generate_scope_name(context, SCOPE_TYPE_IF, node);
+        if (!scope_name) {
+            procesador_error_output(context, "Error generando nombre de scope IF_MIXTO");
+            return 1;
+        }
+
         snprintf(debug_msg, sizeof(debug_msg), "✅ CONDICIÓN TRUE - ejecutando IF_MIXTO: %s", scope_name);
         procesador_debug_output(context, debug_msg);
-        return process_bloque_if(context, bloque_if, scope_name, 1);
+
+        // EJECUTAR SOLO EL BLOQUE IF Y TERMINAR
+        int resultado = process_bloque_if(context, bloque_if, scope_name, 1);
+        free(scope_name);
+        return resultado;
     } else {
-        // Ejecutar la parte ELSE (que puede contener else if anidados)
-        snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN FALSE - ejecutando rama ELSE_MIXTO");
+        // ===== CONDICIÓN FALSE, PROCESAR ELSE (SIN PROCESAR AUTOMÁTICAMENTE) =====
+        snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN FALSE - procesando rama ELSE_MIXTO");
         procesador_debug_output(context, debug_msg);
 
-        // Procesar instrucción else (puede ser otro IF completo)
-        for (int i = 0; i < instruccion_else->child_count; i++) {
-            if (process_ast_node(context, instruccion_else->children[i]) != 0) {
-                return 1;
-            }
-        }
-        return 0;
+        // ===== PROCESAR LA INSTRUCCIÓN ELSE RECURSIVAMENTE =====
+        // Esto debería ser otro IF que se evaluará independientemente
+        return process_ast_node(context, instruccion_else);
     }
 }
