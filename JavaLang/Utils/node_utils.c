@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "Procesador_casting.h"
+#include "Procesador_Logico.h"
 
 // ===== DECLARACIONES FORWARD PARA EVITAR DEPENDENCIAS CIRCULARES =====
 extern char* process_expresion_node(NodeProcessorContext* context, ASTNode* node);
@@ -150,7 +151,10 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
                 return TIPO_BOOLEAN;
             }
             else if (strcmp(operador, "&&") == 0 || strcmp(operador, "||") == 0) {
-                // Operadores lógicos siempre retornan boolean
+                // ===== OPERADORES LÓGICOS SIEMPRE RETORNAN BOOLEAN =====
+                if (context && context->modo_debug) {
+                    printf("DEBUG NODE_UTILS: Operador lógico '%s' → boolean\n", operador);
+                }
                 return TIPO_BOOLEAN;
             }
         }
@@ -173,13 +177,16 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
                node->value ? node->value : "NULL");
 
         if (node->value && node->child_count > 0) {
-            // Obtener el valor del operando
-            char* valor_operando = obtener_valor_desde_nodo(node->children[0], context);
-            if (!valor_operando) return NULL;
-
-            // Procesar según el operador
-            if (strcmp(node->value, "-") == 0) {
+            if (strcmp(node->value, "!") == 0) {
+                // ===== NOT LÓGICO - USAR PROCESADOR ESPECIALIZADO =====
+                printf("   → NOT LÓGICO detectado, delegando al procesador\n");
+                return process_logico_unario_node(context, node);
+            }
+            else if (strcmp(node->value, "-") == 0) {
                 // Negación aritmética: agregar '-' al inicio
+                char* valor_operando = obtener_valor_desde_nodo(node->children[0], context);
+                if (!valor_operando) return NULL;
+
                 char* resultado = malloc(strlen(valor_operando) + 2); // +1 para '-', +1 para '\0'
                 snprintf(resultado, strlen(valor_operando) + 2, "-%s", valor_operando);
 
@@ -189,31 +196,22 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
             }
             else if (strcmp(node->value, "+") == 0) {
                 // Positivo explícito: mantener el valor
+                char* valor_operando = obtener_valor_desde_nodo(node->children[0], context);
                 printf("   → POSITIVO EXPLÍCITO: '%s'\n", valor_operando);
                 return valor_operando; // No necesita modificación
             }
-            else if (strcmp(node->value, "!") == 0) {
-                // Negación lógica: invertir boolean
-                char* resultado = malloc(8);
-                if (strcmp(valor_operando, "true") == 0) {
-                    strcpy(resultado, "false");
-                } else if (strcmp(valor_operando, "false") == 0) {
-                    strcpy(resultado, "true");
-                } else {
-                    // Si no es boolean, es un error semántico
-                    free(resultado);
-                    free(valor_operando);
-                    return NULL;
-                }
-
-                printf("   → NEGACIÓN LÓGICA: '%s' → '%s'\n", valor_operando, resultado);
-                free(valor_operando);
-                return resultado;
+            else if (strcmp(node->value, "++") == 0) {
+                // Incremento (futuro)
+                printf("   → ❌ Operador '++' no implementado aún\n");
+                return NULL;
             }
-            // Otros operadores unarios (++, --) se pueden agregar aquí
+            else if (strcmp(node->value, "--") == 0) {
+                // Decremento (futuro)
+                printf("   → ❌ Operador '--' no implementado aún\n");
+                return NULL;
+            }
             else {
                 printf("   → ❌ Operador unario '%s' no implementado\n", node->value);
-                free(valor_operando);
                 return NULL;
             }
         }
@@ -254,10 +252,12 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
         } else {
             printf("   → ❌ Variable '%s' NO encontrada en tabla de símbolos\n", node->value);
 
-            // Registrar error semántico por variable no declarada
+            // ===== MEJORAR MENSAJE DE ERROR CON CONTEXTO =====
             if (global_error_manager) {
-                char error_msg[256];
-                snprintf(error_msg, sizeof(error_msg), "Variable '%s' no ha sido declarada", node->value);
+                char error_msg[512];
+                snprintf(error_msg, sizeof(error_msg),
+                        "Variable '%s' no ha sido declarada en el scope actual o accesible",
+                        node->value);
 
                 const char* scope_actual = "global";
                 if (context->scope_actual && context->scope_actual->nombre) {
@@ -266,10 +266,19 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
                     scope_actual = context->tabla_simbolos->ambito_actual;
                 }
 
+                // ===== AGREGAR INFORMACIÓN DE DEBUG =====
+                char error_detallado[512];
+                snprintf(error_detallado, sizeof(error_detallado),
+                        "%s (buscada en scope: %s, línea: %d)",
+                        error_msg, scope_actual, node->line);
+
                 error_manager_add_semantico(global_error_manager,
                                           node->line, node->column,
-                                          error_msg, node->value,
+                                          error_detallado, node->value,
                                           scope_actual);
+
+                // TAMBIÉN LOG A CONSOLA PARA DEBUG
+                printf("   → ERROR SEMÁNTICO: %s\n", error_detallado);
             }
             return NULL;
         }

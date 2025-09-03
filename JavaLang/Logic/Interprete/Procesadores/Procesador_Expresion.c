@@ -4,6 +4,7 @@
 #include "../../../Headers/Procesador_Resta.h"
 #include "../../../Headers/Procesador_Multiplicacion.h"
 #include "../../../Headers/node_utils.h"
+#include "../../../Headers/Procesador_Logico.h"
 #include "../../../Headers/Procesador_Comparacion.h"
 #include "../../../Headers/Procesador_Modulo.h"
 #include "../../../Headers/globals.h"
@@ -170,10 +171,15 @@ char* process_expresion_node(NodeProcessorContext* context, ASTNode* node) {
 
         // ===== OPERADORES LÓGICOS NO IMPLEMENTADOS =====
         case EXPR_TYPE_AND_LOGICO:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando AND lógico a Procesador_Logico\n");
+            }
+            return process_logico_binario_node(context, node);
         case EXPR_TYPE_OR_LOGICO:
-            printf("ERROR PROCESADOR_EXPRESION: Operador lógico '%s' no implementado\n", 
-                   node->value ? node->value : "desconocido");
-            return NULL;
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando OR lógico a Procesador_Logico\n");
+            }
+            return process_logico_binario_node(context, node);
 
         // ===== OPERADORES UNARIOS IMPLEMENTADOS =====
         case EXPR_TYPE_NEGACION_ARITMETICA:

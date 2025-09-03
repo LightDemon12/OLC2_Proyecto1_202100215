@@ -4,6 +4,7 @@
 #include "../../Headers/mainview.h"
 #include "../../Headers/Procesador_casting.h"
 #include "../Headers/Procesador_Constantes.h"
+#include "../../Headers/Procesador_If.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -221,21 +222,9 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
         case NODE_TYPE_IF_SIMPLE:
         case NODE_TYPE_IF_CON_ELSE:
         case NODE_TYPE_IF_CON_ELSE_IF:
-            {
-                char scope_name[64];
-                snprintf(scope_name, sizeof(scope_name), "if_%d", node->line);
-                printf("🔀 DETECTADO IF - entrando scope '%s'\n", scope_name);
-                entrar_scope_combinado(context, SCOPE_IF, scope_name, node->line);
-
-                // Procesar hijos del IF
-                for (int i = 0; i < node->child_count; i++) {
-                    process_ast_node(context, node->children[i]);
-                }
-
-                salir_scope_combinado(context, node->line);
-                printf("🔀 SALIENDO IF '%s'\n", scope_name);
-                return 0;
-            }
+            printf("🔀 PROCESANDO IF: '%s'\n", node->type);
+            // ===== USAR EL PROCESADOR DE IF ESPECIALIZADO =====
+            return process_if_node(context, node);
 
         case NODE_TYPE_WHILE:
             {

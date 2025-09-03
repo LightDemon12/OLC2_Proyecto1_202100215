@@ -133,6 +133,10 @@ set(SOURCES
         Logic/Interprete/Procesadores/Procesador_Modulo.c
         Logic/Interprete/Procesadores/Procesador_Comparacion.c
         Headers/Procesador_Comparacion.h
+        Headers/Procesador_Logico.h
+        Logic/Interprete/Procesadores/Procesador_Logico.c
+        Headers/Procesador_If.h
+        Logic/Interprete/Procesadores/Procesador_If.c
 )
 
 # Crear ejecutable
