@@ -61,6 +61,10 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
                 TipoDato tipo_operando = obtener_tipo_desde_nodo(node->children[0], context);
                 // Verificar que el operando sea numérico
                 if (es_tipo_numerico(tipo_operando)) {
+                    if (context && context->modo_debug) {
+                        printf("DEBUG NODE_UTILS: EXPRESION_UNARIA '%s' → tipo: %s\n",
+                               node->value, tipo_dato_to_string(tipo_operando));
+                    }
                     return tipo_operando; // El tipo se preserva: -int = int, -float = float
                 }
                 return TIPO_DESCONOCIDO; // Error: operador unario en tipo no numérico
@@ -101,28 +105,56 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
         }
     }
     // Si es una expresión binaria, evaluar recursivamente
-    if (strcmp(node->type, "EXPRESION_BINARIA") == 0 && node->child_count >= 2) {
-        TipoDato tipo_izq = obtener_tipo_desde_nodo(node->children[0], context);
-        TipoDato tipo_der = obtener_tipo_desde_nodo(node->children[1], context);
+    if (strcmp(node->type, "EXPRESION_BINARIA") == 0) {
+        if (!node->value) return TIPO_DESCONOCIDO;
 
-        // Aplicar reglas de promoción de tipos para la expresión
-        if (node->value) {
-            if (strcmp(node->value, "+") == 0) {
-                // Para suma: string + cualquier_cosa = string, sino promoción numérica
+        const char* operador = node->value;
+
+        if (node->child_count >= 2) {
+            TipoDato tipo_izq = obtener_tipo_desde_nodo(node->children[0], context);
+            TipoDato tipo_der = obtener_tipo_desde_nodo(node->children[1], context);
+
+            if (context && context->modo_debug) {
+                printf("DEBUG NODE_UTILS: EXPRESION_BINARIA '%s' - tipos: %s %s %s\n",
+                       operador,
+                       tipo_dato_to_string(tipo_izq),
+                       operador,
+                       tipo_dato_to_string(tipo_der));
+            }
+
+            // ===== DETERMINAR TIPO RESULTADO SEGÚN OPERADOR =====
+            if (strcmp(operador, "+") == 0) {
+                // Para suma: String + cualquier_cosa = String, sino promoción numérica
                 if (tipo_izq == TIPO_STRING || tipo_der == TIPO_STRING) {
                     return TIPO_STRING;
                 }
                 return promocionar_tipos(tipo_izq, tipo_der);
             }
-            else if (strcmp(node->value, "-") == 0 || strcmp(node->value, "*") == 0 || strcmp(node->value, "/") == 0) {
-                // Para resta, multiplicación, división: solo numéricos
+            else if (strcmp(operador, "-") == 0 || strcmp(operador, "*") == 0 ||
+                     strcmp(operador, "/") == 0 || strcmp(operador, "%") == 0) {
+                // Operaciones aritméticas puras - solo tipos numéricos
                 if (tipos_compatibles_aritmetica(tipo_izq, tipo_der)) {
-                    return promocionar_tipos(tipo_izq, tipo_der);
+                    TipoDato resultado = promocionar_tipos(tipo_izq, tipo_der);
+                    if (context && context->modo_debug) {
+                        printf("DEBUG NODE_UTILS: Promoción aritmética → %s\n",
+                               tipo_dato_to_string(resultado));
+                    }
+                    return resultado;
                 }
                 return TIPO_DESCONOCIDO;
             }
-            // Agregar más operadores según sea necesario
+            else if (strcmp(operador, "==") == 0 || strcmp(operador, "!=") == 0 ||
+                     strcmp(operador, ">") == 0 || strcmp(operador, "<") == 0 ||
+                     strcmp(operador, ">=") == 0 || strcmp(operador, "<=") == 0) {
+                // Operadores de comparación siempre retornan boolean
+                return TIPO_BOOLEAN;
+            }
+            else if (strcmp(operador, "&&") == 0 || strcmp(operador, "||") == 0) {
+                // Operadores lógicos siempre retornan boolean
+                return TIPO_BOOLEAN;
+            }
         }
+
         return TIPO_DESCONOCIDO;
     }
 
@@ -134,6 +166,59 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
 
     printf("🔍 DEBUG obtener_valor_desde_nodo: procesando '%s' con valor '%s'\n",
            node->type, node->value ? node->value : "NULL");
+
+    // ===== MANEJO ESPECIAL PARA EXPRESIONES UNARIAS =====
+    if (strcmp(node->type, "EXPRESION_UNARIA") == 0) {
+        printf("   → EXPRESION_UNARIA detectada con operador '%s'\n",
+               node->value ? node->value : "NULL");
+
+        if (node->value && node->child_count > 0) {
+            // Obtener el valor del operando
+            char* valor_operando = obtener_valor_desde_nodo(node->children[0], context);
+            if (!valor_operando) return NULL;
+
+            // Procesar según el operador
+            if (strcmp(node->value, "-") == 0) {
+                // Negación aritmética: agregar '-' al inicio
+                char* resultado = malloc(strlen(valor_operando) + 2); // +1 para '-', +1 para '\0'
+                snprintf(resultado, strlen(valor_operando) + 2, "-%s", valor_operando);
+
+                printf("   → NEGACIÓN ARITMÉTICA: '%s' → '%s'\n", valor_operando, resultado);
+                free(valor_operando);
+                return resultado;
+            }
+            else if (strcmp(node->value, "+") == 0) {
+                // Positivo explícito: mantener el valor
+                printf("   → POSITIVO EXPLÍCITO: '%s'\n", valor_operando);
+                return valor_operando; // No necesita modificación
+            }
+            else if (strcmp(node->value, "!") == 0) {
+                // Negación lógica: invertir boolean
+                char* resultado = malloc(8);
+                if (strcmp(valor_operando, "true") == 0) {
+                    strcpy(resultado, "false");
+                } else if (strcmp(valor_operando, "false") == 0) {
+                    strcpy(resultado, "true");
+                } else {
+                    // Si no es boolean, es un error semántico
+                    free(resultado);
+                    free(valor_operando);
+                    return NULL;
+                }
+
+                printf("   → NEGACIÓN LÓGICA: '%s' → '%s'\n", valor_operando, resultado);
+                free(valor_operando);
+                return resultado;
+            }
+            // Otros operadores unarios (++, --) se pueden agregar aquí
+            else {
+                printf("   → ❌ Operador unario '%s' no implementado\n", node->value);
+                free(valor_operando);
+                return NULL;
+            }
+        }
+        return NULL;
+    }
 
     // Si es un DATO, extraer el valor del literal
     if (strcmp(node->type, "DATO") == 0 && node->children && node->child_count > 0) {
@@ -297,22 +382,23 @@ TipoDato promocionar_tipos(TipoDato tipo1, TipoDato tipo2) {
     }
 
     // ===== PROMOCIÓN NUMÉRICA SEGÚN JAVA =====
-    // double > float > long > int > char
+    // double > float > long > int > short > byte > char
     if (tipo1 == TIPO_DOUBLE || tipo2 == TIPO_DOUBLE) {
         return TIPO_DOUBLE;
     }
     if (tipo1 == TIPO_FLOAT || tipo2 == TIPO_FLOAT) {
         return TIPO_FLOAT;
     }
-    if (tipo1 == TIPO_LONG || tipo2 == TIPO_LONG) {      // ← AÑADIR ESTA LÍNEA
+    if (tipo1 == TIPO_LONG || tipo2 == TIPO_LONG) {
         return TIPO_LONG;
     }
     if (tipo1 == TIPO_INT || tipo2 == TIPO_INT) {
         return TIPO_INT;
     }
-    if (tipo1 == TIPO_CHAR && tipo2 == TIPO_CHAR) {
-        return TIPO_INT; // char + char = int en Java
-    }
+    if ((tipo1 == TIPO_SHORT || tipo1 == TIPO_BYTE || tipo1 == TIPO_CHAR) &&
+        (tipo2 == TIPO_SHORT || tipo2 == TIPO_BYTE || tipo2 == TIPO_CHAR)) {
+        return TIPO_INT; // Promoción automática a int
+        }
 
     return TIPO_INT; // Valor por defecto
 }

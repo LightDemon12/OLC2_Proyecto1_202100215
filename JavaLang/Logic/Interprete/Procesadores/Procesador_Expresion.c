@@ -4,6 +4,8 @@
 #include "../../../Headers/Procesador_Resta.h"
 #include "../../../Headers/Procesador_Multiplicacion.h"
 #include "../../../Headers/node_utils.h"
+#include "../../../Headers/Procesador_Comparacion.h"
+#include "../../../Headers/Procesador_Modulo.h"
 #include "../../../Headers/globals.h"
 #include "../../Headers/mainview.h"
 #include <stdio.h>
@@ -139,25 +141,32 @@ char* process_expresion_node(NodeProcessorContext* context, ASTNode* node) {
             return process_division_node(context, node);
 
         case EXPR_TYPE_MODULO:
-            printf("ERROR PROCESADOR_EXPRESION: Operador módulo '%%' no implementado\n");
-            return NULL;
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando módulo a Procesador_Modulo\n");
+            }
+            return process_modulo_node(context, node);
 
         // ===== OPERADORES DE COMPARACIÓN NO IMPLEMENTADOS =====
         case EXPR_TYPE_IGUAL:
-            printf("ERROR PROCESADOR_EXPRESION: Operador igualdad '==' no implementado\n");
-            return NULL;
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando igualdad a Procesador_Comparacion\n");
+            }
+            return process_comparacion_node(context, node);
 
         case EXPR_TYPE_DIFERENTE:
-            printf("ERROR PROCESADOR_EXPRESION: Operador desigualdad '!=' no implementado\n");
-            return NULL;
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando desigualdad a Procesador_Comparacion\n");
+            }
+            return process_comparacion_node(context, node);
 
         case EXPR_TYPE_MAYOR:
         case EXPR_TYPE_MENOR:
         case EXPR_TYPE_MAYOR_IGUAL:
         case EXPR_TYPE_MENOR_IGUAL:
-            printf("ERROR PROCESADOR_EXPRESION: Operador relacional '%s' no implementado\n", 
-                   node->value ? node->value : "desconocido");
-            return NULL;
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando comparación relacional a Procesador_Comparacion\n");
+            }
+            return process_comparacion_node(context, node);
 
         // ===== OPERADORES LÓGICOS NO IMPLEMENTADOS =====
         case EXPR_TYPE_AND_LOGICO:

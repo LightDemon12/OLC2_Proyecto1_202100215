@@ -129,6 +129,10 @@ set(SOURCES
         Logic/Interprete/Procesadores/Procesador_casting.c
         Headers/Procesador_Constantes.h
         Logic/Interprete/Procesadores/Procesador_Constantes.c
+        Headers/Procesador_Modulo.h
+        Logic/Interprete/Procesadores/Procesador_Modulo.c
+        Logic/Interprete/Procesadores/Procesador_Comparacion.c
+        Headers/Procesador_Comparacion.h
 )
 
 # Crear ejecutable
@@ -143,7 +147,7 @@ target_include_directories(JavaLang PRIVATE
 )
 
 target_compile_options(JavaLang PRIVATE ${GTK3_CFLAGS_OTHER})
-target_link_libraries(JavaLang ${GTK3_LIBRARIES} fl)  # ← AGREGAR fl para flex
+target_link_libraries(JavaLang ${GTK3_LIBRARIES} fl m)  # ← AGREGAR fl para flex
 target_link_directories(JavaLang PRIVATE ${GTK3_LIBRARY_DIRS})
 
 # Debug info
