@@ -13,6 +13,8 @@
 
 // ========== ELIMINAR LAS FUNCIONES DUPLICADAS Y USAR LAS DEL PROCESADOR SUMA ==========
 
+
+
 int process_declaracion_node(NodeProcessorContext* context, ASTNode* node) {
     if (!context || !node) {
         procesador_error_output(context, "Contexto o nodo NULL en declaracion");
@@ -224,7 +226,7 @@ int process_declaracion_sin_inicializacion(NodeProcessorContext* context, TipoDa
 
     char debug_msg[256];
     snprintf(debug_msg, sizeof(debug_msg),
-            "🔢 ANÁLISIS SEMÁNTICO: Declarando variable sin inicialización '%s' tipo '%s'",
+            "🔢 ANÁLISIS SEMÁNTICO: Declarando variable '%s' tipo '%s' con valor por defecto",
             id_str, tipo_dato_to_string(tipo));
     procesador_debug_output(context, debug_msg);
 
@@ -261,39 +263,52 @@ int process_declaracion_sin_inicializacion(NodeProcessorContext* context, TipoDa
         }
     }
 
-    // Crear símbolo sin valor inicial
+    // ===== CREAR SÍMBOLO CON VALOR POR DEFECTO =====
     Simbolo simbolo = crear_simbolo_default(id_str, SIMBOLO_VARIABLE, tipo);
     simbolo.linea = parent->line;
     simbolo.columna = parent->column;
     simbolo.visibilidad = VIS_PUBLIC;
-    simbolo.inicializado = 0;
+    simbolo.inicializado = 1;  // ✅ CAMBIO: Sí está inicializado con valor por defecto
     simbolo.timestamp_creacion = time(NULL);
 
-    // Valor por defecto según el tipo (valores por defecto de Java)
+    // ===== VALORES POR DEFECTO CORREGIDOS DE JAVA =====
+    const char* valor_defecto = NULL;
     switch (tipo) {
         case TIPO_BYTE:
         case TIPO_SHORT:
         case TIPO_INT:
         case TIPO_LONG:
-            strncpy(simbolo.valor, "0", MAX_VALUE_LENGTH - 1);
+            valor_defecto = "0";
             break;
         case TIPO_FLOAT:
+            valor_defecto = "0.0f";  // ✅ CORREGIDO: float lleva 'f'
+            break;
         case TIPO_DOUBLE:
-            strncpy(simbolo.valor, "0.0", MAX_VALUE_LENGTH - 1);
+            valor_defecto = "0.0";
             break;
         case TIPO_BOOLEAN:
-            strncpy(simbolo.valor, "false", MAX_VALUE_LENGTH - 1);
+            valor_defecto = "false";
             break;
         case TIPO_CHAR:
-            strncpy(simbolo.valor, "\\u0000", MAX_VALUE_LENGTH - 1);
+            valor_defecto = "'\\u0000'";  // ✅ CORREGIDO: formato de char
             break;
         case TIPO_STRING:
-            strncpy(simbolo.valor, "null", MAX_VALUE_LENGTH - 1);
+            valor_defecto = "null";
             break;
         default:
-            strncpy(simbolo.valor, "undefined", MAX_VALUE_LENGTH - 1);
+            valor_defecto = "null";
             break;
     }
+
+    // Asignar valor por defecto
+    strncpy(simbolo.valor, valor_defecto, MAX_VALUE_LENGTH - 1);
+    simbolo.valor[MAX_VALUE_LENGTH - 1] = '\0';
+
+    // ===== DEBUG DEL VALOR ASIGNADO =====
+    snprintf(debug_msg, sizeof(debug_msg),
+            "🏗️ VALOR POR DEFECTO: variable '%s' tipo '%s' = '%s'",
+            id_str, tipo_dato_to_string(tipo), valor_defecto);
+    procesador_debug_output(context, debug_msg);
 
     // Insertar símbolo
     if (!insertar_simbolo_en_scope_combinado(context, simbolo)) {
@@ -303,7 +318,8 @@ int process_declaracion_sin_inicializacion(NodeProcessorContext* context, TipoDa
     }
 
     snprintf(debug_msg, sizeof(debug_msg),
-            "✅ Variable '%s' (sin inicializar) declarada exitosamente", simbolo.id);
+            "✅ Variable '%s' = '%s' declarada exitosamente (valor por defecto)",
+            simbolo.id, simbolo.valor);
     procesador_debug_output(context, debug_msg);
 
     return 0;
