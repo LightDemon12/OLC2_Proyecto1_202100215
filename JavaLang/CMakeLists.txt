@@ -115,6 +115,14 @@ set(SOURCES
         Logic/Interprete/Procesadores/Procesador_Expresion.c
         Logic/Interprete/Procesadores/Procesador_Suma.c
         Headers/Procesador_Suma.h
+        Headers/Procesador_Resta.h
+        Logic/Interprete/Procesadores/Procesador_Resta.c
+        Headers/node_utils.h
+        Utils/node_utils.c
+        Headers/Procesador_Multiplicacion.h
+        Logic/Interprete/Procesadores/Procesador_Multiplicacion.c
+        Headers/Procesador_Division.h
+        Logic/Interprete/Procesadores/Procesador_Division.c
 )
 
 # Crear ejecutable

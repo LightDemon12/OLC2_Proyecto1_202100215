@@ -161,6 +161,7 @@ int recorrer_nodo(ContextoInterprete* contexto, ASTNode* nodo) {
     return 0;
 }
 
+// Función CORREGIDA - SIN DOBLE PROCESAMIENTO
 int recorrer_ast_recursivo(NodeProcessorContext* context, ASTNode* node) {
     if (!context || !node) {
         return 0;
@@ -169,94 +170,23 @@ int recorrer_ast_recursivo(NodeProcessorContext* context, ASTNode* node) {
     context->linea_actual = node->line;
 
     if (context->modo_debug) {
-        printf("DEBUG INTERPRETE: Recorriendo nodo '%s' en línea %d\n",
+        printf("🌳 RECORRER_AST_RECURSIVO: nodo '%s' en linea %d\n",
                node->type ? node->type : "NULL", node->line);
     }
 
-    // **MANEJAR SCOPES ESPECÍFICOS**
-    int entro_scope_especial = 0;
-    char scope_name[128] = {0};
-
-    // Si es un SCOPE con valor específico, manejar ámbito
-    if (node->type && strcmp(node->type, "SCOPE") == 0 && node->value) {
-        if (strcmp(node->value, "FUNCION") == 0 ||
-            strcmp(node->value, "IF") == 0 ||
-            strcmp(node->value, "ELSE") == 0 ||
-            strcmp(node->value, "BLOQUE_FOR") == 0 ||
-            strcmp(node->value, "BLOQUE_WHILE") == 0 ||
-            strcmp(node->value, "BLOQUE_SWITCH") == 0) {
-
-            // Crear ámbito temporal para bloques
-            snprintf(scope_name, sizeof(scope_name), "%s_%d",
-                     node->value, context->tabla_simbolos->siguiente_direccion++);
-
-            if (context->modo_debug) {
-                printf("DEBUG INTERPRETE: Entrando a ámbito temporal '%s'\n", scope_name);
-            }
-
-            entrar_ambito(context->tabla_simbolos, scope_name);
-            entro_scope_especial = 1;
-        }
-    }
-
-    // Procesar el nodo actual
+    //   SOLO PROCESAR EL NODO ACTUAL - NO RECORRER HIJOS AQUÍ
+    // Los hijos se procesan dentro de process_ast_node según el tipo
     int result = process_ast_node(context, node);
 
     if (result != 0) {
-        printf("ERROR INTERPRETE: Error procesando nodo '%s' en línea %d\n",
+        printf("❌ ERROR procesando nodo '%s' en linea %d\n",
                node->type ? node->type : "NULL", node->line);
-
-        // Salir del ámbito si entramos
-        if (entro_scope_especial) {
-            salir_ambito(context->tabla_simbolos);
-        }
         return result;
     }
 
-    // **CASOS ESPECIALES: Funciones ya manejan sus propios ámbitos**
-    if (node->type && strcmp(node->type, "FUNCION") == 0) {
-        // Las funciones ya manejan sus ámbitos en process_funcion_node
-        // Solo procesar los hijos que NO sean SIGNATURA_FUNCION, BLOQUE_FUNCION
-        for (int i = 0; i < node->child_count; i++) {
-            ASTNode* child = node->children[i];
-            if (child && child->type) {
-                // Saltar hijos que ya se procesaron en process_funcion_node
-                if (strcmp(child->type, "SIGNATURA_FUNCION") == 0 ||
-                    strcmp(child->type, "BLOQUE_FUNCION") == 0) {
-                    continue;
-                }
-
-                result = recorrer_ast_recursivo(context, child);
-                if (result != 0) {
-                    if (entro_scope_especial) {
-                        salir_ambito(context->tabla_simbolos);
-                    }
-                    return result;
-                }
-            }
-        }
-    } else {
-        // Procesar hijos recursivamente para otros nodos
-        for (int i = 0; i < node->child_count; i++) {
-            ASTNode* child = node->children[i];
-            if (child) {
-                result = recorrer_ast_recursivo(context, child);
-                if (result != 0) {
-                    if (entro_scope_especial) {
-                        salir_ambito(context->tabla_simbolos);
-                    }
-                    return result;
-                }
-            }
-        }
-    }
-
-    // Salir del ámbito temporal si entramos
-    if (entro_scope_especial) {
-        if (context->modo_debug) {
-            printf("DEBUG INTERPRETE: Saliendo de ámbito temporal '%s'\n", scope_name);
-        }
-        salir_ambito(context->tabla_simbolos);
+    if (context->modo_debug) {
+        printf("  RECORRER_AST_RECURSIVO: nodo '%s' procesado exitosamente\n",
+               node->type ? node->type : "NULL");
     }
 
     return 0;
@@ -266,33 +196,50 @@ int recorrer_ast_recursivo(NodeProcessorContext* context, ASTNode* node) {
 int interpretar_ast_con_gui(ASTNode* ast_root, MainView* mainview) {
     if (!ast_root) {
         if (mainview) {
-            mainview_append_output(mainview, "❌ No hay AST para procesar");
+            mainview_append_output(mainview, "ERROR: No hay AST para procesar");
         }
         return 1;
     }
 
-    // Crear contexto con mainview
+    //   CREAR CONTEXTO CON SCOPES COMBINADOS
     NodeProcessorContext context = {
         .tabla_simbolos = crear_tabla_simbolos(),
         .linea_actual = 1,
-        .modo_debug = 1,  // Activar debug para GUI
-        .mainview = mainview  //   PASAR MAINVIEW
+        .modo_debug = 1,
+        .mainview = mainview,
+        .scope_actual = NULL,    //   INICIALIZAR STACK DE SCOPES
+        .scope_counter = 0       //   CONTADOR PARA NOMBRES ÚNICOS
     };
 
     if (mainview) {
-        mainview_append_output(mainview, "  Iniciando procesamiento del AST...");
+        mainview_append_output(mainview, "Iniciando procesamiento del AST...");
     }
 
-    // Procesar AST con output visible
+    // Procesar AST con output visible y scopes combinados
     int resultado = recorrer_ast_recursivo(&context, ast_root);
 
     if (mainview) {
         if (resultado == 0) {
-            mainview_append_output(mainview, "  AST procesado exitosamente");
+            mainview_append_output(mainview, "AST procesado exitosamente");
         } else {
-            mainview_append_output(mainview, "❌ Error procesando AST");
+            mainview_append_output(mainview, "Error procesando AST");
         }
     }
+
+    //   LIMPIAR SCOPES RESTANTES
+    while (context.scope_actual) {
+        salir_scope_combinado(&context, context.linea_actual);
+    }
+
+    // Mostrar tabla de símbolos final
+    if (context.modo_debug) {
+        printf("\n=== TABLA DE SIMBOLOS FINAL ===\n");
+        imprimir_tabla_simbolos(context.tabla_simbolos);
+        printf("=== FIN TABLA ===\n\n");
+    }
+
+    // Limpiar memoria
+    liberar_tabla_simbolos(context.tabla_simbolos);
 
     return resultado;
 }

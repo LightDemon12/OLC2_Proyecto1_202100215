@@ -211,9 +211,22 @@ char* generar_temporal(TablaSimbolos* tabla) {
     if (!tabla) return NULL;
 
     static char temporal[MAX_TEMP_LENGTH];
-    snprintf(temporal, MAX_TEMP_LENGTH, "t%d", tabla->siguiente_temporal++);
+    snprintf(temporal, MAX_TEMP_LENGTH, "t%d", tabla->siguiente_temporal);
 
-    printf("DEBUG TABLA_SIMBOLOS: Temporal generado: %s\n", temporal);
+    // CREAR E INSERTAR EL SÍMBOLO TEMPORAL EN LA TABLA
+    Simbolo simbolo_temporal = crear_simbolo_default(temporal, SIMBOLO_TEMPORAL, TIPO_INT);
+    simbolo_temporal.linea = 0;  // Los temporales no tienen línea específica
+    simbolo_temporal.columna = 0;
+    simbolo_temporal.inicializado = 1;
+    strcpy(simbolo_temporal.valor, "temp");
+
+    // Insertar en la tabla
+    insertar_simbolo(tabla, simbolo_temporal);
+
+    // Incrementar contador DESPUÉS de usar el valor
+    tabla->siguiente_temporal++;
+
+    printf("DEBUG TABLA_SIMBOLOS: Temporal generado e insertado: %s\n", temporal);
     return temporal;
 }
 
@@ -221,9 +234,22 @@ char* generar_etiqueta(TablaSimbolos* tabla) {
     if (!tabla) return NULL;
 
     static char etiqueta[MAX_LABEL_LENGTH];
-    snprintf(etiqueta, MAX_LABEL_LENGTH, "L%d", tabla->siguiente_etiqueta++);
+    snprintf(etiqueta, MAX_LABEL_LENGTH, "L%d", tabla->siguiente_etiqueta);
 
-    printf("DEBUG TABLA_SIMBOLOS: Etiqueta generada: %s\n", etiqueta);
+    // CREAR E INSERTAR EL SÍMBOLO ETIQUETA EN LA TABLA
+    Simbolo simbolo_etiqueta = crear_simbolo_default(etiqueta, SIMBOLO_ETIQUETA, TIPO_VOID);
+    simbolo_etiqueta.linea = 0;  // Las etiquetas no tienen línea específica
+    simbolo_etiqueta.columna = 0;
+    simbolo_etiqueta.inicializado = 1;
+    strcpy(simbolo_etiqueta.valor, "label");
+
+    // Insertar en la tabla
+    insertar_simbolo(tabla, simbolo_etiqueta);
+
+    // Incrementar contador DESPUÉS de usar el valor
+    tabla->siguiente_etiqueta++;
+
+    printf("DEBUG TABLA_SIMBOLOS: Etiqueta generada e insertada: %s\n", etiqueta);
     return etiqueta;
 }
 
@@ -254,22 +280,51 @@ void imprimir_tabla_simbolos(TablaSimbolos* tabla) {
            "===============", "============", "==========", "===============",
            "========", "========", "===============", "==========");
 
+    // Primero imprimir variables y símbolos regulares
     for (int i = 0; i < HASH_TABLE_SIZE; i++) {
         NodoSimbolo* actual = tabla->tabla[i];
         while (actual) {
             Simbolo* s = &actual->simbolo;
-            printf("%-15s %-12s %-10s %-15s %-8d %-8d %-15s %-10d\n",
-                   s->id,
-                   tipo_simbolo_to_string(s->tipo_simbolo),
-                   tipo_dato_to_string(s->tipo_dato),
-                   s->ambito,
-                   s->linea,
-                   s->direccion,
-                   s->inicializado ? s->valor : "N/A",
-                   s->num_usos);
+            if (s->tipo_simbolo != SIMBOLO_TEMPORAL && s->tipo_simbolo != SIMBOLO_ETIQUETA) {
+                printf("%-15s %-12s %-10s %-15s %-8d %-8d %-15s %-10d\n",
+                       s->id,
+                       tipo_simbolo_to_string(s->tipo_simbolo),
+                       tipo_dato_to_string(s->tipo_dato),
+                       s->ambito,
+                       s->linea,
+                       s->direccion,
+                       s->inicializado ? s->valor : "N/A",
+                       s->num_usos);
+            }
             actual = actual->siguiente;
         }
     }
+
+    // Luego imprimir temporales y etiquetas si existen
+    bool hay_temporales_etiquetas = false;
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        NodoSimbolo* actual = tabla->tabla[i];
+        while (actual) {
+            Simbolo* s = &actual->simbolo;
+            if (s->tipo_simbolo == SIMBOLO_TEMPORAL || s->tipo_simbolo == SIMBOLO_ETIQUETA) {
+                if (!hay_temporales_etiquetas) {
+                    printf("\n--- TEMPORALES Y ETIQUETAS ---\n");
+                    hay_temporales_etiquetas = true;
+                }
+                printf("%-15s %-12s %-10s %-15s %-8d %-8d %-15s %-10d\n",
+                       s->id,
+                       tipo_simbolo_to_string(s->tipo_simbolo),
+                       tipo_dato_to_string(s->tipo_dato),
+                       s->ambito,
+                       s->linea,
+                       s->direccion,
+                       s->inicializado ? s->valor : "N/A",
+                       s->num_usos);
+            }
+            actual = actual->siguiente;
+        }
+    }
+
     printf("=== FIN TABLA DE SÍMBOLOS ===\n\n");
 }
 
@@ -305,21 +360,20 @@ const char* tipo_simbolo_to_string(TipoSimbolo tipo) {
 }
 
 const char* tipo_dato_to_string(TipoDato tipo) {
-    switch (tipo) {
+    switch(tipo) {
         case TIPO_INT: return "int";
         case TIPO_FLOAT: return "float";
         case TIPO_DOUBLE: return "double";
-        case TIPO_STRING: return "string";
         case TIPO_CHAR: return "char";
+        case TIPO_STRING: return "string";
         case TIPO_BOOLEAN: return "boolean";
+        case TIPO_LONG: return "long";
+        case TIPO_SHORT: return "short";
+        case TIPO_BYTE: return "byte";
         case TIPO_VOID: return "void";
-        case TIPO_ARRAY_INT: return "int[]";
-        case TIPO_ARRAY_FLOAT: return "float[]";
-        case TIPO_ARRAY_DOUBLE: return "double[]";
-        case TIPO_ARRAY_STRING: return "string[]";
-        case TIPO_ARRAY_CHAR: return "char[]";
-        case TIPO_ARRAY_BOOLEAN: return "boolean[]";
-        default: return "desconocido";
+        case TIPO_NULL: return "null";        // ← AGREGAR ESTE
+        case TIPO_DESCONOCIDO: return "desconocido";
+        default: return "tipo_invalido";
     }
 }
 

@@ -350,26 +350,73 @@ static void on_compilar_clicked(GtkMenuItem *menuitem, gpointer user_data) {
         return;
     }
 
+    // Limpiar errores previos del global_error_manager
+    if (global_error_manager) {
+        error_manager_clear(global_error_manager);
+    } else {
+        global_error_manager = error_manager_create();
+    }
+
     mainview_append_output(mainview, " AST detectado - iniciando procesamiento...");
     mainview_append_output(mainview, " Procesando expresiones y declaraciones...");
 
-    //   CAMBIAR ESTA LÍNEA - usar la función CON GUI
+    // EJECUTAR EL ANÁLISIS SEMÁNTICO
     int resultado_interprete = interpretar_ast_con_gui(ast_root, mainview);
 
-    if (resultado_interprete != 0) {
-        mainview_append_output(mainview, " ERROR: Falló el análisis semántico");
-        mainview_append_output(mainview, " Revisa la consola para más detalles");
+    // ===== VERIFICAR RESULTADO USANDO ERROR_MANAGER =====
+    int total_errores = error_manager_get_total_count(global_error_manager);
+    int errores_semanticos = error_manager_get_semantico_count(global_error_manager);
+    bool tiene_errores = error_manager_has_errors(global_error_manager);
+
+    // Si hay errores en el interpreter O errores en el error_manager
+    if (resultado_interprete != 0 || tiene_errores) {
+        mainview_append_output(mainview, "\n === COMPILACIÓN FALLIDA === ");
+
+        // Mostrar resumen de errores usando el error_manager
+        if (tiene_errores) {
+            char* error_summary = error_manager_get_summary(global_error_manager);
+            char mensaje_error[512];
+
+            snprintf(mensaje_error, sizeof(mensaje_error),
+                    " %s", error_summary ? error_summary : "Errores detectados");
+            mainview_append_output(mainview, mensaje_error);
+
+            if (errores_semanticos > 0) {
+                snprintf(mensaje_error, sizeof(mensaje_error),
+                        " Errores semánticos críticos: %d", errores_semanticos);
+                mainview_append_output(mainview, mensaje_error);
+            }
+
+            if (error_summary) free(error_summary);
+        } else {
+            mainview_append_output(mainview, " Error en el análisis semántico (código interno)");
+        }
+
+        mainview_append_output(mainview, "\n ❌ La compilación no puede continuar debido a errores");
+        mainview_append_output(mainview, " Revisa la consola para detalles de los errores");
+        mainview_append_output(mainview, " Usa 'Reportes > Errores' para ver el reporte completo");
+
+        // IMPRIMIR ERRORES DETALLADOS EN CONSOLA
+        printf("\n=== ERRORES DETECTADOS EN COMPILACIÓN ===\n");
+        if (tiene_errores) {
+            error_manager_print_all(global_error_manager);
+        } else {
+            printf("Error interno del intérprete (código: %d)\n", resultado_interprete);
+        }
+        printf("=== FIN ERRORES ===\n");
+
         return;
     }
 
+    // ===== COMPILACIÓN EXITOSA =====
     mainview_append_output(mainview, "\n === COMPILACIÓN EXITOSA === ");
     mainview_append_output(mainview, " AST procesado correctamente");
     mainview_append_output(mainview, " Tabla de símbolos creada");
-    mainview_append_output(mainview, " Análisis semántico completado");
+    mainview_append_output(mainview, " Análisis semántico completado sin errores");
     mainview_append_output(mainview, "\n Tip: Revisa la consola para ver la tabla de símbolos detallada");
     mainview_append_output(mainview, " Usa 'Reportes > Tabla de Símbolos' para ver el reporte completo");
 
-    printf("DEBUG: Compilación completa - AST procesado exitosamente\n");
+    printf("DEBUG: Compilación completa - AST procesado exitosamente sin errores\n");
 }
 
 // Callbacks del menú Reportes

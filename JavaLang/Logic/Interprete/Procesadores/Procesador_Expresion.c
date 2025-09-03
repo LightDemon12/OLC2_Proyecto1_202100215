@@ -1,13 +1,100 @@
-//
-// Created by lightdemon on 2/09/25.
-//
 #include "../../../Headers/Procesador_Expresion.h"
 #include "../../../Headers/Procesador_Suma.h"
+#include "../../../Headers/Procesador_Division.h"
+#include "../../../Headers/Procesador_Resta.h"
+#include "../../../Headers/Procesador_Multiplicacion.h"
+#include "../../../Headers/node_utils.h"
+#include "../../../Headers/globals.h"
 #include "../../Headers/mainview.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// ===== FUNCIÓN PARA DETERMINAR EL TIPO DE EXPRESIÓN =====
+ExpressionProcessorType get_expression_processor_type(const char* node_type, const char* operator_value) {
+    if (!node_type) return EXPR_TYPE_UNKNOWN;
+
+    // ===== EXPRESIONES BINARIAS =====
+    if (strcmp(node_type, "EXPRESION_BINARIA") == 0) {
+        if (!operator_value) return EXPR_TYPE_UNKNOWN;
+        
+        // Operadores aritméticos
+        if (strcmp(operator_value, "+") == 0) return EXPR_TYPE_SUMA;
+        if (strcmp(operator_value, "-") == 0) return EXPR_TYPE_RESTA;
+        if (strcmp(operator_value, "*") == 0) return EXPR_TYPE_MULTIPLICACION;
+        if (strcmp(operator_value, "/") == 0) return EXPR_TYPE_DIVISION;
+        if (strcmp(operator_value, "%") == 0) return EXPR_TYPE_MODULO;
+        
+        // Operadores de comparación
+        if (strcmp(operator_value, "==") == 0) return EXPR_TYPE_IGUAL;
+        if (strcmp(operator_value, "!=") == 0) return EXPR_TYPE_DIFERENTE;
+        if (strcmp(operator_value, ">") == 0) return EXPR_TYPE_MAYOR;
+        if (strcmp(operator_value, "<") == 0) return EXPR_TYPE_MENOR;
+        if (strcmp(operator_value, ">=") == 0) return EXPR_TYPE_MAYOR_IGUAL;
+        if (strcmp(operator_value, "<=") == 0) return EXPR_TYPE_MENOR_IGUAL;
+        
+        // Operadores lógicos
+        if (strcmp(operator_value, "&&") == 0) return EXPR_TYPE_AND_LOGICO;
+        if (strcmp(operator_value, "||") == 0) return EXPR_TYPE_OR_LOGICO;
+        
+        return EXPR_TYPE_UNKNOWN;
+    }
+
+    // ===== EXPRESIONES UNARIAS =====
+    if (strcmp(node_type, "EXPRESION_UNARIA") == 0) {
+        if (!operator_value) return EXPR_TYPE_UNKNOWN;
+        
+        if (strcmp(operator_value, "-") == 0) return EXPR_TYPE_NEGACION_ARITMETICA;
+        if (strcmp(operator_value, "+") == 0) return EXPR_TYPE_POSITIVO_EXPLICITO;
+        if (strcmp(operator_value, "!") == 0) return EXPR_TYPE_NEGACION_LOGICA;
+        if (strcmp(operator_value, "++") == 0) return EXPR_TYPE_PRE_INCREMENTO;
+        if (strcmp(operator_value, "--") == 0) return EXPR_TYPE_PRE_DECREMENTO;
+        
+        return EXPR_TYPE_UNKNOWN;
+    }
+
+    // ===== EXPRESIONES POSTFIJO =====
+    if (strcmp(node_type, "EXPRESION_POSTFIJO") == 0) {
+        if (!operator_value) return EXPR_TYPE_UNKNOWN;
+        
+        if (strcmp(operator_value, "++") == 0) return EXPR_TYPE_POST_INCREMENTO;
+        if (strcmp(operator_value, "--") == 0) return EXPR_TYPE_POST_DECREMENTO;
+        
+        return EXPR_TYPE_UNKNOWN;
+    }
+
+    // ===== TIPOS DE NODOS SIMPLES =====
+    if (strcmp(node_type, "DATO") == 0) return EXPR_TYPE_DATO;
+    if (strcmp(node_type, "IDENTIFIER") == 0) return EXPR_TYPE_IDENTIFIER;
+    if (strcmp(node_type, "EXPRESION_PARENTESIS") == 0) return EXPR_TYPE_PARENTESIS;
+    if (strcmp(node_type, "NULL_LITERAL") == 0) return EXPR_TYPE_NULL_LITERAL;
+    if (strcmp(node_type, "INT_LITERAL") == 0) return EXPR_TYPE_INT_LITERAL;
+    if (strcmp(node_type, "FLOAT_LITERAL") == 0) return EXPR_TYPE_FLOAT_LITERAL;
+    if (strcmp(node_type, "STRING_LITERAL") == 0) return EXPR_TYPE_STRING_LITERAL;
+    if (strcmp(node_type, "CHAR_LITERAL") == 0) return EXPR_TYPE_CHAR_LITERAL;
+    if (strcmp(node_type, "BOOLEAN_LITERAL") == 0) return EXPR_TYPE_BOOLEAN_LITERAL;
+
+    // ===== TIPOS AVANZADOS (FUTURO) =====
+    if (strcmp(node_type, "LLAMADA_FUNCION") == 0) return EXPR_TYPE_LLAMADA_FUNCION;
+    if (strcmp(node_type, "ARRAY_ACCESO_MULTIDIMENSIONAL") == 0) return EXPR_TYPE_ACCESO_ARRAY;
+    if (strcmp(node_type, "EXPRESION_ACCESO") == 0) return EXPR_TYPE_ACCESO_PROPIEDAD;
+    
+    // Embebidas
+    if (strcmp(node_type, "PARSEINT_EMBEBIDA") == 0 ||
+        strcmp(node_type, "PARSEFLOAT_EMBEBIDA") == 0 ||
+        strcmp(node_type, "PARSEDOUBLE_EMBEBIDA") == 0 ||
+        strcmp(node_type, "VALUEOF_EMBEBIDA") == 0 ||
+        strcmp(node_type, "INDEXOF_EMBEBIDA") == 0 ||
+        strcmp(node_type, "LENGTH_EMBEBIDA") == 0 ||
+        strcmp(node_type, "ADD_EMBEBIDA") == 0 ||
+        strcmp(node_type, "JOIN_EMBEBIDA") == 0) {
+        return EXPR_TYPE_EMBEBIDA;
+    }
+
+    return EXPR_TYPE_UNKNOWN;
+}
+
+// ===== PROCESADOR PRINCIPAL OPTIMIZADO =====
 char* process_expresion_node(NodeProcessorContext* context, ASTNode* node) {
     if (!context || !node) {
         printf("ERROR PROCESADOR_EXPRESION: Contexto o nodo NULL\n");
@@ -19,65 +106,217 @@ char* process_expresion_node(NodeProcessorContext* context, ASTNode* node) {
                node->type, node->line);
     }
 
-    // Delegar según el tipo de expresión
-    if (strcmp(node->type, "EXPRESION_BINARIA") == 0) {
+    // Determinar tipo de expresión
+    ExpressionProcessorType expr_type = get_expression_processor_type(node->type, node->value);
 
-        // Verificar qué operador es
-        if (node->value && strcmp(node->value, "+") == 0) {
+    // ===== SWITCH OPTIMIZADO =====
+    switch (expr_type) {
+        // ===== OPERADORES ARITMÉTICOS IMPLEMENTADOS =====
+        case EXPR_TYPE_SUMA:
             if (context->modo_debug) {
                 printf("DEBUG PROCESADOR_EXPRESION: → Delegando suma a Procesador_Suma\n");
             }
             return process_suma_node(context, node);
-        }
-        else {
-            printf("ERROR PROCESADOR_EXPRESION: Operador binario '%s' no implementado\n",
-                   node->value ? node->value : "NULL");
+
+        case EXPR_TYPE_RESTA:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando resta a Procesador_Resta\n");
+            }
+            return process_resta_node(context, node);
+
+        case EXPR_TYPE_MULTIPLICACION:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando multiplicación a Procesador_Multiplicacion\n");
+            }
+            return process_multiplicacion_node(context, node);
+
+        // ===== OPERADORES ARITMÉTICOS NO IMPLEMENTADOS =====
+        case EXPR_TYPE_DIVISION:
+            // ===== IMPLEMENTAR DIVISIÓN =====
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando división a Procesador_Division\n");
+            }
+            return process_division_node(context, node);
+
+        case EXPR_TYPE_MODULO:
+            printf("ERROR PROCESADOR_EXPRESION: Operador módulo '%%' no implementado\n");
             return NULL;
-        }
-    }
-    else if (strcmp(node->type, "DATO") == 0) {
-        // Los DATO son valores literales, extraer su valor directo
-        if (node->child_count > 0 && node->children[0]) {
-            ASTNode* literal = node->children[0];
-            if (literal->value) {
-                char* resultado = malloc(strlen(literal->value) + 1);
-                strcpy(resultado, literal->value);
+
+        // ===== OPERADORES DE COMPARACIÓN NO IMPLEMENTADOS =====
+        case EXPR_TYPE_IGUAL:
+            printf("ERROR PROCESADOR_EXPRESION: Operador igualdad '==' no implementado\n");
+            return NULL;
+
+        case EXPR_TYPE_DIFERENTE:
+            printf("ERROR PROCESADOR_EXPRESION: Operador desigualdad '!=' no implementado\n");
+            return NULL;
+
+        case EXPR_TYPE_MAYOR:
+        case EXPR_TYPE_MENOR:
+        case EXPR_TYPE_MAYOR_IGUAL:
+        case EXPR_TYPE_MENOR_IGUAL:
+            printf("ERROR PROCESADOR_EXPRESION: Operador relacional '%s' no implementado\n", 
+                   node->value ? node->value : "desconocido");
+            return NULL;
+
+        // ===== OPERADORES LÓGICOS NO IMPLEMENTADOS =====
+        case EXPR_TYPE_AND_LOGICO:
+        case EXPR_TYPE_OR_LOGICO:
+            printf("ERROR PROCESADOR_EXPRESION: Operador lógico '%s' no implementado\n", 
+                   node->value ? node->value : "desconocido");
+            return NULL;
+
+        // ===== OPERADORES UNARIOS IMPLEMENTADOS =====
+        case EXPR_TYPE_NEGACION_ARITMETICA:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Procesando negación unaria '-'\n");
+            }
+            return obtener_valor_desde_nodo(node, context);
+
+        case EXPR_TYPE_POSITIVO_EXPLICITO:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Procesando positivo unario '+'\n");
+            }
+            return obtener_valor_desde_nodo(node, context);
+
+        // ===== OPERADORES UNARIOS NO IMPLEMENTADOS =====
+        case EXPR_TYPE_NEGACION_LOGICA:
+        case EXPR_TYPE_PRE_INCREMENTO:
+        case EXPR_TYPE_PRE_DECREMENTO:
+        case EXPR_TYPE_POST_INCREMENTO:
+        case EXPR_TYPE_POST_DECREMENTO:
+            printf("ERROR PROCESADOR_EXPRESION: Operador unario '%s' no implementado\n", 
+                   node->value ? node->value : "desconocido");
+            return NULL;
+
+        // ===== TIPOS DE DATOS IMPLEMENTADOS =====
+        case EXPR_TYPE_DATO:
+            // Los DATO son valores literales, extraer su valor directo
+            if (node->child_count > 0 && node->children[0]) {
+                ASTNode* literal = node->children[0];
+                if (literal->value) {
+                    char* resultado = malloc(strlen(literal->value) + 1);
+                    strcpy(resultado, literal->value);
+
+                    if (context->modo_debug) {
+                        printf("DEBUG PROCESADOR_EXPRESION: → Literal extraído: '%s'\n", resultado);
+                    }
+                    return resultado;
+                }
+            }
+            return NULL;
+
+        case EXPR_TYPE_IDENTIFIER:
+            // ===== BUSCAR EN TABLA DE SÍMBOLOS =====
+            if (node->value && context->tabla_simbolos) {
+                Simbolo* simbolo = buscar_simbolo(context->tabla_simbolos, node->value);
+
+                if (simbolo) {
+                    // Incrementar uso del símbolo
+                    incrementar_uso_simbolo(context->tabla_simbolos, node->value);
+
+                    // Retornar VALOR de la variable, no su nombre
+                    char* resultado = malloc(strlen(simbolo->valor) + 1);
+                    strcpy(resultado, simbolo->valor);
+
+                    if (context->modo_debug) {
+                        printf("DEBUG PROCESADOR_EXPRESION: → Variable '%s' = '%s' (tipo: %s)\n",
+                               node->value, simbolo->valor, tipo_dato_to_string(simbolo->tipo_dato));
+                    }
+                    return resultado;
+                } else {
+                    // ===== ERROR SEMÁNTICO: VARIABLE NO DECLARADA =====
+                    char error_msg[256];
+                    snprintf(error_msg, sizeof(error_msg), "Variable '%s' no ha sido declarada", node->value);
+
+                    // Obtener scope actual
+                    const char* scope_actual = "global";
+                    if (context->scope_actual && context->scope_actual->nombre) {
+                        scope_actual = context->scope_actual->nombre;
+                    } else if (context->tabla_simbolos && context->tabla_simbolos->ambito_actual) {
+                        scope_actual = context->tabla_simbolos->ambito_actual;
+                    }
+
+                    // Registrar error semántico
+                    if (global_error_manager) {
+                        error_manager_add_semantico(global_error_manager,
+                                                  node->line, node->column,
+                                                  error_msg, node->value,
+                                                  scope_actual);
+                    }
+
+                    printf("ERROR PROCESADOR_EXPRESION: %s\n", error_msg);
+                    return NULL;
+                }
+            } else {
+                printf("ERROR PROCESADOR_EXPRESION: Identificador sin valor o tabla de símbolos nula\n");
+                return NULL;
+            }
+
+        case EXPR_TYPE_PARENTESIS:
+            // Para expresiones con paréntesis, evaluar la expresión interna
+            if (node->child_count > 0 && node->children[0]) {
+                if (context->modo_debug) {
+                    printf("DEBUG PROCESADOR_EXPRESION: → Procesando expresión entre paréntesis\n");
+                }
+                return process_expresion_node(context, node->children[0]);
+            }
+            printf("ERROR PROCESADOR_EXPRESION: Expresión entre paréntesis sin contenido\n");
+            return NULL;
+
+        case EXPR_TYPE_NULL_LITERAL:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Literal null detectado\n");
+            }
+            return strdup("null");
+
+        case EXPR_TYPE_INT_LITERAL:
+        case EXPR_TYPE_FLOAT_LITERAL:
+        case EXPR_TYPE_STRING_LITERAL:
+        case EXPR_TYPE_CHAR_LITERAL:
+        case EXPR_TYPE_BOOLEAN_LITERAL:
+            // ===== LITERALES DIRECTOS =====
+            if (node->value) {
+                char* resultado = malloc(strlen(node->value) + 1);
+                strcpy(resultado, node->value);
 
                 if (context->modo_debug) {
-                    printf("DEBUG PROCESADOR_EXPRESION: → Literal extraído: '%s'\n", resultado);
+                    printf("DEBUG PROCESADOR_EXPRESION: → Literal directo: '%s'\n", resultado);
                 }
                 return resultado;
             }
-        }
-        return NULL;
-    }
-    else if (strcmp(node->type, "IDENTIFIER") == 0) {
-        // Para identificadores, por ahora retornamos el nombre
-        // TODO: Buscar en tabla de símbolos y retornar su valor
-        if (node->value) {
-            char* resultado = malloc(strlen(node->value) + 1);
-            strcpy(resultado, node->value);
+            printf("ERROR PROCESADOR_EXPRESION: Literal sin valor\n");
+            return NULL;
 
-            if (context->modo_debug) {
-                printf("DEBUG PROCESADOR_EXPRESION: → Identificador: '%s'\n", resultado);
-            }
-            return resultado;
-        }
-        return NULL;
-    }
-    else {
-        printf("ERROR PROCESADOR_EXPRESION: Tipo de expresión no implementado: '%s'\n", node->type);
-        return NULL;
+        // ===== TIPOS AVANZADOS NO IMPLEMENTADOS =====
+        case EXPR_TYPE_LLAMADA_FUNCION:
+            printf("ERROR PROCESADOR_EXPRESION: Llamadas a funciones no implementadas\n");
+            return NULL;
+
+        case EXPR_TYPE_ACCESO_ARRAY:
+            printf("ERROR PROCESADOR_EXPRESION: Acceso a arrays no implementado\n");
+            return NULL;
+
+        case EXPR_TYPE_ACCESO_PROPIEDAD:
+            printf("ERROR PROCESADOR_EXPRESION: Acceso a propiedades no implementado\n");
+            return NULL;
+
+        case EXPR_TYPE_EMBEBIDA:
+            printf("ERROR PROCESADOR_EXPRESION: Funciones embebidas no implementadas\n");
+            return NULL;
+
+        // ===== TIPO DESCONOCIDO =====
+        case EXPR_TYPE_UNKNOWN:
+        default:
+            printf("ERROR PROCESADOR_EXPRESION: Tipo de expresión no implementado: '%s'\n", node->type);
+            return NULL;
     }
 }
 
+// ===== FUNCIÓN AUXILIAR =====
 int is_expresion_node(const char* node_type) {
     if (!node_type) return 0;
 
-    return (strcmp(node_type, "EXPRESION_BINARIA") == 0 ||
-            strcmp(node_type, "EXPRESION_UNARIA") == 0 ||
-            strcmp(node_type, "EXPRESION_POSTFIJO") == 0 ||
-            strcmp(node_type, "EXPRESION_PARENTESIS") == 0 ||
-            strcmp(node_type, "DATO") == 0 ||
-            strcmp(node_type, "IDENTIFIER") == 0);
+    ExpressionProcessorType type = get_expression_processor_type(node_type, NULL);
+    return (type != EXPR_TYPE_UNKNOWN);
 }

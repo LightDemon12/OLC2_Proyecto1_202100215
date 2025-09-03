@@ -384,6 +384,10 @@ expresion:
     {
         $$ = build_expresion_unaria("--", $2, @1.first_line, @1.first_column);
     }
+    | TOKEN_MINUS expresion
+    {
+        $$ = build_expresion_unaria("-", $2, @1.first_line, @1.first_column);
+    }
     
     /* OPERADORES POSTFIJO */
     | TOKEN_IDENTIFIER TOKEN_INCREMENT 
