@@ -3,6 +3,8 @@
 
 #include "ast.h"
 
+/* ===== DECLARACIONES DE VARIABLES ===== */
+
 /**
  * Construye una declaración con inicialización
  * Ejemplo: int x = 5;
@@ -20,6 +22,22 @@ ASTNode* build_declaracion_multiple(ASTNode* tipo_node, ASTNode* lista_declaraci
  * Ejemplo: int x;
  */
 ASTNode* build_declaracion_sin_inicializacion(ASTNode* tipo_node, const char* identifier, int line, int column);
+
+/* ===== DECLARACIONES DE CONSTANTES (FINAL) ===== */
+
+/**
+ * Construye una declaración de constante con inicialización
+ * Ejemplo: final int x = 5;
+ */
+ASTNode* build_constante_single(ASTNode* tipo_node, const char* identifier, ASTNode* expresion_node, int line, int column);
+
+/**
+ * Construye una declaración múltiple de constantes
+ * Ejemplo: final int x = 5, y = 10, z = 15;
+ */
+ASTNode* build_constante_multiple(ASTNode* tipo_node, ASTNode* lista_declaraciones_node, int line, int column);
+
+/* ===== LISTAS DE DECLARACIONES ===== */
 
 /**
  * Construye una lista de declaraciones (para declaraciones múltiples)

@@ -69,6 +69,7 @@ void yyerror(const char* s);
 %token TOKEN_STATIC       // static
 %token TOKEN_VOID         // void
 %token TOKEN_MAIN         // main
+%token TOKEN_FINAL       // final   
 /*VALOR NULO */
 %token TOKEN_NULL         // null
 /*IDENTIFICADORES */
@@ -456,6 +457,15 @@ declaraciones:
     | tipo TOKEN_IDENTIFIER TOKEN_SEMICOLON
     {
         $$ = build_declaracion_sin_inicializacion($1, $2, @1.first_line, @1.first_column);
+    }
+    /* ===== CONSTANTES CON FINAL ===== */
+    | TOKEN_FINAL tipo TOKEN_IDENTIFIER TOKEN_ASSIGN expresion TOKEN_SEMICOLON
+    {
+        $$ = build_constante_single($2, $3, $5, @1.first_line, @1.first_column);
+    }
+    | TOKEN_FINAL tipo lista_declaraciones TOKEN_SEMICOLON
+    {
+        $$ = build_constante_multiple($2, $3, @1.first_line, @1.first_column);
     }
     ;
 

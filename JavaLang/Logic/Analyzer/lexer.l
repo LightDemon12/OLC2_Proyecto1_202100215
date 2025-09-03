@@ -70,6 +70,7 @@ COMMENT_BLOCK   "/*"([^*]|\*+[^*/])*\*+"/"
 "static"                    { DEBUG_TOKEN("TOKEN_STATIC"); return TOKEN_STATIC; }
 "void"                      { DEBUG_TOKEN("TOKEN_VOID"); return TOKEN_VOID; }
 "main"                      { DEBUG_TOKEN("TOKEN_MAIN"); return TOKEN_MAIN; }
+"final"                     { DEBUG_TOKEN("TOKEN_FINAL"); return TOKEN_FINAL; }
 "System.out.println"        { DEBUG_TOKEN("TOKEN_SOUT"); return TOKEN_SOUT; }
 "Integer.parseInt"          { DEBUG_TOKEN("TOKEN_PARSEINT"); return TOKEN_PARSEINT; }
 "Float.parseFloat"          { DEBUG_TOKEN("TOKEN_PARSEFLOAT"); return TOKEN_PARSEFLOAT; }

@@ -3,6 +3,7 @@
 #include "../../Headers/Procesador_Expresion.h"
 #include "../../Headers/mainview.h"
 #include "../../Headers/Procesador_casting.h"
+#include "../Headers/Procesador_Constantes.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -153,6 +154,8 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "DECLARACION_CON_INICIALIZACION") == 0) return NODE_TYPE_DECLARACION_CON_INICIALIZACION;
     if (strcmp(node_type, "DECLARACION_MULTIPLE") == 0) return NODE_TYPE_DECLARACION_MULTIPLE;
     if (strcmp(node_type, "DECLARACION_SIN_INICIALIZACION") == 0) return NODE_TYPE_DECLARACION_SIN_INICIALIZACION;
+    if (strcmp(node_type, "CONSTANTE_CON_INICIALIZACION") == 0) return NODE_TYPE_CONSTANTE_CON_INICIALIZACION;
+    if (strcmp(node_type, "CONSTANTE_MULTIPLE") == 0) return NODE_TYPE_CONSTANTE_MULTIPLE;
     if (strcmp(node_type, "CAST") == 0) return NODE_TYPE_CAST;
 
     //   SCOPES SEGÚN TU PARSER (nombres exactos del parser.y)
@@ -306,7 +309,12 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                    node->type,
                    context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
             return process_declaracion_node(context, node);
-
+        case NODE_TYPE_CONSTANTE_CON_INICIALIZACION:
+        case NODE_TYPE_CONSTANTE_MULTIPLE:
+            printf("🔒 PROCESANDO CONSTANTE: '%s' en scope '%s'\n",
+                   node->type,
+                   context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
+            return process_constante_node(context, node);
         // EXPRESIONES - Delegar al procesador (NO tienen hijos que procesar aquí)
         case NODE_TYPE_EXPRESION_BINARIA:
         case NODE_TYPE_EXPRESION_UNARIA:
