@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Procesador_Funciones.h"
 #include "Procesador_Sout.h"
 
 //   IMPLEMENTACIÓN COMPLETA DEL SISTEMA COMBINADO DE SCOPES
@@ -358,7 +359,9 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "ARRAY_ASIGNACION_1D") == 0) return NODE_TYPE_ARRAY_ASIGNACION_1D;
     if (strcmp(node_type, "ASIGNACION_COMPUESTA_ARRAY_1D") == 0) return NODE_TYPE_ASIGNACION_COMPUESTA_ARRAY_1D;
     if (strcmp(node_type, "ARRAY_ASIGNACION_ELEMENTO") == 0) return NODE_TYPE_ARRAY_ASIGNACION_ELEMENTO;
-
+    // Funciones
+    if (strcmp(node_type, "FUNCION") == 0) return NODE_TYPE_FUNCION;
+    if (strcmp(node_type, "LLAMADA_FUNCION") == 0) return NODE_TYPE_LLAMADA_FUNCION;
     return NODE_TYPE_UNKNOWN;
 }
 
@@ -453,22 +456,6 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
             printf("🔀 PROCESANDO SWITCH: '%s'\n", node->type);
             return procesar_switch(context, node);
 
-        case NODE_TYPE_FUNCION:
-            {
-                char scope_name[64];
-                snprintf(scope_name, sizeof(scope_name), "funcion_%d", node->line);
-                printf("🔧 DETECTADO FUNCION - entrando scope '%s'\n", scope_name);
-                entrar_scope_combinado(context, SCOPE_FUNCION, scope_name, node->line);
-
-                for (int i = 0; i < node->child_count; i++) {
-                    process_ast_node(context, node->children[i]);
-                }
-
-                salir_scope_combinado(context, node->line);
-                printf("🔧 SALIENDO FUNCION '%s'\n", scope_name);
-                return 0;
-            }
-
         // DECLARACIONES - Generan símbolos (NO tienen hijos que procesar)
         case NODE_TYPE_DECLARACION_CON_INICIALIZACION:
         case NODE_TYPE_DECLARACION_MULTIPLE:
@@ -532,7 +519,18 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                 free(resultado_cast);
             }
             return 0;
+        case NODE_TYPE_FUNCION:
+            printf("🔧 PROCESANDO FUNCIÓN: '%s'\n", node->type);
+            return procesar_declaracion_funcion(context, node);
 
+        case NODE_TYPE_LLAMADA_FUNCION:
+            printf("📞 PROCESANDO LLAMADA A FUNCIÓN: '%s'\n", node->type);
+            char* resultado_llamada = procesar_llamada_funcion(context, node); // Renombrar la variable
+            if (resultado_llamada) {
+                printf("   → Resultado de la llamada: %s\n", resultado_llamada);
+                free(resultado_llamada);
+            }
+            return 0;
         case NODE_TYPE_SOUT:
             printf("🖨️  PROCESANDO SOUT: '%s'\n", node->type);
             char* resultado_sout = process_sout_node(context, node);

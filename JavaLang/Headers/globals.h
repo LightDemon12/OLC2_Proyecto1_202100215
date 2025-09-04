@@ -12,4 +12,6 @@
 extern ErrorManager* global_error_manager;
 extern ASTNode* ast_root;
 
+
+
 #endif // GLOBALS_H

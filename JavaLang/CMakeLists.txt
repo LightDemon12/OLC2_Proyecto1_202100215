@@ -163,6 +163,9 @@ set(SOURCES
         Headers/Procesador_Vectores.h
         Headers/Procesador_Multidimensional.h
         Logic/Interprete/Procesadores/Procesador_Multidimensional.c
+        Headers/Procesador_Funciones.h
+        Logic/Interprete/Procesadores/Procesador_Funciones.c
+        Headers/FuncionInfo.h
 )
 
 # Crear ejecutable
