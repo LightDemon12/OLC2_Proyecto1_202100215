@@ -10,14 +10,14 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
-#include "FuncionInfo.h"
-#define HASH_TABLE_SIZE 101
+#include "globals.h"
+
+// Constantes necesarias
 #define MAX_ID_LENGTH 64
 #define MAX_SCOPE_LENGTH 64
 #define MAX_VALUE_LENGTH 64
 #define MAX_TEMP_LENGTH 32
 #define MAX_LABEL_LENGTH 32
-struct FuncionInfo;
 
 
 typedef enum {
@@ -34,7 +34,7 @@ typedef enum {
 typedef enum {
     TIPO_INT, TIPO_FLOAT, TIPO_DOUBLE, TIPO_CHAR, TIPO_STRING, TIPO_BOOLEAN, TIPO_VOID,
     TIPO_ARRAY_INT, TIPO_ARRAY_FLOAT, TIPO_ARRAY_DOUBLE, TIPO_ARRAY_CHAR, TIPO_ARRAY_STRING, TIPO_ARRAY_BOOLEAN,
-    TIPO_DESCONOCIDO, TIPO_NULL, TIPO_LONG, TIPO_SHORT, TIPO_BYTE,
+    TIPO_DESCONOCIDO, TIPO_NULL, TIPO_LONG, TIPO_SHORT, TIPO_BYTE
 } TipoDato;
 
 typedef enum {
@@ -95,9 +95,6 @@ typedef struct {
     char*** valores_char_3d;      // Para arrays 3D (char[][][])
     int** valores_bool_2d;        // Para arrays 2D (boolean[][])
     int*** valores_bool_3d;       // Para arrays 3D (boolean[][][])
-
-    FuncionInfo* funcion_info;    // Información de la función (declaración adelantada)
-
 } Simbolo;
 
 typedef struct NodoSimbolo {
@@ -105,6 +102,7 @@ typedef struct NodoSimbolo {
     struct NodoSimbolo* siguiente;
 } NodoSimbolo;
 
+// Tabla de símbolos
 typedef struct {
     NodoSimbolo* tabla[HASH_TABLE_SIZE];
     int num_simbolos;

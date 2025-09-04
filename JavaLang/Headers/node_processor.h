@@ -185,5 +185,9 @@ void reset_compilation_state(NodeProcessorContext* context);
 void reset_scope_counters(NodeProcessorContext* context);
 
 void limpiar_variables_locales_scope_actual(NodeProcessorContext* context);
+int es_codigo_control_flujo(int codigo);
 
+// Declaración de obtener_nombre_control
+const char* obtener_nombre_control(int codigo);
+int procesar_instrucciones_con_control(NodeProcessorContext* context, ASTNode* instrucciones_node, const char* contexto);
 #endif // NODE_PROCESSOR_H

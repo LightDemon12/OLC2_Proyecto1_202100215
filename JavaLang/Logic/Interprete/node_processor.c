@@ -223,10 +223,13 @@ void salir_scope_combinado(NodeProcessorContext* context, int linea) {
         procesador_debug_output(context, debug_msg);
     }
 
-    //   USAR SISTEMA EXISTENTE DE TABLA_SIMBOLOS (PARTE A)
+    // Limpiar variables locales del scope actual
+    limpiar_variables_locales_ambito_actual(context->tabla_simbolos);
+
+    // Salir del ámbito en la tabla de símbolos
     salir_ambito(context->tabla_simbolos);
 
-    //   ACTUALIZAR STACK DE SCOPES (PARTE B)
+    // Actualizar el stack de scopes
     context->scope_actual = scope_saliente->parent;
     liberar_scope_node(scope_saliente);
 }

@@ -12,6 +12,6 @@
 extern ErrorManager* global_error_manager;
 extern ASTNode* ast_root;
 
-
+#define HASH_TABLE_SIZE 128
 
 #endif // GLOBALS_H
