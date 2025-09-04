@@ -151,6 +151,16 @@ set(SOURCES
         Headers/Procesador_Return.h
         Logic/Interprete/Procesadores/Procesador_Switch.c
         Headers/Procesador_Switch.h
+        Logic/Interprete/Procesadores/Procesador_Incremento.c
+        Headers/Procesador_Incremento.h
+        Headers/Procesador_While.h
+        Logic/Interprete/Procesadores/Procesador_While.c
+        Logic/Interprete/Procesadores/Procesador_Do_While.c
+        Headers/Procesador_Do_While.h
+        Logic/Interprete/Procesadores/Procesador_For.c
+        Headers/Procesador_For.h
+        Logic/Interprete/Procesadores/Procesador_Vectores.c
+        Headers/Procesador_Vectores.h
 )
 
 # Crear ejecutable

@@ -184,25 +184,55 @@ Simbolo* buscar_simbolo(TablaSimbolos* tabla, const char* id) {
     unsigned int indice = hash_simbolo(id);
     NodoSimbolo* actual = tabla->tabla[indice];
 
+    // PRIMERA PASADA: Buscar en el ámbito actual
     while (actual) {
         if (strcmp(actual->simbolo.id, id) == 0) {
-            // ===== VALIDACIÓN DE SCOPE AGREGADA =====
             if (es_simbolo_accesible_desde_ambito_actual(tabla, &actual->simbolo)) {
                 printf("DEBUG TABLA_SIMBOLOS: ✅ Símbolo '%s' encontrado y accesible desde '%s'\n",
                        id, tabla->ambito_actual);
                 actual->simbolo.num_usos++;
                 actual->simbolo.timestamp_ultimo_uso = time(NULL);
                 return &actual->simbolo;
-            } else {
-                printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' existe pero NO es accesible desde '%s'\n",
-                       id, tabla->ambito_actual);
-                // Continuar buscando otras declaraciones del mismo nombre
             }
         }
         actual = actual->siguiente;
     }
 
-    printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' NO encontrado o no accesible\n", id);
+    // SEGUNDA PASADA: Buscar específicamente en 'main_1' (accesible globalmente)
+    if (strcmp(tabla->ambito_actual, "main_1") != 0) {
+        printf("DEBUG TABLA_SIMBOLOS: No encontrado en ámbito actual, buscando en 'main_1'\n");
+
+        actual = tabla->tabla[indice];
+        while (actual) {
+            if (strcmp(actual->simbolo.id, id) == 0 &&
+                strcmp(actual->simbolo.ambito, "main_1") == 0) {
+                printf("DEBUG TABLA_SIMBOLOS: ✅ Símbolo '%s' encontrado en 'main_1' (accesible globalmente)\n", id);
+                actual->simbolo.num_usos++;
+                actual->simbolo.timestamp_ultimo_uso = time(NULL);
+                return &actual->simbolo;
+            }
+            actual = actual->siguiente;
+        }
+    }
+
+    // TERCERA PASADA: Buscar en 'global' (comportamiento original)
+    if (strcmp(tabla->ambito_actual, "global") != 0) {
+        printf("DEBUG TABLA_SIMBOLOS: No encontrado en 'main_1', buscando en 'global'\n");
+
+        actual = tabla->tabla[indice];
+        while (actual) {
+            if (strcmp(actual->simbolo.id, id) == 0 &&
+                strcmp(actual->simbolo.ambito, "global") == 0) {
+                printf("DEBUG TABLA_SIMBOLOS: ✅ Símbolo '%s' encontrado en 'global'\n", id);
+                actual->simbolo.num_usos++;
+                actual->simbolo.timestamp_ultimo_uso = time(NULL);
+                return &actual->simbolo;
+            }
+            actual = actual->siguiente;
+        }
+    }
+
+    printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' NO encontrado en ningún ámbito accesible\n", id);
     return NULL;
 }
 
@@ -451,14 +481,15 @@ void liberar_tabla_simbolos(TablaSimbolos* tabla) {
 
 const char* tipo_simbolo_to_string(TipoSimbolo tipo) {
     switch (tipo) {
-        case SIMBOLO_VARIABLE: return "VARIABLE";
-        case SIMBOLO_FUNCION: return "FUNCION";
-        case SIMBOLO_PARAMETRO: return "PARAMETRO";
-        case SIMBOLO_ARRAY: return "ARRAY";
-        case SIMBOLO_TEMPORAL: return "TEMPORAL";
-        case SIMBOLO_ETIQUETA: return "ETIQUETA";
-        case SIMBOLO_CONSTANTE: return "CONSTANTE";
-        default: return "DESCONOCIDO";
+        case SIMBOLO_VARIABLE:   return "VARIABLE";
+        case SIMBOLO_CONSTANTE:  return "CONSTANTE";
+        case SIMBOLO_FUNCION:    return "FUNCION";
+        case SIMBOLO_PARAMETRO:  return "PARAMETRO";
+        case SIMBOLO_ARRAY:      return "ARRAY";
+        case SIMBOLO_VECTOR:     return "VECTOR";    // <-- ESTE ES EL QUE FALTABA
+        case SIMBOLO_TEMPORAL:   return "TEMPORAL";
+        case SIMBOLO_ETIQUETA:   return "ETIQUETA";
+        default:                 return "DESCONOCIDO";
     }
 }
 
@@ -551,20 +582,66 @@ int calcular_tamaño_tipo(TipoDato tipo, int dimensiones, int* tamaños_dimensio
 }
 
 Simbolo crear_simbolo_default(const char* id, TipoSimbolo tipo_simbolo, TipoDato tipo_dato) {
-    Simbolo simbolo = {0};  // Inicializar toda la estructura a 0
+    Simbolo simbolo;
+    memset(&simbolo, 0, sizeof(Simbolo)); // Inicializa toda la estructura a cero
 
+    // Identificador y tipos
     strncpy(simbolo.id, id, MAX_ID_LENGTH - 1);
+    simbolo.id[MAX_ID_LENGTH - 1] = '\0';
     simbolo.tipo_simbolo = tipo_simbolo;
     simbolo.tipo_dato = tipo_dato;
+
+    // Ámbito y posición
+    simbolo.ambito[0] = '\0';
+    simbolo.nivel_ambito = 0;
+    simbolo.linea = 0;
+    simbolo.columna = 0;
+    simbolo.direccion = 0;
+
+    // Inicialización y valor
+    simbolo.tamano = 0;
     simbolo.inicializado = 0;
+    simbolo.valor[0] = '\0';
     simbolo.num_usos = 0;
+
+    // Visibilidad y parámetros
+    simbolo.visibilidad = VIS_DEFAULT;
     simbolo.es_parametro = 0;
     simbolo.posicion_parametro = -1;
-    simbolo.visibilidad = VIS_DEFAULT;
-    simbolo.es_array = 0;
-    simbolo.dimensiones = 0;
+
+    // Array/vector info
+    simbolo.es_array = (tipo_simbolo == SIMBOLO_VECTOR) ? 1 : 0;
+    simbolo.dimensiones = (tipo_simbolo == SIMBOLO_VECTOR) ? 1 : 0;
+    for (int i = 0; i < 4; i++) simbolo.tamaños_dimensiones[i] = 0;
+
+    // Constante/global
     simbolo.es_constante = 0;
     simbolo.es_global = 0;
+
+    // Temporales y etiquetas
+    simbolo.temporal[0] = '\0';
+    simbolo.etiqueta[0] = '\0';
+
+    // Punteros a datos
+    simbolo.valores_int = NULL;
+    simbolo.valores_long = NULL;
+    simbolo.valores_double = NULL;
+    simbolo.valores_float = NULL;
+    simbolo.valores_char = NULL;
+    simbolo.valores_str = NULL;
+    simbolo.valores_bool = NULL;
+    simbolo.valores_short = NULL;
+    simbolo.valores_byte = NULL;
+
+    // Arrays multidimensionales (no usados para vectores 1D)
+    simbolo.valores_int_2d = NULL;
+    simbolo.valores_int_3d = NULL;
+    simbolo.valores_str_2d = NULL;
+    simbolo.valores_int_nd = NULL;
+
+    // Timestamps
+    simbolo.timestamp_creacion = 0;
+    simbolo.timestamp_ultimo_uso = 0;
 
     return simbolo;
 }
@@ -577,3 +654,49 @@ int validar_simbolo(Simbolo* simbolo) {
     return 1;
 }
 
+void limpiar_variables_locales_ambito_actual(TablaSimbolos* tabla) {
+    if (!tabla) return;
+
+    printf("🧹 LIMPIANDO variables locales del ámbito: '%s'\n", tabla->ambito_actual);
+
+    // ===== ITERAR POR TODA LA TABLA HASH =====
+    int variables_eliminadas = 0;
+
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        NodoSimbolo* actual = tabla->tabla[i];
+        NodoSimbolo* anterior = NULL;
+
+        while (actual != NULL) {
+            // ===== VERIFICAR SI ES VARIABLE DEL ÁMBITO ACTUAL =====
+            if (strcmp(actual->simbolo.ambito, tabla->ambito_actual) == 0 &&
+                actual->simbolo.tipo_simbolo == SIMBOLO_VARIABLE) {
+
+                printf("   → Eliminando variable local: '%s' (tipo: %s)\n",
+                       actual->simbolo.id, tipo_dato_to_string(actual->simbolo.tipo_dato));
+
+                // ===== ELIMINAR NODO DE LA LISTA =====
+                if (anterior == NULL) {
+                    // Es el primer nodo de la lista
+                    tabla->tabla[i] = actual->siguiente;
+                } else {
+                    // Conectar anterior con siguiente
+                    anterior->siguiente = actual->siguiente;
+                }
+
+                NodoSimbolo* a_eliminar = actual;
+                actual = actual->siguiente;
+                free(a_eliminar);
+                variables_eliminadas++;
+                tabla->num_simbolos--;
+
+                } else {
+                    // No eliminar, continuar
+                    anterior = actual;
+                    actual = actual->siguiente;
+                }
+        }
+    }
+
+    printf("🧹 Limpieza completada: %d variables eliminadas del ámbito '%s'\n",
+           variables_eliminadas, tabla->ambito_actual);
+}

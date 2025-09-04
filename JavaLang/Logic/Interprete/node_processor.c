@@ -11,12 +11,118 @@
 #include "../../Headers/Procesador_Continue.h"
 #include "../../Headers/Procesador_Switch.h"
 #include "../../Headers/Procesador_Return.h"
+#include "../../Headers/Procesador_While.h"
+#include "../../Headers/Procesador_Do_While.h"
+#include "../../Headers/Procesador_For.h"
+#include "../../Headers/Procesador_Vectores.h"
+#include "../../Headers/Procesador_Vectores.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "Procesador_Sout.h"
 
 //   IMPLEMENTACIÓN COMPLETA DEL SISTEMA COMBINADO DE SCOPES
+
+int es_codigo_control_flujo(int codigo) {
+    return (codigo == -1 || codigo == -2 || codigo == -3); // break, continue, return
+}
+
+// Obtener nombre del código de control
+const char* obtener_nombre_control(int codigo) {
+    switch (codigo) {
+        case -1: return "BREAK";
+        case -2: return "CONTINUE";
+        case -3: return "RETURN";
+        default: return "UNKNOWN";
+    }
+}
+
+// Procesar lista de instrucciones con control de flujo
+int procesar_instrucciones_con_control(NodeProcessorContext* context, ASTNode* instrucciones_node, const char* contexto) {
+    if (!instrucciones_node || strcmp(instrucciones_node->type, "INSTRUCCIONES") != 0) {
+        return 0;
+    }
+
+    printf("🔍 PROCESANDO INSTRUCCIONES en contexto '%s' - %d instrucciones\n",
+           contexto, instrucciones_node->child_count);
+
+    for (int i = 0; i < instrucciones_node->child_count; i++) {
+        ASTNode* instruccion = instrucciones_node->children[i];
+        if (!instruccion) continue;
+
+        printf("   → Ejecutando instrucción %d/%d: '%s'\n",
+               i+1, instrucciones_node->child_count, instruccion->type);
+
+        int resultado = process_ast_node(context, instruccion);
+
+        // ===== VERIFICAR CÓDIGOS DE CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 %s detectado en INSTRUCCIONES (%s) - propagando hacia arriba\n",
+                   obtener_nombre_control(resultado), contexto);
+            printf("   → Saltando instrucciones restantes (%d-%d de %d)\n",
+                   i+2, instrucciones_node->child_count, instrucciones_node->child_count);
+            return resultado;
+        }
+
+        // Si hay error normal, continuar procesando pero marcarlo
+        if (resultado != 0) {
+            printf("⚠️ WARNING: Instrucción '%s' retornó código %d\n",
+                   instruccion->type, resultado);
+        }
+    }
+
+    return 0; // Todas las instrucciones procesadas sin control de flujo
+}
+
+// Procesar bloque con scope (genérico para IF, FOR, WHILE, etc.)
+int procesar_bloque_con_scope(NodeProcessorContext* context, ASTNode* bloque_node,
+                              ScopeType tipo_scope, const char* nombre_scope,
+                              const char* contexto) {
+    if (!bloque_node) return 0;
+
+    printf("🔍 ENTRANDO BLOQUE %s: %s\n", contexto, nombre_scope);
+    entrar_scope_combinado(context, tipo_scope, nombre_scope, bloque_node->line);
+
+    int resultado = 0;
+
+    // Buscar INSTRUCCIONES dentro del bloque
+    if (strcmp(bloque_node->type, "SCOPE") == 0) {
+        // Es un SCOPE con INSTRUCCIONES dentro
+        for (int i = 0; i < bloque_node->child_count; i++) {
+            ASTNode* hijo = bloque_node->children[i];
+            if (hijo && strcmp(hijo->type, "INSTRUCCIONES") == 0) {
+                resultado = procesar_instrucciones_con_control(context, hijo, contexto);
+                if (es_codigo_control_flujo(resultado)) {
+                    break;
+                }
+            } else {
+                int resultado_hijo = process_ast_node(context, hijo);
+                if (es_codigo_control_flujo(resultado_hijo)) {
+                    resultado = resultado_hijo;
+                    break;
+                }
+            }
+        }
+    } else if (strcmp(bloque_node->type, "INSTRUCCIONES") == 0) {
+        // Es directamente INSTRUCCIONES
+        resultado = procesar_instrucciones_con_control(context, bloque_node, contexto);
+    } else {
+        // Procesar directamente
+        resultado = process_ast_node(context, bloque_node);
+    }
+
+    printf("🔍 SALIENDO BLOQUE %s: %s\n", contexto, nombre_scope);
+    salir_scope_combinado(context, bloque_node->line);
+
+    // Propagar control de flujo
+    if (es_codigo_control_flujo(resultado)) {
+        printf("🔄 BLOQUE %s propagando %s: %d\n",
+               contexto, obtener_nombre_control(resultado), resultado);
+    }
+
+    return resultado;
+}
 
 // Crear un nuevo nodo de scope
 ScopeNode* crear_scope_node(ScopeType tipo, const char* nombre, int linea) {
@@ -138,30 +244,46 @@ Simbolo* buscar_simbolo_en_scopes_combinado(NodeProcessorContext* context, const
     return buscar_simbolo(context->tabla_simbolos, id);
 }
 
-// Insertar símbolo en scope actual
 int insertar_simbolo_en_scope_combinado(NodeProcessorContext* context, Simbolo simbolo) {
     if (!context) return 0;
 
-    //   VERIFICAR DUPLICADOS EN ÁMBITO ACTUAL
+    // CORRECCIÓN CRÍTICA: Determinar el scope correcto para la inserción
+    const char* scope_destino = "global";  // Por defecto global
+
+    // Si hay scope actual, usarlo, pero con correcciones
+    if (context->scope_actual && context->scope_actual->nombre) {
+        scope_destino = context->scope_actual->nombre;
+
+        // CORRECCIÓN: Si estamos en el contexto "global" pero el scope dice otra cosa,
+        // forzar que las declaraciones del main vayan al scope global real
+        if (strcmp(scope_destino, "GLOBAL") == 0 ||
+            (context->scope_actual->nivel == -1)) {
+            scope_destino = "global";
+            }
+    }
+
+    // ASEGURAR que el símbolo tenga el scope correcto en su estructura
+    strncpy(simbolo.ambito, scope_destino, MAX_SCOPE_LENGTH - 1);
+    simbolo.ambito[MAX_SCOPE_LENGTH - 1] = '\0';
+
+    // VERIFICAR DUPLICADOS EN ÁMBITO CORRECTO
     if (existe_simbolo_en_ambito_actual(context->tabla_simbolos, simbolo.id)) {
         char error_msg[256];
         snprintf(error_msg, sizeof(error_msg),
                 "Variable '%s' ya existe en scope '%s'",
-                simbolo.id,
-                context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
+                simbolo.id, scope_destino);
         procesador_error_output(context, error_msg);
         return 0;
     }
 
-    //   USAR TU FUNCIÓN EXISTENTE PARA INSERTAR
+    // INSERTAR con el scope ya corregido
     int resultado = insertar_simbolo(context->tabla_simbolos, simbolo);
 
     if (resultado && context->modo_debug) {
         char debug_msg[256];
         snprintf(debug_msg, sizeof(debug_msg),
                 "Variable '%s' declarada en scope '%s' (nivel %d)",
-                simbolo.id,
-                context->scope_actual ? context->scope_actual->nombre : "GLOBAL",
+                simbolo.id, scope_destino,
                 context->scope_actual ? context->scope_actual->nivel : 0);
         procesador_debug_output(context, debug_msg);
     }
@@ -199,6 +321,14 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "ASIGNACION_COMPUESTA") == 0) return NODE_TYPE_ASIGNACION_COMPUESTA;
     if (strcmp(node_type, "CONSTANTE_MULTIPLE") == 0) return NODE_TYPE_CONSTANTE_MULTIPLE;
     if (strcmp(node_type, "CAST") == 0) return NODE_TYPE_CAST;
+    if (strcmp(node_type, "INICIALIZACION_FOR_DECLARACION") == 0) return NODE_TYPE_DECLARACION_CON_INICIALIZACION;
+    // VECTORES Y ARRAYS
+    if (strcmp(node_type, "VECTOR_NEW") == 0) return NODE_TYPE_VECTOR_NEW;
+    if (strcmp(node_type, "VECTOR_INICIALIZADO") == 0) return NODE_TYPE_VECTOR_INICIALIZADO;
+    if (strcmp(node_type, "ARRAY_MULTIDIMENSIONAL_NEW") == 0) return NODE_TYPE_ARRAY_MULTIDIMENSIONAL_NEW;
+    if (strcmp(node_type, "ARRAY_MULTIDIMENSIONAL_INICIALIZADO") == 0) return NODE_TYPE_ARRAY_MULTIDIMENSIONAL_INICIALIZADO;
+    if (strcmp(node_type, "ARRAY_ACCESO_MULTIDIMENSIONAL") == 0) return NODE_TYPE_ARRAY_ACCESO_MULTIDIMENSIONAL;
+    if (strcmp(node_type, "ARRAY_ASIGNACION_1D") == 0) return NODE_TYPE_ARRAY_ASIGNACION_1D;
     // ===== INSTRUCCIONES DE SALIDA =====
     if (strcmp(node_type, "SOUT") == 0) return NODE_TYPE_SOUT;
     //   SCOPES SEGÚN TU PARSER (nombres exactos del parser.y)
@@ -211,6 +341,7 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "WHILE") == 0) return NODE_TYPE_WHILE;
     if (strcmp(node_type, "DO_WHILE") == 0) return NODE_TYPE_DO_WHILE;
     if (strcmp(node_type, "FOR") == 0) return NODE_TYPE_FOR;
+    if (strcmp(node_type, "FOR_EACH") == 0) return NODE_TYPE_FOR;
     if (strcmp(node_type, "SWITCH") == 0) return NODE_TYPE_SWITCH;
     if (strcmp(node_type, "FUNCION") == 0) return NODE_TYPE_FUNCION;
     if (strcmp(node_type, "BREAK") == 0) return NODE_TYPE_BREAK;
@@ -224,7 +355,8 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "EXPRESION_PARENTESIS") == 0) return NODE_TYPE_EXPRESION_PARENTESIS;
     if (strcmp(node_type, "DATO") == 0) return NODE_TYPE_DATO;
     if (strcmp(node_type, "IDENTIFIER") == 0) return NODE_TYPE_IDENTIFIER;
-
+    if (strcmp(node_type, "ARRAY_ASIGNACION_1D") == 0) return NODE_TYPE_ARRAY_ASIGNACION_1D;
+    if (strcmp(node_type, "ASIGNACION_COMPUESTA_ARRAY_1D") == 0) return NODE_TYPE_ASIGNACION_COMPUESTA_ARRAY_1D;
     return NODE_TYPE_UNKNOWN;
 }
 
@@ -276,46 +408,45 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
             return process_if_node(context, node);
 
         case NODE_TYPE_WHILE:
-            {
-                char scope_name[64];
-                snprintf(scope_name, sizeof(scope_name), "while_%d", node->line);
-                printf("🔄 DETECTADO WHILE - entrando scope '%s'\n", scope_name);
-                entrar_scope_combinado(context, SCOPE_WHILE, scope_name, node->line);
-
-                for (int i = 0; i < node->child_count; i++) {
-                    process_ast_node(context, node->children[i]);
-                }
-
-                salir_scope_combinado(context, node->line);
-                printf("🔄 SALIENDO WHILE '%s'\n", scope_name);
-                return 0;
+            printf("🔄 PROCESANDO WHILE: '%s'\n", node->type);
+            // ===== USAR EL PROCESADOR DE WHILE ESPECIALIZADO =====
+            char* resultado_while = process_while_node(context, node);
+            if (resultado_while && context->modo_debug) {
+                printf("   → Resultado WHILE: '%s' iteraciones\n", resultado_while);
+                free(resultado_while);
             }
+            return 0;
+        case NODE_TYPE_DO_WHILE:
+            printf("🔄 PROCESANDO DO_WHILE: '%s'\n", node->type);
+            // ===== USAR EL PROCESADOR DE DO_WHILE ESPECIALIZADO =====
+            char* resultado_do_while = process_do_while_node(context, node);
+            if (resultado_do_while && context->modo_debug) {
+                printf("   → Resultado DO_WHILE: '%s' iteraciones\n", resultado_do_while);
+                free(resultado_do_while);
+            }
+            return 0;
         case NODE_TYPE_BREAK:
             printf("🛑 PROCESANDO BREAK: '%s'\n", node->type);
             return procesar_break(context, node);
         case NODE_TYPE_CONTINUE:
             printf("🔄 PROCESANDO CONTINUE: '%s'\n", node->type);
+            // ===== RETORNAR EL CÓDIGO DE CONTINUE DIRECTAMENTE =====
             return procesar_continue(context, node);
         case NODE_TYPE_RETURN_CON_VALOR:
         case NODE_TYPE_RETURN_VACIO:
             printf("↩️ PROCESANDO RETURN: '%s'\n", node->type);
             return procesar_return(context, node);
         case NODE_TYPE_FOR:
-            {
-                char scope_name[64];
-                snprintf(scope_name, sizeof(scope_name), "for_%d", node->line);
-                printf("🔁 DETECTADO FOR - entrando scope '%s'\n", scope_name);
-                entrar_scope_combinado(context, SCOPE_FOR, scope_name, node->line);
-
-                for (int i = 0; i < node->child_count; i++) {
-                    process_ast_node(context, node->children[i]);
-                }
-
-                salir_scope_combinado(context, node->line);
-                printf("🔁 SALIENDO FOR '%s'\n", scope_name);
-                return 0;
+            printf("🔁 PROCESANDO FOR: '%s'\n", node->type);
+            char* resultado_for = process_for_node(context, node);
+            if (resultado_for && context->modo_debug) {
+                printf("   → Resultado FOR: '%s' iteraciones\n", resultado_for);
+                free(resultado_for);
             }
-
+            return 0;
+        case NODE_TYPE_ASIGNACION_COMPUESTA_ARRAY_1D:
+            printf("📝 PROCESANDO ASIGNACIÓN COMPUESTA ARRAY: '%s'\n", node->type);
+            return procesar_asignacion_compuesta_array(context, node);
         case NODE_TYPE_SWITCH:
             printf("🔀 PROCESANDO SWITCH: '%s'\n", node->type);
             return procesar_switch(context, node);
@@ -370,6 +501,18 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                 free(resultado);
             }
             return 0;
+        case NODE_TYPE_VECTOR_NEW:
+        case NODE_TYPE_VECTOR_INICIALIZADO:
+            printf("🧮 PROCESANDO VECTOR/ARRAY: '%s'\n", node->type);
+            return process_vector_node(context, node);
+        case NODE_TYPE_ARRAY_ACCESO_MULTIDIMENSIONAL:
+            printf("🔍 PROCESANDO ACCESO A VECTOR: '%s'\n", node->type);
+            return procesar_acceso_vector(context, node);
+        case NODE_TYPE_ARRAY_ASIGNACION_1D:
+            printf("📝 PROCESANDO ARRAY_ASIGNACION_1D: '%s' en scope '%s'\n",
+                   node->type,
+                   context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
+            return process_declaracion_node(context, node);
         case NODE_TYPE_CAST:
             printf("🎭 PROCESANDO CASTING: '%s'\n", node->type);
             char* resultado_cast = process_cast_node(context, node);
@@ -393,6 +536,11 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
             printf("❓ NODO ESTRUCTURAL: '%s' - procesando %d hijos\n",
                    node->type, node->child_count);
 
+            // ===== VERIFICAR SI ES INSTRUCCIONES =====
+            if (strcmp(node->type, "INSTRUCCIONES") == 0) {
+                return procesar_instrucciones_con_control(context, node, "ESTRUCTURAL");
+            }
+
             //   IMPORTANTE: Verificar que no sea un BLOQUE_MAIN mal detectado
             if (strcmp(node->type, "BLOQUE_MAIN") == 0) {
                 printf("⚠️  ADVERTENCIA: BLOQUE_MAIN detectado como UNKNOWN - corrigiendo\n");
@@ -405,12 +553,70 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
                 return 0;
             }
 
-            // Procesar hijos para nodos estructurales (PROGRAM, INSTRUCCIONES, etc.)
+            // Procesar hijos para nodos estructurales (PROGRAM, SCOPE, etc.)
             for (int i = 0; i < node->child_count; i++) {
                 printf("   → Procesando hijo %d/%d de '%s': '%s'\n",
                        i+1, node->child_count, node->type,
                        node->children[i] ? node->children[i]->type : "NULL");
-                process_ast_node(context, node->children[i]);
+
+                int resultado = process_ast_node(context, node->children[i]);
+
+                // ===== PROPAGAR CONTROL DE FLUJO =====
+                if (es_codigo_control_flujo(resultado)) {
+                    printf("🔄 Nodo estructural '%s' propagando %s: %d\n",
+                           node->type, obtener_nombre_control(resultado), resultado);
+                    return resultado;
+                }
+            }
+            return 0;
+
+            // ===== VERIFICAR SI ES INSTRUCCIONES DENTRO DE ESTRUCTURAS DE CONTROL =====
+            if (strcmp(node->type, "INSTRUCCIONES") == 0) {
+                printf("🔍 PROCESANDO INSTRUCCIONES - verificando control de flujo\n");
+
+                // Procesar cada instrucción y verificar códigos de control
+                for (int i = 0; i < node->child_count; i++) {
+                    printf("   → Procesando instrucción %d/%d de '%s': '%s'\n",
+                           i+1, node->child_count, node->type,
+                           node->children[i] ? node->children[i]->type : "NULL");
+
+                    int resultado = process_ast_node(context, node->children[i]);
+
+                    // ===== VERIFICAR CÓDIGOS DE CONTROL DE FLUJO =====
+                    if (resultado == -1) { // break
+                        printf("🛑 BREAK detectado en INSTRUCCIONES - propagando hacia arriba\n");
+                        return -1;
+                    }
+                    if (resultado == -2) { // continue
+                        printf("🔄 CONTINUE detectado en INSTRUCCIONES - propagando hacia arriba\n");
+                        printf("   → Saltando instrucciones restantes (%d-%d de %d)\n",
+                               i+1, node->child_count, node->child_count);
+                        return -2;
+                    }
+
+                    // Si hay error normal, continuar procesando pero marcarlo
+                    if (resultado != 0) {
+                        printf("⚠️ WARNING: Instrucción '%s' retornó código %d\n",
+                               node->children[i] ? node->children[i]->type : "NULL", resultado);
+                    }
+                }
+                return 0; // Todas las instrucciones procesadas sin control de flujo
+            }
+
+            // Procesar hijos para nodos estructurales (PROGRAM, SCOPE, etc.)
+            for (int i = 0; i < node->child_count; i++) {
+                printf("   → Procesando hijo %d/%d de '%s': '%s'\n",
+                       i+1, node->child_count, node->type,
+                       node->children[i] ? node->children[i]->type : "NULL");
+
+                int resultado = process_ast_node(context, node->children[i]);
+
+                // ===== PARA NODOS ESTRUCTURALES, PROPAGAR CONTROL DE FLUJO =====
+                if (resultado == -1 || resultado == -2) {
+                    printf("🔄 Nodo estructural '%s' propagando código de control: %d\n",
+                           node->type, resultado);
+                    return resultado;
+                }
             }
             return 0;
     }
@@ -437,4 +643,11 @@ void procesador_error_output(NodeProcessorContext* context, const char* message)
         snprintf(gui_message, sizeof(gui_message), "[ERROR] %s", message);
         mainview_append_output(context->mainview, gui_message);
     }
+}
+
+void limpiar_variables_locales_scope_actual(NodeProcessorContext* context) {
+    if (!context || !context->tabla_simbolos) return;
+
+    printf("🧹 NODE_PROCESSOR: Limpiando variables locales del scope actual\n");
+    limpiar_variables_locales_ambito_actual(context->tabla_simbolos);
 }

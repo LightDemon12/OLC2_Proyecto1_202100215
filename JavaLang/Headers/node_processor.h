@@ -183,4 +183,7 @@ void procesador_debug_output(NodeProcessorContext* context, const char* message)
 void procesador_error_output(NodeProcessorContext* context, const char* message);
 void reset_compilation_state(NodeProcessorContext* context);
 void reset_scope_counters(NodeProcessorContext* context);
+
+void limpiar_variables_locales_scope_actual(NodeProcessorContext* context);
+
 #endif // NODE_PROCESSOR_H

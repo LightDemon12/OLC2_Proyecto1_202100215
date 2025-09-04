@@ -22,7 +22,9 @@ char* extract_dato_value(ASTNode* node);
 // Estas funciones están implementadas en Procesador_Suma.c
 extern TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context);
 extern char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context);
+unsigned int hash_simbolo(const char* id);
 
+int verificar_simbolo_existe_en_scope_especifico(TablaSimbolos* tabla, const char* nombre, const char* scope_nombre);
 
 
 #endif // PROCESADOR_DECLARACIONES_H

@@ -38,5 +38,7 @@ int es_expresion_valida_para_sout(ASTNode* expresion);
 
 // ===== LIBERACIÓN DE MEMORIA =====
 void liberar_resultado_sout(ResultadoSout* resultado);
-
+// ===== FUNCIONES DE PROCESAMIENTO DE STRINGS =====
+char* procesar_string_con_escapes(const char* valor);
+char* procesar_char_con_escapes(const char* valor);
 #endif // PROCESADOR_SOUT_H

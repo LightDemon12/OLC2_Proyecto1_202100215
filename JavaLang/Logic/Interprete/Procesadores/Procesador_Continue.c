@@ -76,13 +76,6 @@ int procesar_continue(NodeProcessorContext* context, ASTNode* node) {
            scope_objetivo->nombre);
 
     // ===== MARCAR ESTADO DE CONTINUE PARA CONTROL DE FLUJO =====
-    // En Java, continue:
-    // 1. Termina inmediatamente la iteración actual del bucle más cercano
-    // 2. Salta directamente a la evaluación de la condición (while/do-while)
-    //    o al incremento (for)
-    // 3. NO ejecuta el resto del código en la iteración actual
-    // 4. Continúa con la siguiente iteración si la condición es verdadera
-
     switch (scope_objetivo->tipo) {
         case SCOPE_WHILE:
             printf("   → Saltando a evaluación de condición del WHILE\n");
@@ -108,13 +101,12 @@ int procesar_continue(NodeProcessorContext* context, ASTNode* node) {
         mainview_append_console(context->mainview, continue_msg);
     }
 
-    // TODO: Cuando implementemos el intérprete completo, aquí:
-    // - Para WHILE: saltar a evaluación de condición
-    // - Para FOR: saltar a incremento, luego evaluación
-    // - Para DO-WHILE: saltar a evaluación de condición al final
-    // - Marcar flag de continue en el contexto
-    // - Omitir el resto de sentencias en la iteración actual
-
     printf("🎯 Control transferido - continue procesado exitosamente\n");
-    return 0;
+
+    // ===== RETORNAR CÓDIGO ESPECIAL PARA CONTINUE =====
+    // -2 = continue (salta a siguiente iteración)
+    // -1 = break (sale del bucle)
+    //  0 = éxito normal
+    //  1 = error
+    return -2;
 }

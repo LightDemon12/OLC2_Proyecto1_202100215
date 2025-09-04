@@ -11,6 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern int procesar_instrucciones_con_control(NodeProcessorContext* context, ASTNode* instrucciones_node, const char* contexto);
+extern int procesar_bloque_con_scope(NodeProcessorContext* context, ASTNode* bloque_node,
+                                     ScopeType tipo_scope, const char* nombre_scope,
+                                     const char* contexto);
+extern int es_codigo_control_flujo(int codigo);
+extern const char* obtener_nombre_control(int codigo);
+extern void limpiar_variables_locales_scope_actual(NodeProcessorContext* context);
+
 // Función para determinar el tipo de IF
 TipoIF get_tipo_if(const char* node_type) {
     if (!node_type) return IF_TYPE_DESCONOCIDO;
@@ -109,52 +117,72 @@ ResultadoCondicion evaluar_condicion_if(NodeProcessorContext* context, ASTNode* 
     return resultado;
 }
 
-// Función para procesar un bloque IF
+// Función para procesar un bloque IF (CORREGIDA)
 int process_bloque_if(NodeProcessorContext* context, ASTNode* bloque_node,
                       const char* nombre_scope, int crear_scope) {
     if (!bloque_node) return 0;
 
-    char debug_msg[256];
     if (crear_scope) {
-        snprintf(debug_msg, sizeof(debug_msg), "🔍 ENTRANDO SCOPE IF: %s", nombre_scope);
-        procesador_debug_output(context, debug_msg);
+        // ===== CREAR SCOPE Y PROCESAR CON LIMPIEZA JAVA =====
+        printf("🔍 IF creando scope con limpieza Java: %s\n", nombre_scope);
+
+        // Crear scope usando tu sistema
         entrar_scope_combinado(context, SCOPE_IF, nombre_scope, bloque_node->line);
-    } else {
-        snprintf(debug_msg, sizeof(debug_msg), "🔍 EJECUTANDO INSTRUCCIÓN IF (sin scope)");
-        procesador_debug_output(context, debug_msg);
-    }
 
-    int resultado = 0;
+        int resultado = 0;
 
-    // Procesar contenido del bloque
-    if (strcmp(bloque_node->type, "SCOPE") == 0) {
-        // Es un SCOPE con INSTRUCCIONES dentro
-        for (int i = 0; i < bloque_node->child_count; i++) {
-            if (process_ast_node(context, bloque_node->children[i]) != 0) {
-                resultado = 1;
-                break;
+        // Procesar contenido del IF
+        if (strcmp(bloque_node->type, "SCOPE") == 0) {
+            for (int i = 0; i < bloque_node->child_count; i++) {
+                ASTNode* hijo = bloque_node->children[i];
+                if (hijo && strcmp(hijo->type, "INSTRUCCIONES") == 0) {
+                    resultado = procesar_instrucciones_con_control(context, hijo, "IF");
+                    if (es_codigo_control_flujo(resultado)) {
+                        break;
+                    }
+                } else {
+                    int resultado_hijo = process_ast_node(context, hijo);
+                    if (es_codigo_control_flujo(resultado_hijo)) {
+                        resultado = resultado_hijo;
+                        break;
+                    }
+                }
             }
+        } else if (strcmp(bloque_node->type, "INSTRUCCIONES") == 0) {
+            resultado = procesar_instrucciones_con_control(context, bloque_node, "IF");
+        } else {
+            resultado = process_ast_node(context, bloque_node);
         }
-    } else if (strcmp(bloque_node->type, "INSTRUCCION_IF") == 0) {
-        // Es una sola instrucción
-        for (int i = 0; i < bloque_node->child_count; i++) {
-            if (process_ast_node(context, bloque_node->children[i]) != 0) {
-                resultado = 1;
-                break;
-            }
-        }
-    } else {
-        // Procesar directamente
-        resultado = process_ast_node(context, bloque_node);
-    }
 
-    if (crear_scope) {
-        snprintf(debug_msg, sizeof(debug_msg), "🔍 SALIENDO SCOPE IF: %s", nombre_scope);
-        procesador_debug_output(context, debug_msg);
+        // 🧹 LIMPIEZA JAVA: Eliminar variables locales del scope del IF
+        printf("🧹 Limpieza del scope IF (comportamiento Java)...\n");
+        limpiar_variables_locales_scope_actual(context);
+
+        // Salir del scope
         salir_scope_combinado(context, bloque_node->line);
-    }
 
-    return resultado;
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
+        return resultado;
+    } else {
+        // Sin scope, procesar directamente
+        printf("🔍 EJECUTANDO INSTRUCCIÓN IF (sin scope)\n");
+
+        if (strcmp(bloque_node->type, "INSTRUCCIONES") == 0) {
+            return procesar_instrucciones_con_control(context, bloque_node, "IF_SIN_SCOPE");
+        } else {
+            int resultado = process_ast_node(context, bloque_node);
+
+            if (es_codigo_control_flujo(resultado)) {
+                printf("🔄 IF_SIN_SCOPE propagando %s: %d\n",
+                       obtener_nombre_control(resultado), resultado);
+            }
+
+            return resultado;
+        }
+    }
 }
 
 // Procesador principal para todos los tipos de IF
@@ -189,7 +217,7 @@ int process_if_node(NodeProcessorContext* context, ASTNode* node) {
     }
 }
 
-// IF_SIMPLE: if (condicion) { ... }
+// IF_SIMPLE: if (condicion) { ... } (CORREGIDO PARA PROPAGAR CONTINUE/BREAK)
 int process_if_simple(NodeProcessorContext* context, ASTNode* node) {
     if (node->child_count < 2) {
         procesador_error_output(context, "IF_SIMPLE con estructura incorrecta");
@@ -220,8 +248,16 @@ int process_if_simple(NodeProcessorContext* context, ASTNode* node) {
     if (resultado_condicion == CONDICION_TRUE) {
         snprintf(debug_msg, sizeof(debug_msg), "✅ CONDICIÓN TRUE - ejecutando bloque IF: %s", scope_name);
         procesador_debug_output(context, debug_msg);
+
+        // ===== USAR FUNCTION HELPER PARA PROPAGAR CONTROL DE FLUJO =====
         int resultado = process_bloque_if(context, bloque_node, scope_name, 1);
         free(scope_name);
+
+        // ===== VERIFICAR Y PROPAGAR CÓDIGOS DE CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF_SIMPLE propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
         return resultado;
     } else {
         snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN FALSE - omitiendo bloque IF: %s", scope_name);
@@ -249,7 +285,15 @@ int process_if_simple_sin_llaves(NodeProcessorContext* context, ASTNode* node) {
 
     // Ejecutar instrucción solo si condición es true (SIN CREAR SCOPE)
     if (resultado_condicion == CONDICION_TRUE) {
-        return process_bloque_if(context, instruccion_node, "if_sin_llaves", 0);
+        printf("🔀 IF_SIN_LLAVES: Ejecutando instrucción\n");
+        int resultado = process_bloque_if(context, instruccion_node, "if_sin_llaves", 0);
+
+        // ===== PROPAGAR CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF_SIN_LLAVES propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
+        return resultado;
     } else {
         procesador_debug_output(context, "🔀 IF SIN LLAVES: Condición falsa, omitiendo instrucción");
         return 0;
@@ -290,6 +334,12 @@ int process_if_con_else(NodeProcessorContext* context, ASTNode* node) {
 
         int resultado = process_bloque_if(context, bloque_if, scope_name, 1);
         free(scope_name);
+
+        // ===== PROPAGAR CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF_CON_ELSE (rama IF) propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
         return resultado;
     } else {
         // ===== CONDICIÓN FALSE, EJECUTAR ELSE =====
@@ -308,6 +358,12 @@ int process_if_con_else(NodeProcessorContext* context, ASTNode* node) {
 
         int resultado = process_bloque_if(context, bloque_else, scope_name, 1);
         free(scope_name);
+
+        // ===== PROPAGAR CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF_CON_ELSE (rama ELSE) propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
         return resultado;
     }
 }
@@ -347,14 +403,26 @@ int process_if_con_else_mixto(NodeProcessorContext* context, ASTNode* node) {
         // EJECUTAR SOLO EL BLOQUE IF Y TERMINAR
         int resultado = process_bloque_if(context, bloque_if, scope_name, 1);
         free(scope_name);
+
+        // ===== PROPAGAR CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF_MIXTO (rama IF) propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
         return resultado;
     } else {
-        // ===== CONDICIÓN FALSE, PROCESAR ELSE (SIN PROCESAR AUTOMÁTICAMENTE) =====
+        // ===== CONDICIÓN FALSE, PROCESAR ELSE RECURSIVAMENTE =====
         snprintf(debug_msg, sizeof(debug_msg), "❌ CONDICIÓN FALSE - procesando rama ELSE_MIXTO");
         procesador_debug_output(context, debug_msg);
 
         // ===== PROCESAR LA INSTRUCCIÓN ELSE RECURSIVAMENTE =====
-        // Esto debería ser otro IF que se evaluará independientemente
-        return process_ast_node(context, instruccion_else);
+        int resultado = process_ast_node(context, instruccion_else);
+
+        // ===== PROPAGAR CONTROL DE FLUJO =====
+        if (es_codigo_control_flujo(resultado)) {
+            printf("🔄 IF_MIXTO (rama ELSE) propagando %s: %d\n", obtener_nombre_control(resultado), resultado);
+        }
+
+        return resultado;
     }
 }

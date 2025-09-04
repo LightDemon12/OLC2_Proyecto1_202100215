@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "../../Headers/Procesador_Vectores.h"
 #include "Procesador_casting.h"
 #include "Procesador_Logico.h"
 
@@ -105,6 +105,7 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
             return string_to_tipo_dato(tipo_destino->value);
         }
     }
+
     // Si es una expresión binaria, evaluar recursivamente
     if (strcmp(node->type, "EXPRESION_BINARIA") == 0) {
         if (!node->value) return TIPO_DESCONOCIDO;
@@ -123,6 +124,16 @@ TipoDato obtener_tipo_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
                        tipo_dato_to_string(tipo_der));
             }
 
+            if (strcmp(node->type, "ARRAY_ACCESO_MULTIDIMENSIONAL") == 0 && node->child_count >= 1) {
+                ASTNode* id_node = node->children[0];
+                if (id_node && id_node->value && context && context->tabla_simbolos) {
+                    Simbolo* simbolo = buscar_simbolo(context->tabla_simbolos, id_node->value);
+                    if (simbolo && simbolo->tipo_simbolo == SIMBOLO_VECTOR) {
+                        return simbolo->tipo_dato;
+                    }
+                }
+                return TIPO_DESCONOCIDO;
+            }
             // ===== DETERMINAR TIPO RESULTADO SEGÚN OPERADOR =====
             if (strcmp(operador, "+") == 0) {
                 // Para suma: String + cualquier_cosa = String, sino promoción numérica
@@ -286,7 +297,30 @@ char* obtener_valor_desde_nodo(ASTNode* node, NodeProcessorContext* context) {
             return NULL;
         }
     }
-
+    // ===== SOPORTE PARA ACCESO_ARRAY_1D =====
+    if (strcmp(node->type, "ACCESO_ARRAY_1D") == 0 && node->child_count == 2) {
+        // Procesar el acceso al vector usando la función existente
+        int valor_int = procesar_acceso_vector(context, node);
+        if (valor_int != -1) {  // Cambiado: -1 indica error
+            char* resultado = malloc(32);
+            snprintf(resultado, 32, "%d", valor_int);
+            return resultado;
+        } else {
+            // Si hay error, retornar el mensaje de error
+            return strdup("[Error de acceso a vector]");
+        }
+    }
+    if (strcmp(node->type, "ARRAY_ACCESO_MULTIDIMENSIONAL") == 0 && node->child_count == 2) {
+        // Procesar el acceso al vector usando la función existente
+        int valor_int = procesar_acceso_vector(context, node);
+        if (valor_int != -1) {
+            char* resultado = malloc(32);
+            snprintf(resultado, 32, "%d", valor_int);
+            return resultado;
+        } else {
+            return strdup("[Error de acceso a vector]");
+        }
+    }
     // ===== MANEJO PARA EXPRESIONES BINARIAS =====
     if (strcmp(node->type, "EXPRESION_BINARIA") == 0) {
         printf("   → EXPRESION_BINARIA detectada, delegando al procesador\n");

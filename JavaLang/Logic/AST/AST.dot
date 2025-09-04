@@ -14,15 +14,25 @@ digraph AST {
   node_1 -> node_2;
   node_3 [label="INSTRUCCIONES"];
   node_2 -> node_3;
-  node_4 [label="ASIGNACION_COMPUESTA"];
+  node_4 [label="ASIGNACION_COMPUESTA_ARRAY_1D"];
   node_3 -> node_4;
-  node_5 [label="IDENTIFIER\na"];
+  node_5 [label="ACCESO_ARRAY_1D"];
   node_4 -> node_5;
-  node_6 [label="OPERADOR_ASIGNACION\n="];
-  node_4 -> node_6;
-  node_7 [label="DATO"];
-  node_4 -> node_7;
-  node_8 [label="INT_LITERAL\n3"];
+  node_6 [label="IDENTIFIER\nmatriz"];
+  node_5 -> node_6;
+  node_7 [label="INDICE_ARRAY"];
+  node_5 -> node_7;
+  node_8 [label="DATO"];
   node_7 -> node_8;
+  node_9 [label="INT_LITERAL\n0"];
+  node_8 -> node_9;
+  node_10 [label="OPERADOR_ASIGNACION\n="];
+  node_4 -> node_10;
+  node_11 [label="VALOR_ASIGNACION"];
+  node_4 -> node_11;
+  node_12 [label="DATO"];
+  node_11 -> node_12;
+  node_13 [label="INT_LITERAL\n42"];
+  node_12 -> node_13;
 
 }

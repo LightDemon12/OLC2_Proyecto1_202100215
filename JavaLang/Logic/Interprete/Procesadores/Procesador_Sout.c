@@ -5,6 +5,7 @@
 #include "../../../Headers/Procesador_Expresion.h"
 #include "../../../Headers/node_utils.h"
 #include "../../../Headers/mainview.h"
+#include "../../Headers/Procesador_Vectores.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -155,33 +156,124 @@ char* evaluar_expresion_para_sout(NodeProcessorContext* context, ASTNode* expres
     return NULL;
 }
 
+char* procesar_string_con_escapes(const char* valor) {
+    if (!valor) return strdup("null");
+
+    char* resultado = malloc(1024);
+    if (!resultado) return NULL;
+
+    int len = strlen(valor);
+    int i = 0, j = 0;
+
+    // Verificar si tiene comillas y saltarlas
+    if (len >= 2 && valor[0] == '"' && valor[len-1] == '"') {
+        i = 1;           // Empezar después de la primera comilla
+        len = len - 1;   // Terminar antes de la última comilla
+    }
+
+    // Procesar caracter por caracter
+    while (i < len && j < 1023) {
+        if (valor[i] == '\\' && i + 1 < len) {
+            // Procesar secuencia de escape
+            switch (valor[i + 1]) {
+                case '"':   // \"
+                    resultado[j++] = '"';
+                    i += 2;
+                    break;
+                case '\\':  // \\
+                    resultado[j++] = '\\';
+                    i += 2;
+                    break;
+                case 'n':   // \n
+                    resultado[j++] = '\n';
+                    i += 2;
+                    break;
+                case 'r':   // \r
+                    resultado[j++] = '\r';
+                    i += 2;
+                    break;
+                case 't':   // \t
+                    resultado[j++] = '\t';
+                    i += 2;
+                    break;
+                default:
+                    // Secuencia desconocida, copiar tal como está
+                    resultado[j++] = valor[i++];
+                    break;
+            }
+        } else {
+            // Caracter normal
+            resultado[j++] = valor[i++];
+        }
+    }
+
+    resultado[j] = '\0';
+    return resultado;
+}
+
+
+// ===== NUEVA FUNCIÓN: PROCESAR CHAR CON SECUENCIAS DE ESCAPE =====
+char* procesar_char_con_escapes(const char* valor) {
+    if (!valor) return strdup("null");
+
+    char* resultado = malloc(8);  // Suficiente para un char procesado
+    if (!resultado) return NULL;
+
+    int len = strlen(valor);
+
+    // Verificar si tiene comillas simples y procesarlo
+    if (len >= 3 && valor[0] == '\'' && valor[len-1] == '\'') {
+        // Char con comillas: 'a', '\n', etc.
+        if (valor[1] == '\\' && len >= 4) {
+            // Secuencia de escape
+            switch (valor[2]) {
+                case 'n':
+                    resultado[0] = '\n';
+                    break;
+                case 't':
+                    resultado[0] = '\t';
+                    break;
+                case 'r':
+                    resultado[0] = '\r';
+                    break;
+                case '\\':
+                    resultado[0] = '\\';
+                    break;
+                case '\'':
+                    resultado[0] = '\'';
+                    break;
+                default:
+                    resultado[0] = valor[2];
+                    break;
+            }
+        } else {
+            // Char simple
+            resultado[0] = valor[1];
+        }
+        resultado[1] = '\0';
+    } else {
+        // Sin comillas, copiar tal como está
+        strcpy(resultado, valor);
+    }
+
+    return resultado;
+}
+
 // ===== CONVERSIÓN A STRING PARA SOUT =====
 char* convertir_a_string_para_sout(const char* valor, TipoDato tipo) {
     if (!valor) return strdup("null");
 
-    char* resultado = malloc(512);
+    char* resultado = malloc(1024);  // Aumentar tamaño para secuencias de escape
     if (!resultado) return NULL;
 
     switch (tipo) {
         case TIPO_STRING:
-            // Remover comillas de strings literales
-            if (valor[0] == '"' && valor[strlen(valor)-1] == '"') {
-                strncpy(resultado, valor + 1, strlen(valor) - 2);
-                resultado[strlen(valor) - 2] = '\0';
-            } else {
-                strcpy(resultado, valor);
-            }
-            break;
+            // Procesar string con secuencias de escape
+            return procesar_string_con_escapes(valor);
 
         case TIPO_CHAR:
-            // Remover comillas simples de chars
-            if (valor[0] == '\'' && valor[strlen(valor)-1] == '\'') {
-                resultado[0] = valor[1];
-                resultado[1] = '\0';
-            } else {
-                strcpy(resultado, valor);
-            }
-            break;
+            // Procesar char con secuencias de escape
+            return procesar_char_con_escapes(valor);
 
         case TIPO_BOOLEAN:
             // Convertir true/false a string
@@ -206,6 +298,7 @@ char* convertir_a_string_para_sout(const char* valor, TipoDato tipo) {
 
     return resultado;
 }
+
 
 // ===== PROCESAMIENTO DE CONCATENACIÓN =====
 char* procesar_concatenacion_sout(NodeProcessorContext* context, ASTNode* expr_binaria) {
@@ -236,18 +329,18 @@ char* procesar_array_acceso_sout(NodeProcessorContext* context, ASTNode* array_n
 
     printf("🔍 DEBUG SOUT: Procesando acceso a array\n");
 
-    // TODO: Implementar cuando tengamos el procesador de arrays
-    // Por ahora, retornar un placeholder
-    if (array_node->child_count > 0 && array_node->children[0]) {
-        char* nombre_array = array_node->children[0]->value;
-        if (nombre_array) {
-            char* resultado = malloc(256);
-            snprintf(resultado, 256, "[Array %s - acceso no implementado]", nombre_array);
-            return resultado;
-        }
+    // Acceso a vector unidimensional (int[])
+    int valor = procesar_acceso_vector(context, array_node);
+
+    // Si hubo error semántico, puedes retornar un mensaje especial
+    if (valor == 1) {
+        return strdup("[Error de acceso a vector]");
     }
 
-    return strdup("[Array acceso - error]");
+    // Convertir el valor int a string para SOUT
+    char* resultado = malloc(32);
+    snprintf(resultado, 32, "%d", valor);
+    return resultado;
 }
 
 // ===== FUNCIONES DE VALIDACIÓN =====

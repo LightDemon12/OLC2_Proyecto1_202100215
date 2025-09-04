@@ -23,6 +23,7 @@ typedef enum {
     SIMBOLO_FUNCION,
     SIMBOLO_PARAMETRO,
     SIMBOLO_ARRAY,
+    SIMBOLO_VECTOR,
     SIMBOLO_TEMPORAL,
     SIMBOLO_ETIQUETA
 } TipoSimbolo;
@@ -39,6 +40,7 @@ typedef enum {
 
 typedef struct {
     char id[MAX_ID_LENGTH];            // Identificador
+
     TipoSimbolo tipo_simbolo;          // Tipo de símbolo (variable, función, etc.)
     TipoDato tipo_dato;                // Tipo de dato
     char ambito[MAX_SCOPE_LENGTH];     // Ámbito
@@ -56,12 +58,27 @@ typedef struct {
     int es_array;                      // 1 si es array/matriz
     int dimensiones;                   // Número de dimensiones (para arrays/matrices)
     int tamaños_dimensiones[4];        // Tamaños por dimensión (ej. [3][4][5])
+    int tamano;
+    int* valores_int;         // Para vectores 1D (int[])
+    int** valores_int_2d;     // Para arrays 2D (int[][])
+    int*** valores_int_3d;    // Para arrays 3D (int[][][])
+    char** valores_str_2d;    // Para arrays 2D de string
     int es_constante;                  // 1 si es constante, 0 si no
     int es_global;                     // 1 si es variable global
     char temporal[MAX_TEMP_LENGTH];    // Nombre de temporal (para 3D)
     char etiqueta[MAX_LABEL_LENGTH];   // Nombre de etiqueta (para saltos/ensamblador)
+    char** valores_str;       // Para arrays/matrices de tipo string
+    int* valores_int_nd;      // Para arrays de N dimensiones (linealizado)
     time_t timestamp_creacion;         // Momento de creación
     time_t timestamp_ultimo_uso;       // Última vez usado
+    long* valores_long;
+    double* valores_double;
+    float* valores_float;
+    char* valores_char;
+    int* valores_bool;
+    short* valores_short;
+    char* valores_byte;
+
 } Simbolo;
 
 typedef struct NodoSimbolo {
@@ -117,5 +134,5 @@ int es_simbolo_accesible_desde_ambito_actual(TablaSimbolos* tabla, Simbolo* simb
 Simbolo* buscar_simbolo_en_ambito(TablaSimbolos* tabla, const char* id, const char* ambito);
 int verificar_si_existe_en_otro_scope(TablaSimbolos* tabla, const char* id);
 int es_scope_hijo_de_jerarquico(const char* scope_hijo, const char* scope_padre);
-
+void limpiar_variables_locales_ambito_actual(TablaSimbolos* tabla);
 #endif // TABLA_SIMBOLOS_H

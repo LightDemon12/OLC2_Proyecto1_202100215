@@ -76,13 +76,6 @@ int procesar_break(NodeProcessorContext* context, ASTNode* node) {
     // 2. Transfiere control a la siguiente sentencia después del bucle/switch
     // 3. No ejecuta más iteraciones ni código dentro del bloque
 
-    if (context->mainview) {
-        char break_msg[256];
-        snprintf(break_msg, sizeof(break_msg),
-                "[CONTROL] Break ejecutado - saliendo de %s en línea %d",
-                scope_objetivo->nombre, node->line);
-        mainview_append_console(context->mainview, break_msg);
-    }
 
     // TODO: Cuando implementemos el intérprete completo, aquí:
     // - Marcar flag de break en el contexto
@@ -90,5 +83,5 @@ int procesar_break(NodeProcessorContext* context, ASTNode* node) {
     // - Limpiar cualquier estado de iteración pendiente
 
     printf("🎯 Control transferido - break procesado exitosamente\n");
-    return 0;
+    return -1;
 }

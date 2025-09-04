@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include "../../Headers/Procesador_Vectores.h"
 #include "node_utils.h"
 #include "Procesador_casting.h"
 
@@ -25,6 +25,59 @@ int process_declaracion_node(NodeProcessorContext* context, ASTNode* node) {
     snprintf(debug_msg, sizeof(debug_msg), "Procesando declaracion '%s' en linea %d (hijos: %d)",
             node->type, node->line, node->child_count);
     procesador_debug_output(context, debug_msg);
+
+    // === SOPORTE PARA ARRAY_ASIGNACION_1D - MOVER AL PRINCIPIO ===
+    if (strcmp(node->type, "ARRAY_ASIGNACION_1D") == 0 && node->child_count == 2) {
+        ASTNode* decl_var = node->children[0]; // DECLARACION_VARIABLE
+        ASTNode* acceso_array = node->children[1]; // ACCESO_ARRAY_1D
+
+        // Obtener tipo y nombre
+        ASTNode* tipo_node = decl_var->children[0];
+        ASTNode* id_node = decl_var->children[1];
+        if (!tipo_node || !id_node || !tipo_node->value || !id_node->value) {
+            procesador_error_output(context, "Nodo tipo o identificador inválido en ARRAY_ASIGNACION_1D");
+            return 1;
+        }
+
+        TipoDato tipo = string_to_tipo_dato(tipo_node->value);
+        const char* id_str = id_node->value;
+
+        // Verificar si ya existe en el scope actual
+        const char* scope_actual_nombre = context->scope_actual ?
+                                         context->scope_actual->nombre : "global";
+        if (verificar_simbolo_existe_en_scope_especifico(context->tabla_simbolos, id_str, scope_actual_nombre)) {
+            char error_msg[512];
+            snprintf(error_msg, sizeof(error_msg),
+                    "Variable '%s' ya está declarada en el scope '%s' (línea %d)",
+                    id_str, scope_actual_nombre, node->line);
+            procesador_error_output(context, error_msg);
+            return 1;
+        }
+
+        // Extraer valor del vector
+        char* valor_extraido = obtener_valor_desde_nodo(acceso_array, context);
+        if (!valor_extraido) {
+            procesador_error_output(context, "No se pudo extraer valor del vector para asignación");
+            return 1;
+        }
+
+        // Crear símbolo y agregarlo
+        Simbolo simbolo = crear_simbolo_default(id_str, SIMBOLO_VARIABLE, tipo);
+        simbolo.linea = node->line;
+        simbolo.columna = node->column;
+        simbolo.visibilidad = VIS_PUBLIC;
+        simbolo.inicializado = 1;
+        simbolo.timestamp_creacion = time(NULL);
+        strncpy(simbolo.valor, valor_extraido, MAX_VALUE_LENGTH - 1);
+        simbolo.valor[MAX_VALUE_LENGTH - 1] = '\0';
+        free(valor_extraido);
+
+        if (!insertar_simbolo_en_scope_combinado(context, simbolo)) {
+            procesador_error_output(context, "No se pudo insertar variable");
+            return 1;
+        }
+        return 0;
+    }
 
     if (node->child_count < 2) {
         snprintf(debug_msg, sizeof(debug_msg), "Nodo con pocos hijos (%d), saltando", node->child_count);
@@ -50,14 +103,16 @@ int process_declaracion_node(NodeProcessorContext* context, ASTNode* node) {
     snprintf(debug_msg, sizeof(debug_msg), "🔍 ANÁLISIS SEMÁNTICO: Tipo detectado '%s'", tipo_str);
     procesador_debug_output(context, debug_msg);
 
+
     // Delegar según el tipo específico de declaración
     if (strcmp(node->type, "DECLARACION_MULTIPLE") == 0) {
         return process_declaracion_multiple(context, tipo_dato, node->children[1], node);
     }
-    else if (strcmp(node->type, "DECLARACION_CON_INICIALIZACION") == 0) {
+    else if (strcmp(node->type, "DECLARACION_CON_INICIALIZACION") == 0 ||
+             strcmp(node->type, "INICIALIZACION_FOR_DECLARACION") == 0) { // <-- AGREGADO
         return process_declaracion_con_inicializacion(context, tipo_dato,
                                                      node->children[1], node->children[2], node);
-    }
+             }
     else if (strcmp(node->type, "DECLARACION_SIN_INICIALIZACION") == 0) {
         return process_declaracion_sin_inicializacion(context, tipo_dato, node->children[1], node);
     }
@@ -66,6 +121,32 @@ int process_declaracion_node(NodeProcessorContext* context, ASTNode* node) {
         procesador_error_output(context, debug_msg);
         return 1;
     }
+}
+
+int verificar_simbolo_existe_en_scope_especifico(TablaSimbolos* tabla, const char* nombre, const char* scope_nombre) {
+    if (!tabla || !nombre || !scope_nombre) return 0;
+
+    printf("DEBUG TABLA_SIMBOLOS: Verificando si '%s' existe ÚNICAMENTE en ámbito actual '%s'\n",
+           nombre, scope_nombre);
+
+    unsigned int indice = hash_simbolo(nombre);
+    NodoSimbolo* actual = tabla->tabla[indice];
+
+    while (actual) {
+        // Verificar nombre Y que esté exactamente en el scope especificado
+        if (strcmp(actual->simbolo.id, nombre) == 0 &&
+            strcmp(actual->simbolo.ambito, scope_nombre) == 0) {
+
+            printf("DEBUG TABLA_SIMBOLOS: ✅ Símbolo '%s' encontrado en ámbito específico '%s'\n",
+                   nombre, scope_nombre);
+            return 1; // Encontrado en scope específico
+            }
+        actual = actual->siguiente;
+    }
+
+    printf("DEBUG TABLA_SIMBOLOS: ❌ Símbolo '%s' NO encontrado en ámbito específico '%s'\n",
+           nombre, scope_nombre);
+    return 0; // NO encontrado en scope específico
 }
 
 int process_declaracion_con_inicializacion(NodeProcessorContext* context, TipoDato tipo,
@@ -84,24 +165,22 @@ int process_declaracion_con_inicializacion(NodeProcessorContext* context, TipoDa
             context->scope_actual ? context->scope_actual->nombre : "GLOBAL");
     procesador_debug_output(context, debug_msg);
 
-    // ===== VERIFICAR REDECLARACIÓN =====
+    // ===== VERIFICAR REDECLARACIÓN SOLO EN SCOPE ACTUAL =====
     if (context->tabla_simbolos) {
-        Simbolo* simbolo_existente = buscar_simbolo(context->tabla_simbolos, id_str);
-        if (simbolo_existente) {
+        const char* scope_actual_nombre = context->scope_actual ?
+                                         context->scope_actual->nombre : "global";
+
+        // CAMBIO: Usar función que busque SOLO en scope actual
+        if (verificar_simbolo_existe_en_scope_especifico(context->tabla_simbolos, id_str, scope_actual_nombre)) {
             char error_msg[512];
             snprintf(error_msg, sizeof(error_msg),
                     "Variable '%s' ya está declarada en el scope '%s' (línea %d)",
-                    id_str, simbolo_existente->ambito, simbolo_existente->linea);
-
-            const char* scope_actual = "global";
-            if (context->scope_actual && context->scope_actual->nombre) {
-                scope_actual = context->scope_actual->nombre;
-            }
+                    id_str, scope_actual_nombre, parent->line);
 
             if (global_error_manager) {
                 error_manager_add_semantico(global_error_manager,
                                           parent->line, parent->column,
-                                          error_msg, id_str, scope_actual);
+                                          error_msg, id_str, scope_actual_nombre);
             }
 
             procesador_error_output(context, error_msg);
@@ -230,36 +309,26 @@ int process_declaracion_sin_inicializacion(NodeProcessorContext* context, TipoDa
             id_str, tipo_dato_to_string(tipo));
     procesador_debug_output(context, debug_msg);
 
-    // ===== VERIFICAR REDECLARACIÓN ANTES DE CONTINUAR =====
+    // ===== VERIFICAR REDECLARACIÓN SOLO EN SCOPE ACTUAL =====
     if (context->tabla_simbolos) {
-        Simbolo* simbolo_existente = buscar_simbolo(context->tabla_simbolos, id_str);
-        if (simbolo_existente) {
-            // ===== ERROR SEMÁNTICO: REDECLARACIÓN =====
+        const char* scope_actual_nombre = context->scope_actual ?
+                                         context->scope_actual->nombre : "global";
+
+        // CAMBIO: Usar función que busque SOLO en scope actual
+        if (verificar_simbolo_existe_en_scope_especifico(context->tabla_simbolos, id_str, scope_actual_nombre)) {
             char error_msg[512];
             snprintf(error_msg, sizeof(error_msg),
                     "Variable '%s' ya está declarada en el scope '%s' (línea %d)",
-                    id_str,
-                    simbolo_existente->ambito,
-                    simbolo_existente->linea);
+                    id_str, scope_actual_nombre, parent->line);
 
-            // OBTENER EL SCOPE ACTUAL
-            const char* scope_actual = "global";
-            if (context->scope_actual && context->scope_actual->nombre) {
-                scope_actual = context->scope_actual->nombre;
-            } else if (context->tabla_simbolos && context->tabla_simbolos->ambito_actual) {
-                scope_actual = context->tabla_simbolos->ambito_actual;
-            }
-
-            // Registrar error semántico global
             if (global_error_manager) {
                 error_manager_add_semantico(global_error_manager,
                                           parent->line, parent->column,
-                                          error_msg, id_str,
-                                          scope_actual);
+                                          error_msg, id_str, scope_actual_nombre);
             }
 
             procesador_error_output(context, error_msg);
-            return 1; // Error semántico - no continuar
+            return 1;
         }
     }
 

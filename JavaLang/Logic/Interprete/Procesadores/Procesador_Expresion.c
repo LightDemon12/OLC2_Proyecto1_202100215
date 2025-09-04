@@ -9,6 +9,7 @@
 #include "../../../Headers/Procesador_Modulo.h"
 #include "../../../Headers/globals.h"
 #include "../../Headers/mainview.h"
+#include "../../../Headers/Procesador_Incremento.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -193,16 +194,35 @@ char* process_expresion_node(NodeProcessorContext* context, ASTNode* node) {
                 printf("DEBUG PROCESADOR_EXPRESION: → Procesando positivo unario '+'\n");
             }
             return obtener_valor_desde_nodo(node, context);
+        case EXPR_TYPE_PRE_INCREMENTO:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando pre-incremento a Procesador_Incremento\n");
+            }
+            return process_pre_incremento_node(context, node);
 
+        case EXPR_TYPE_PRE_DECREMENTO:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando pre-decremento a Procesador_Incremento\n");
+            }
+            return process_pre_decremento_node(context, node);
+
+        case EXPR_TYPE_POST_INCREMENTO:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando post-incremento a Procesador_Incremento\n");
+            }
+            return process_post_incremento_node(context, node);
+
+        case EXPR_TYPE_POST_DECREMENTO:
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando post-decremento a Procesador_Incremento\n");
+            }
+            return process_post_decremento_node(context, node);
         // ===== OPERADORES UNARIOS NO IMPLEMENTADOS =====
         case EXPR_TYPE_NEGACION_LOGICA:
-        case EXPR_TYPE_PRE_INCREMENTO:
-        case EXPR_TYPE_PRE_DECREMENTO:
-        case EXPR_TYPE_POST_INCREMENTO:
-        case EXPR_TYPE_POST_DECREMENTO:
-            printf("ERROR PROCESADOR_EXPRESION: Operador unario '%s' no implementado\n", 
-                   node->value ? node->value : "desconocido");
-            return NULL;
+            if (context->modo_debug) {
+                printf("DEBUG PROCESADOR_EXPRESION: → Delegando negación lógica (!) a Procesador_Logico\n");
+            }
+            return process_logico_unario_node(context, node);
 
         // ===== TIPOS DE DATOS IMPLEMENTADOS =====
         case EXPR_TYPE_DATO:
