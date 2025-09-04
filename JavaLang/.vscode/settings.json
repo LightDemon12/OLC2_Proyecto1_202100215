@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "node_processor.h": "c"
+        "node_processor.h": "c",
+        "string.h": "c"
     }
 }

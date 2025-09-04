@@ -16,7 +16,7 @@
 #include "../../Headers/Procesador_For.h"
 #include "../../Headers/Procesador_Vectores.h"
 #include "../../Headers/Procesador_Vectores.h"
-
+#include "../../Headers/Procesador_Multidimensional.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -357,6 +357,8 @@ NodeProcessorType get_node_processor_type(const char* node_type) {
     if (strcmp(node_type, "IDENTIFIER") == 0) return NODE_TYPE_IDENTIFIER;
     if (strcmp(node_type, "ARRAY_ASIGNACION_1D") == 0) return NODE_TYPE_ARRAY_ASIGNACION_1D;
     if (strcmp(node_type, "ASIGNACION_COMPUESTA_ARRAY_1D") == 0) return NODE_TYPE_ASIGNACION_COMPUESTA_ARRAY_1D;
+    if (strcmp(node_type, "ARRAY_ASIGNACION_ELEMENTO") == 0) return NODE_TYPE_ARRAY_ASIGNACION_ELEMENTO;
+
     return NODE_TYPE_UNKNOWN;
 }
 
@@ -505,9 +507,18 @@ int process_ast_node(NodeProcessorContext* context, ASTNode* node) {
         case NODE_TYPE_VECTOR_INICIALIZADO:
             printf("🧮 PROCESANDO VECTOR/ARRAY: '%s'\n", node->type);
             return process_vector_node(context, node);
+        case NODE_TYPE_ARRAY_MULTIDIMENSIONAL_NEW:
+            printf("🧮 PROCESANDO ARRAY MULTIDIMENSIONAL NEW: '%s'\n", node->type);
+            return process_array_multidimensional_new(context, node);
+        case NODE_TYPE_ARRAY_MULTIDIMENSIONAL_INICIALIZADO:
+            printf("🧮 PROCESANDO ARRAY MULTIDIMENSIONAL INICIALIZADO: '%s'\n", node->type);
+            return process_array_multidimensional_inicializado(context, node);
         case NODE_TYPE_ARRAY_ACCESO_MULTIDIMENSIONAL:
             printf("🔍 PROCESANDO ACCESO A VECTOR: '%s'\n", node->type);
             return procesar_acceso_vector(context, node);
+        case NODE_TYPE_ARRAY_ASIGNACION_ELEMENTO:
+            printf("📝 PROCESANDO ARRAY_ASIGNACION_ELEMENTO: '%s'\n", node->type);
+            return process_array_asignacion_elemento(context, node);
         case NODE_TYPE_ARRAY_ASIGNACION_1D:
             printf("📝 PROCESANDO ARRAY_ASIGNACION_1D: '%s' en scope '%s'\n",
                    node->type,

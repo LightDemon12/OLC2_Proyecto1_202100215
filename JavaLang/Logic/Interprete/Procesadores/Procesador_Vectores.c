@@ -213,7 +213,7 @@ int procesar_acceso_vector(NodeProcessorContext* context, ASTNode* acceso_node) 
 
     // Espera estructura: ARRAY_ACCESO_MULTIDIMENSIONAL con hijos:
     // [0] IDENTIFIER (nombre del vector)
-    // [1] BRACKETS_INDICES (con hijo INDICE -> DATO -> INT_LITERAL)
+    // [1] BRACKETS_INDICES (con hijos INDICE -> DATO -> INT_LITERAL)
     if (acceso_node->child_count < 2) return -1;
 
     ASTNode* id_node = acceso_node->children[0];
@@ -221,28 +221,7 @@ int procesar_acceso_vector(NodeProcessorContext* context, ASTNode* acceso_node) 
     if (!id_node || !indices_node || !id_node->value) return -1;
 
     const char* vector_id = id_node->value;
-
-    // Solo soporta 1 índice para vectores 1D
-    if (indices_node->child_count != 1) {
-        if (global_error_manager) {
-            error_manager_add_semantico(global_error_manager,
-                acceso_node->line, acceso_node->column,
-                "Acceso a vector con número incorrecto de índices", vector_id,
-                context->scope_actual ? context->scope_actual->nombre : "global");
-        }
-        return -1;
-    }
-
-    ASTNode* indice_node = indices_node->children[0]; // INDICE
-    if (!indice_node || indice_node->child_count < 1) return -1;
-
-    ASTNode* dato_node = indice_node->children[0]; // DATO
-    if (!dato_node) return -1;
-
-    // ===== Usar extract_dato_value en dato_node (DATO) =====
-    char* indice_str = extract_dato_value(dato_node);
-    int indice = indice_str ? atoi(indice_str) : -1;
-    free(indice_str);
+    int num_indices = indices_node->child_count;
 
     // Buscar el símbolo en la tabla
     Simbolo* simbolo = buscar_simbolo_en_scopes_combinado(context, vector_id);
@@ -256,29 +235,69 @@ int procesar_acceso_vector(NodeProcessorContext* context, ASTNode* acceso_node) 
         return -1;
     }
 
-    // Verificar rango
-    if (indice < 0 || indice >= simbolo->tamano) {
-        char msg[128];
-        snprintf(msg, sizeof(msg),
-            "Índice fuera de rango en acceso a vector '%s' (índice: %d, tamaño: %d)",
-            vector_id, indice, simbolo->tamano);
+    // Verificar número de índices
+    if (num_indices != simbolo->dimensiones) {
         if (global_error_manager) {
             error_manager_add_semantico(global_error_manager,
                 acceso_node->line, acceso_node->column,
-                msg, vector_id,
+                "Acceso a vector con número incorrecto de índices", vector_id,
                 context->scope_actual ? context->scope_actual->nombre : "global");
         }
         return -1;
     }
 
-    // Retornar el valor (solo int[])
-    if (simbolo->tipo_dato == TIPO_INT && simbolo->valores_int) {
-        return simbolo->valores_int[indice];
+    // Extraer índices
+    int* indices = malloc(num_indices * sizeof(int));
+    for (int i = 0; i < num_indices; i++) {
+        ASTNode* indice_node = indices_node->children[i]; // INDICE
+        if (!indice_node || indice_node->child_count < 1) {
+            free(indices);
+            return -1;
+        }
+        ASTNode* dato_node = indice_node->children[0]; // DATO
+        if (!dato_node) {
+            free(indices);
+            return -1;
+        }
+        char* indice_str = extract_dato_value(dato_node);
+        indices[i] = indice_str ? atoi(indice_str) : -1;
+        free(indice_str);
     }
 
-    // Si el tipo no es int, solo retorna 0 (puedes expandir para otros tipos)
-    return 0;
+    // Verificar límites
+    for (int i = 0; i < num_indices; i++) {
+        if (indices[i] < 0 || indices[i] >= simbolo->tamaños_dimensiones[i]) {
+            char msg[256];
+            snprintf(msg, sizeof(msg),
+                "Índice fuera de límites en dimensión %d | Token: '%s'", i, vector_id);
+            if (global_error_manager) {
+                error_manager_add_semantico(global_error_manager,
+                    acceso_node->line, acceso_node->column,
+                    msg, vector_id,
+                    context->scope_actual ? context->scope_actual->nombre : "global");
+            }
+            free(indices);
+            return -1;
+        }
+    }
+
+    // Retornar el valor como int si es int, 0 para otros tipos
+    int resultado = 0;
+    if (simbolo->tipo_dato == TIPO_INT) {
+        if (num_indices == 1) {
+            resultado = simbolo->valores_int[indices[0]];
+        } else if (num_indices == 2) {
+            resultado = simbolo->valores_int_2d[indices[0]][indices[1]];
+        } else if (num_indices == 3) {
+            resultado = simbolo->valores_int_3d[indices[0]][indices[1]][indices[2]];
+        }
+    }
+    // Para otros tipos (float, double, char, string, boolean), retornar 0
+
+    free(indices);
+    return resultado;
 }
+
 int procesar_asignacion_compuesta_array(NodeProcessorContext* context, ASTNode* node) {
     if (!context || !node || node->child_count < 3) return 1;
 

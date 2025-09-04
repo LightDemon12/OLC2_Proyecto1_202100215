@@ -62,7 +62,6 @@ typedef struct {
     int* valores_int;         // Para vectores 1D (int[])
     int** valores_int_2d;     // Para arrays 2D (int[][])
     int*** valores_int_3d;    // Para arrays 3D (int[][][])
-    char** valores_str_2d;    // Para arrays 2D de string
     int es_constante;                  // 1 si es constante, 0 si no
     int es_global;                     // 1 si es variable global
     char temporal[MAX_TEMP_LENGTH];    // Nombre de temporal (para 3D)
@@ -78,6 +77,22 @@ typedef struct {
     int* valores_bool;
     short* valores_short;
     char* valores_byte;
+    char*** valores_str_2d;   // Corregido: char*** para arrays 2D de strings (cada elemento es char*)
+    char**** valores_str_3d;  // Corregido: char**** para arrays 3D de strings
+    float* valores_float_nd;  // Para arrays de N dimensiones (linealizado, float)
+    double* valores_double_nd; // Para arrays de N dimensiones (linealizado, double)
+    char* valores_char_nd;    // Para arrays de N dimensiones (linealizado, char)
+    char** valores_str_nd;    // Para arrays de N dimensiones (linealizado, string)
+    int* valores_bool_nd;     // Para arrays de N dimensiones (linealizado, boolean)
+    float** valores_float_2d;     // Para arrays 2D (float[][])
+    float*** valores_float_3d;    // Para arrays 3D (float[][][])
+    double** valores_double_2d;   // Para arrays 2D (double[][])
+    double*** valores_double_3d;  // Para arrays 3D (double[][][])
+    char** valores_char_2d;       // Para arrays 2D (char[][])
+    char*** valores_char_3d;      // Para arrays 3D (char[][][])
+    int** valores_bool_2d;        // Para arrays 2D (boolean[][])
+    int*** valores_bool_3d;       // Para arrays 3D (boolean[][][])
+
 
 } Simbolo;
 
